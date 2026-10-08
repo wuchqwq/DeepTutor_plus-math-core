@@ -142,6 +142,9 @@ def test_transitive_import_closure_does_not_reach_old_or_regression_packages():
     adapter = ROOT / "deeptutor/services/session/math_semantic_persistence.py"
     assert adapter.is_file()
     pending.append(adapter)
+    capability = ROOT / "deeptutor/capabilities/math_turn/capability.py"
+    assert capability.is_file()
+    pending.append(capability)
     visited: set[Path] = set()
     while pending:
         path = pending.pop()
@@ -156,6 +159,7 @@ def test_transitive_import_closure_does_not_reach_old_or_regression_packages():
                 pending.append(local)
     assert PACKAGE / "accepted.py" in visited
     assert adapter in visited
+    assert capability in visited
     assert ROOT / "deeptutor/core/context.py" in visited
 
 
@@ -173,6 +177,7 @@ package = importlib.import_module('deeptutor.math_semantic')
 for info in pkgutil.walk_packages(package.__path__, prefix=package.__name__ + '.'):
     module = importlib.import_module(info.name)
     assert pathlib.Path(module.__file__).resolve().is_relative_to(root)
+importlib.import_module('deeptutor.capabilities.math_turn.capability')
 assert not any(name.startswith('tutor_demo') for name in sys.modules)
 print('independent-native-import: PASS')
 """
