@@ -9,6 +9,7 @@ import hashlib
 import json
 import sqlite3
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -18,6 +19,7 @@ from deeptutor.core.stream import StreamEventType
 from deeptutor.math_semantic.support import resolve_math_content_support
 from deeptutor.services.session._turn_runtime_shared import _repair_chinese_emphasis_for_persistence
 from deeptutor.services.session.math_semantic_persistence import sqlite_episode_mutation
+from deeptutor.services.session.turns.title_service import SessionTitleService
 
 from .recovery_support import A
 from .test_routing_isolation import RoutingHost
@@ -490,3 +492,113 @@ async def test_non_math_keeps_existing_publication_even_after_math_response(
     assert not any(
         "math_publication" in event["metadata"] for event in await replay(host, ordinary)
     )
+
+
+class TitleProvider:
+    """Deterministic provider I/O under the actual title stream factory."""
+
+    def __init__(self, text, failure=False):
+        self.text, self.failure, self.calls = text, failure, []
+
+    async def chat_stream_with_retry(self, **kwargs):
+        self.calls.append(kwargs["messages"])
+        if self.failure:
+            raise RuntimeError("test-only title provider failure")
+        await kwargs["on_content_delta"](self.text)
+        return SimpleNamespace(
+            finish_reason="stop", content=self.text, reasoning_content="", usage={}
+        )
+
+    async def aclose(self):
+        pass
+
+
+def enable_real_titles(host, monkeypatch, *, text, failure=False):
+    # The shared body-publication fixture normally isolates title generation.
+    # Remove that instance override: these controls run the real runtime MRO.
+    del host.runtime._maybe_generate_session_title
+    assert (
+        host.runtime._maybe_generate_session_title.__func__
+        is SessionTitleService._maybe_generate_session_title
+    )
+    provider = TitleProvider(text, failure)
+    monkeypatch.setattr(
+        "deeptutor.services.llm.factory.get_runtime_provider", lambda _cfg: provider
+    )
+    writes = AsyncMock(wraps=host.store.update_session_title)
+    monkeypatch.setattr(host.store, "update_session_title", writes)
+    return provider, writes
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["malicious", "empty", "failure"])
+async def test_routed_math_skips_real_title_owner_model_fallback_write_and_event(
+    publication_host_factory, monkeypatch, mode
+):
+    host, generation, completions = publication_host_factory()
+    provider, writes = enable_real_titles(
+        host,
+        monkeypatch,
+        text="" if mode == "empty" else FORBIDDEN_ANSWER,
+        failure=mode == "failure",
+    )
+    # Request says chat; only trusted routing selects math. Raw content A
+    # would produce a non-neutral fallback title if the title owner ran it.
+    session, turn = await host.submit(A, capability="chat")
+    saved_turn = await host.store.get_turn(turn["id"])
+    saved_session = await host.store.get_session(session["id"])
+    context = host.math_contexts[-1]
+    row = host.user_row(context.runtime.accepted_user_message_id)
+    assert saved_turn["capability"] == "chat" and context.active_capability == "math_turn"
+    assert row["content"] == context.runtime.accepted_user_content == A
+    assert row["metadata"]["host_capability_binding"]["binding"]["capability"] == "math_turn"
+    assert host.result()["verification_status"] == "UNKNOWN"
+    assert all(grant["act_kind"] == "orientation" for grant in host.result()["authority"])
+    assert saved_session["title"] == session["title"] == "New conversation"
+    assert provider.calls == []
+    writes.assert_not_awaited()
+    events = await replay(host, turn)
+    assert not any(
+        event["type"] == "session_meta" and "title" in event["metadata"] for event in events
+    )
+    assert FORBIDDEN_ANSWER not in json.dumps(events)
+    # The same turn still completes the existing protected math body path.
+    _, body, metadata, parent = assistant_row(host, turn["id"])
+    assert body == ACKNOWLEDGEMENT and parent == row["id"]
+    receipt = host.state()["host_math_publications"][turn["id"]]
+    trace = json.loads(receipt["metadata_json"])["math_publication"]
+    assert receipt["content"] == body and metadata["accepted_output"]["math_publication"] == trace
+    assert trace["basis"]["accepted_user_message_id"] == row["id"]
+    assert trace["basis"]["turn_id"] == turn["id"]
+    assert completions[-1].agent_output == body and len(generation.calls) == 1
+    assert any(event["type"] == "done" for event in events)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("capability", ["chat", "immersive_reading", "deep_research"])
+@pytest.mark.parametrize("mode", ["generated", "empty", "failure"])
+async def test_ordinary_real_title_owner_keeps_generation_fallback_and_publication(
+    publication_host_factory, monkeypatch, capability, mode
+):
+    host, generation, _ = publication_host_factory()
+    host.scope = None
+    provider, writes = enable_real_titles(
+        host,
+        monkeypatch,
+        text="" if mode == "empty" else "Conversation overview",
+        failure=mode == "failure",
+    )
+    config = {"mode": "notes", "depth": "quick"} if capability == "deep_research" else {}
+    session, turn = await host.submit(A, capability=capability, config=config)
+    context = host.ordinary_contexts[-1]
+    assert context.active_capability == capability and not host.math_contexts
+    expected = "Conversation overview" if mode == "generated" else A
+    assert (await host.store.get_session(session["id"]))["title"] == expected
+    assert len(provider.calls) == 1 and A in provider.calls[0][1]["content"]
+    writes.assert_awaited_once_with(session["id"], expected)
+    assert generation.calls == [] and host.episodes() == {}
+    events = await replay(host, turn)
+    title = next(event for event in events if event["type"] == "session_meta")
+    assert title["content"] == title["metadata"]["title"] == expected
+    assert title["seq"] > next(event["seq"] for event in events if event["type"] == "done")
+    assert assistant_row(host, turn["id"])[1] == "ordinary"

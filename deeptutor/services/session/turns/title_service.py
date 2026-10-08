@@ -47,6 +47,10 @@ class SessionTitleService:
         active on the calling task, which is the user's currently selected
         model.
         """
+        if execution.capability == "math_turn":
+            # This is the host-routed owner, not the requested capability.
+            # Title prose and raw-user fallback have no math acceptance.
+            return
         if not session_id:
             return
         session = await self.store.get_session(session_id)
