@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from deeptutor.app.service import TurnApplicationService
 from deeptutor.capabilities.math_turn.capability import MathTurnCapability
+from deeptutor.core.context import CapabilityBinding
 from deeptutor.math_semantic.accepted import EpisodeIdentity
 from deeptutor.math_semantic.authority import MathSemanticGrant
 from deeptutor.math_semantic.refs import LearnerRef, QuestionRef
@@ -174,13 +175,19 @@ class RecoveryHost:
 
         registry = CapabilityRegistry()
         registry.register(Observed)
+
+        async def host_scope(_reference):
+            return CapabilityBinding("math_turn", host.source.identity.episode_id)
+
         self.store = SQLiteSessionStore(db)
         self.coordinator = MemoryCoordinator()
         self.runtime = TurnRuntimeManager(
             self.store,
             coordinator=self.coordinator,
             owner_id="fresh-recovery-worker",
-            turn_engine=TurnEngine(capability_registry=registry),
+            turn_engine=TurnEngine(
+                capability_registry=registry, resolve_accepted_capability=host_scope
+            ),
         )
 
         async def no_title(**_kwargs):

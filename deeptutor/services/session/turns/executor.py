@@ -1028,6 +1028,15 @@ class TurnExecutor:
                 },
             )
 
+            # Existing engine DI may seal a reviewed capability scope only
+            # after this execution has persisted its actual accepted row.
+            select_capability = getattr(self.turn_engine, "select_capability", None)
+            if callable(select_capability):
+                await select_capability(context)
+                capability_name = context.active_capability or "chat"
+                execution.capability = capability_name
+                payload = {**payload, "capability_route": context.metadata.get("capability_route")}
+
             pending_done_event: StreamEvent | None = None
             async for event in self.turn_engine.execute(context):
                 if event.type == StreamEventType.SESSION:

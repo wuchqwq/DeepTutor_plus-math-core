@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import json
 from typing import TypeVar, cast
 
-from deeptutor.core.context import TurnMutationSQL, TurnRuntimeContext
+from deeptutor.core.context import CapabilityBinding, TurnMutationSQL, TurnRuntimeContext
 from deeptutor.math_semantic.accepted import AcceptedSubmission
 from deeptutor.math_semantic.state import MathMutation, MathMutationAuthority, ReviewedSource
 
@@ -23,7 +23,7 @@ Result = TypeVar("Result")
 
 @dataclass(frozen=True, slots=True)
 class MathEpisodeBinding:
-    """Trusted host DI, never request metadata: one contiguous solving episode.
+    """Trusted host DI, never request metadata: one reviewed solving episode.
 
     A new episode starts at a real accepted row, independently of question ID.
     Starting another episode closes the preceding interval to further writes.
@@ -45,8 +45,9 @@ def sqlite_episode_mutation(
     """Certify an explicit binding, or recover history for reviewed source DI.
 
     ReviewedSource carries no accepted row/history. Existing aggregates must
-    retain their certified start/basis; a new aggregate starts at this turn's
-    actual accepted row. A damaged existing aggregate is never reinitialized.
+    retain their certified start/basis; a new aggregate starts at its earliest
+    durably attributed accepted row. Ordinary gaps are not math evidence.
+    A damaged existing aggregate is never reinitialized.
     """
     # Fresh composition needs only reviewed identity/content. The accepted
     # start and history are recovered and certified under commit authority.
@@ -97,6 +98,10 @@ def sqlite_math_mutation(
     if sum((accepted_prefix is not None, first_message_id is not None, recover_episode)) != 1:
         raise ValueError("exactly one accepted prefix, episode start or recovery is required")
     certified_episode = first_message_id is not None or recover_episode
+    if certified_episode and runtime.capability_binding != CapabilityBinding(
+        "math_turn", source.identity.episode_id
+    ):
+        raise ValueError("math episode requires the exact trusted host capability binding")
     if first_message_id is not None and (
         type(first_message_id) is not int or first_message_id > current_message_id
     ):
@@ -110,7 +115,9 @@ def sqlite_math_mutation(
     ):
         raise ValueError("complete bounded accepted episode prefix is required")
 
-    def read_submission(sql: TurnMutationSQL, message_id: int) -> AcceptedSubmission:
+    def read_submission(
+        sql: TurnMutationSQL, message_id: int, legacy_ids: tuple[int, ...]
+    ) -> AcceptedSubmission:
         rows = sql(
             "SELECT id, session_id, role, content, metadata_json FROM messages WHERE id = ?",
             (message_id,),
@@ -131,6 +138,14 @@ def sqlite_math_mutation(
             turns = sql("SELECT session_id FROM turns WHERE id = ?", (value.turn_id,))
             if len(turns) != 1 or turns[0][0] != session_id:
                 raise ValueError("accepted row has no matching host turn")
+            marker = {
+                "turn_id": value.turn_id,
+                "binding": {"capability": "math_turn", "scope_id": source.identity.episode_id},
+            }
+            if metadata.get("host_capability_binding") != marker and not (
+                message_id in legacy_ids and "host_capability_binding" not in metadata
+            ):
+                raise ValueError("accepted row has no exact host math attribution")
         return value
 
     async def run(mutation: Callable[[MathMutation], Result]) -> Result:
@@ -141,23 +156,77 @@ def sqlite_math_mutation(
             )
             if records and records[0][0] != session_id:
                 raise ValueError("mathematical episode belongs to a foreign host session")
+            old = json.loads(records[0][2]) if records else {}
+            old_ids = tuple(old.get("host_accepted_message_ids", ()))
+            # Existing certified history is frozen at cutover. No unseen row
+            # can be grandfathered later, and removing a new marker is never
+            # mistaken for old unmarked evidence.
+            ownership_version = old.get("host_math_ownership_version")
+            if certified_episode and (
+                (
+                    ownership_version is not None
+                    and (type(ownership_version) is not int or ownership_version != 1)
+                )
+                or ("host_legacy_accepted_message_ids" in old and ownership_version is None)
+            ):
+                raise ValueError("unsupported host math ownership basis")
+            legacy_ids = (
+                tuple(old.get("host_legacy_accepted_message_ids", ()))
+                if ownership_version is not None
+                else old_ids
+            )
+            if certified_episode and (
+                any(type(item) is not int for item in (*old_ids, *legacy_ids))
+                or len(old_ids) > 32
+                or len(legacy_ids) > 32
+                or len(set(old_ids)) != len(old_ids)
+                or len(set(legacy_ids)) != len(legacy_ids)
+                or not set(legacy_ids) <= set(old_ids)
+            ):
+                raise ValueError("invalid durable host math ownership basis")
+            if certified_episode and ownership_version is None and old_ids:
+                placeholders = ",".join("?" for _ in old_ids)
+                marked = {
+                    row[0]
+                    for row in sql(
+                        f"SELECT id FROM messages WHERE session_id=? AND id IN ({placeholders}) AND json_type(metadata_json, '$.host_capability_binding') IS NOT NULL",
+                        (session_id, *old_ids),
+                    )
+                }
+                legacy_ids = tuple(message_id for message_id in old_ids if message_id not in marked)
             start = first_message_id
             if recover_episode:
-                recovered_start = (
-                    json.loads(records[0][2]).get("host_episode_first_message_id")
-                    if records
-                    else current_message_id
-                )
+                # Attribution can commit before an aggregate exists. Such a
+                # failed/lost first math turn still counts as missing evidence.
+                if records:
+                    recovered_start = old.get("host_episode_first_message_id")
+                else:
+                    earliest = sql(
+                        "SELECT MIN(id) FROM messages WHERE session_id=? AND role='user' AND id<=? AND json_extract(metadata_json, '$.host_capability_binding.binding.capability')='math_turn' AND json_extract(metadata_json, '$.host_capability_binding.binding.scope_id')=?",
+                        (session_id, current_message_id, source.identity.episode_id),
+                    )
+                    recovered_start = earliest[0][0]
                 if type(recovered_start) is not int or recovered_start > current_message_id:
                     raise ValueError("durable episode start is missing or invalid")
                 start = cast(int, recovered_start)
             ids = accepted_prefix
             if start is not None:
+                # Capability columns/request snapshots are advisory. Only
+                # exact host-attributed rows (or frozen old certified IDs)
+                # belong to this mathematical episode, including failed math
+                # turns. Ordinary gaps do not increment Core prefix ordinals.
+                pinned = ",".join("?" for _ in old_ids) or "NULL"
                 ids = tuple(
                     row[0]
                     for row in sql(
-                        "SELECT id FROM messages WHERE session_id = ? AND role = 'user' AND id >= ? AND id <= ? ORDER BY id",
-                        (session_id, start, submission.message_id),
+                        f"SELECT id FROM messages WHERE session_id = ? AND role = 'user' AND id >= ? AND id <= ? AND (id IN ({pinned}) OR (json_extract(metadata_json, '$.host_capability_binding.binding.capability') = 'math_turn' AND json_extract(metadata_json, '$.host_capability_binding.binding.scope_id') = ?)) ORDER BY id",
+                        (
+                            session_id,
+                            start,
+                            submission.message_id,
+                            *old_ids,
+                            source.identity.episode_id,
+                        ),
                     )
                 )
                 if not ids or ids[0] != start or ids[-1] != submission.message_id or len(ids) > 32:
@@ -180,12 +249,10 @@ def sqlite_math_mutation(
                     ):
                         raise ValueError("host episode interval was superseded")
             assert ids is not None
-            prefix = tuple(read_submission(sql, message_id) for message_id in ids)
+            prefix = tuple(read_submission(sql, message_id, legacy_ids) for message_id in ids)
             if certified_episode and len({item.turn_id for item in prefix}) != len(prefix):
                 raise ValueError("accepted prefix repeats a host turn")
             if certified_episode and records:
-                old = json.loads(records[0][2])
-                old_ids = tuple(old.get("host_accepted_message_ids", ()))
                 if (
                     old.get("host_episode_first_message_id") != start
                     or not old_ids
@@ -193,6 +260,19 @@ def sqlite_math_mutation(
                     or ids[: len(old_ids)] != old_ids
                 ):
                     raise ValueError("host episode binding or accepted basis changed")
+            if certified_episode:
+                # A fork cannot silently reuse sibling mathematical evidence.
+                # Ordinary ancestors are omitted from the mathematical prefix;
+                # a different reviewed episode may explicitly start a branch.
+                ancestors = {
+                    row[0]
+                    for row in sql(
+                        "WITH RECURSIVE lineage(id, parent_message_id, depth) AS (SELECT id, parent_message_id, 0 FROM messages WHERE id=? AND session_id=? UNION ALL SELECT m.id, m.parent_message_id, l.depth+1 FROM messages m JOIN lineage l ON m.id=l.parent_message_id WHERE m.session_id=? AND l.depth<1024) SELECT id FROM lineage",
+                        (current_message_id, session_id, session_id),
+                    )
+                }
+                if not set(ids) <= ancestors:
+                    raise ValueError("math episode prefix is outside the accepted branch")
             state = MathMutation(source, submission, prefix, records[0][2] if records else None)
             if records and state.snapshot().workspace.revision != records[0][1]:
                 raise ValueError("durable mathematical revision differs from the canonical head")
@@ -201,6 +281,8 @@ def sqlite_math_mutation(
             if start is not None:
                 payload["host_episode_first_message_id"] = start
                 payload["host_accepted_message_ids"] = ids
+                payload["host_math_ownership_version"] = 1
+                payload["host_legacy_accepted_message_ids"] = legacy_ids
             serialized = json.dumps(
                 payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
             )
