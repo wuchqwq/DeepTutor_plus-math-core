@@ -1,0 +1,1810 @@
+{
+  "stage": "MATH-SEMANTIC-EXTRACTION-01",
+  "provenance": {
+    "deeptutor_base_sha": "73774dc26a734c040d3f91bc887060127475178f",
+    "tutor_demo_planning_sha": "a2a1905dc41eed3e5a574304993c2747dcb0838c",
+    "frozen_math_runtime_oracle_sha": "76d5d9697186d086fb967e79a9e08e394b0d5474",
+    "whitelist_version": "MATH-ENGINE-EXTRACTION-WHITELIST-01"
+  },
+  "planning_authorities": [
+    {
+      "path": "docs/design/MATH_ENGINE_EXTRACTION_WHITELIST_01.md",
+      "sha256": "16962641701ad0bf65fda040d676950e2919e8823bb6882828ea2dd46c48b83c"
+    },
+    {
+      "path": "docs/design/DEEPTUTOR_MATH_MIGRATION_ROADMAP_V2.md",
+      "sha256": "79e765de66dc496c314381998d720d939d503cdb5e146b2db12d012571be05e8"
+    },
+    {
+      "path": "evaluation/math_engine_extraction_whitelist/manifest.json",
+      "sha256": "0a665530e95cfc521f82d9cc4aff5cfff4bf7b085283e1ac338d4d96e7c49e48"
+    }
+  ],
+  "classification_counts": {
+    "DELETE_AFTER_CUTOVER": 24,
+    "DO_NOT_MIGRATE": 22,
+    "MIGRATE": 4,
+    "MIGRATE_WITH_ADAPTATION": 17,
+    "REGRESSION_ONLY": 36,
+    "REQUIRES_OWNER_DECISION": 4
+  },
+  "native_boundary_additions": [
+    {
+      "path": "deeptutor/math_semantic/__init__.py",
+      "basis": "Native package composition; no legacy eager namespace copied",
+      "kind": "empty mathematical namespace"
+    },
+    {
+      "path": "deeptutor/services/session/math_semantic_persistence.py",
+      "basis": "Native host composition required by approved accepted response and atomic math persistence slices",
+      "kind": "optional unregistered adapter; existing host SQL mutation port"
+    },
+    {
+      "path": "deeptutor/services/session/sqlite_store.py",
+      "basis": "Existing persistence owner initializes one math aggregate table in its existing database",
+      "kind": "existing-owner schema extension; no new connection/database/service"
+    }
+  ],
+  "rows": [
+    {
+      "path": "data/demo_questions_v1.json",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Baseline-only regression module; tests, CA02/SECOND-SEED, parity corpus or historical documentation remain a frozen oracle, not active product runtime.",
+      "dependency_notes": "TEST_ONLY: classification refers to the pinned base tree, excludes this audit's newly added report/manifest.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "docs/",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Baseline-only regression module; tests, CA02/SECOND-SEED, parity corpus or historical documentation remain a frozen oracle, not active product runtime.",
+      "dependency_notes": "TEST_ONLY: classification refers to the pinned base tree, excludes this audit's newly added report/manifest.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "evaluation/",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Baseline-only regression module; tests, CA02/SECOND-SEED, parity corpus or historical documentation remain a frozen oracle, not active product runtime.",
+      "dependency_notes": "TEST_ONLY: classification refers to the pinned base tree, excludes this audit's newly added report/manifest.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "pyproject.toml",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo packaging",
+      "future_owner": "DeepTutor packaging",
+      "reason": "Do not transplant old demo app package or extras; declare only proven Python math dependencies inside the active repository.",
+      "dependency_notes": "LEGACY: setuptools package exports web/static; SymPy validation is a retained optional domain dependency.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "scripts/audit_p604b_saved_packets.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/audit_p604b1_saved_events.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/build_structured_progression_packet.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/check.ps1",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "DeepTutor owns build/test commands; do not preserve old full-demo test orchestration.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "scripts/eval_pre_p604_generation.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_high_school_tutor.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_phase6_disclosure_shadow.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_real_provider_smoke.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_ref_teaching_action_smoke.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_slim_teaching_planner_smoke.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/evaluate_structured_teaching.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/migrate_p604a_contract_fixtures.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/phase6_disclosure_regression_corpus.json",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/prepare_pilot01_blind_reviewer.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/prepare_pilot01_source_pool.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Frozen evaluation/review/corpus tooling only; no promotion to production.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "scripts/run_demo.ps1",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Delete active demo launcher after cutover gates; keep its pinned original in the frozen repository.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/action_adoption.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/action_checks.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/alignment/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/alignment/contracts.py",
+      "classification": "MIGRATE",
+      "current_owner": "Math Semantic Core",
+      "future_owner": "Math Semantic Core",
+      "reason": "Retain mathematical values, restricted validation or student-origin admission; no host lifecycle ownership.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: neutral refs, math_validation, contracts/tools; namespace changes only, no semantic change.",
+      "production_slices": [
+        "Grounded claim spans; relation, active/divergence/unshown and immutable alignment values"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/claims.py"
+      ],
+      "oracle_coverage": [
+        "grounding",
+        "correspondence",
+        "alignment",
+        "trajectory"
+      ],
+      "migration_mode": "namespace-only mathematical values",
+      "excluded_responsibility": "No grading, learning belief or host response owner",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "3e6ad9efa5900cc21a758f9dafebf180f4d951402011e2a2dfc121cb560fc44a",
+      "planning_source_sha256": "3e6ad9efa5900cc21a758f9dafebf180f4d951402011e2a2dfc121cb560fc44a"
+    },
+    {
+      "path": "src/tutor_demo/alignment/instrumentation.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/alignment/openai_provider.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "DeepTutor proposal runner replaces old OpenAI-compatible transport; domain extraction DTOs remain in adapted alignment contracts.",
+      "dependency_notes": "HOST_COUPLING: math_core.openai_compat transport/configuration.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/alignment/provider.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain extraction DTOs, exact evidence-span resolver and provider protocol; scripted provider remains regression-only.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: EvidenceSpan; transport-independent proposal schema.",
+      "production_slices": [
+        "Bounded proposal DTOs, exact quote occurrence resolver and injected proposal protocol"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/proposals.py"
+      ],
+      "oracle_coverage": [
+        "grounding",
+        "proposal_schema",
+        "alignment"
+      ],
+      "migration_mode": "transport-independent DTO/protocol extraction",
+      "excluded_responsibility": "Scripted provider, HTTP/config/runtime orchestration excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "708f6a76b47767f1878c3ba96a4b984202e1a8f4e0c7bcb44427bbdb79d888c3",
+      "planning_source_sha256": "708f6a76b47767f1878c3ba96a4b984202e1a8f4e0c7bcb44427bbdb79d888c3"
+    },
+    {
+      "path": "src/tutor_demo/alignment/service.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain grounded claims, deterministic correspondence, active/unshown semantics and novel admission; adapt StudentResponse, storage and proposal execution.",
+      "dependency_notes": "HOST_COUPLING: tutor_demo.responses, attempt ledger and thread-based provider loop; math authority stays in core.",
+      "production_slices": [
+        "Deterministic scoped correspondence, active/unshown/divergence and independently validated novel admission"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/alignment.py"
+      ],
+      "oracle_coverage": [
+        "correspondence",
+        "alignment",
+        "trajectory",
+        "validation"
+      ],
+      "migration_mode": "pure materialization instead of provider/store-owning service",
+      "excluded_responsibility": "Provider retry/thread loop, timeout ownership, attempt ledger and regression instrumentation excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "1e44a9d3c3e4849f795a959edfdaa8a3f0b9f58ebda30915229a2c2fbd633750",
+      "planning_source_sha256": "1e44a9d3c3e4849f795a959edfdaa8a3f0b9f58ebda30915229a2c2fbd633750"
+    },
+    {
+      "path": "src/tutor_demo/alignment/store.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain immutable alignments and atomic alignment-plus-workspace commit through a domain store interface.",
+      "dependency_notes": "HOST_COUPLING: accesses MathWorkspaceStore private connection, lock, digest and revision helpers.",
+      "production_slices": [
+        "Immutable alignment identity and atomic alignment plus workspace records"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/codec.py",
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "alignment",
+        "durable_boundary"
+      ],
+      "migration_mode": "transaction-local domain value under host mutation authority",
+      "excluded_responsibility": "Old private SQL connection, sibling locks, schema and ordinary commits excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "49af9b44ca58d14a95e488da0ac133e6c779be51c4a0928fd9b6f89176bf2a39",
+      "planning_source_sha256": "49af9b44ca58d14a95e488da0ac133e6c779be51c4a0928fd9b6f89176bf2a39"
+    },
+    {
+      "path": "src/tutor_demo/application/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/application/demo_questions.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "CA02 reviewed source and authored gold content remain frozen regression input, not production seeding or task authority.",
+      "dependency_notes": "TEST_ONLY / LEGACY: question publication and authored demo seed wiring.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/application/seed_demo_questions.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/application/service.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/application/sessions.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/application/smoke_real_tutor.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/application/teaching.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/assessment.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "DeepTutor assessment/learning owner retains grading provenance; Math Core owns scoped math checks, not the entire Assessment pipeline.",
+      "dependency_notes": "HOST_COUPLING: Question, StudentResponse and provider grading; model_judgment is not verified math or mastery.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/context.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/core.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Only SourceRef plus scoped LearnerRef/QuestionRef values are eligible; no generic learner-state module.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: standard-library dataclasses; agree host-to-domain identity mapping.",
+      "production_slices": [
+        "Neutral learner, question and source-reference values"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/refs.py"
+      ],
+      "oracle_coverage": [
+        "trajectory",
+        "confirmation",
+        "reviewed_binding"
+      ],
+      "migration_mode": "neutral identity values; host authenticates DI scope",
+      "excluded_responsibility": "Old utc_now and host identity lifecycle excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "03cfc82f2ab747f616d2fe1613a6a125a8f168906458c36415d970933c560985",
+      "planning_source_sha256": "03cfc82f2ab747f616d2fe1613a6a125a8f168906458c36415d970933c560985"
+    },
+    {
+      "path": "src/tutor_demo/decision.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/diagnosis.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/durable_loop.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/durable_store.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/finite_math_surface.py",
+      "classification": "REQUIRES_OWNER_DECISION",
+      "current_owner": "tutor_demo teaching boundary",
+      "future_owner": "Owner decision; default excluded from Math Core",
+      "reason": "Owner must decide reuse of finite literal scanning as a bounded host guard helper; it is not trajectory truth.",
+      "dependency_notes": "LEGACY: math_text_key dependency; omission or scanner pass is not natural-language completeness proof.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "default excluded; no Owner decision assumed and no slice extracted",
+      "excluded_responsibility": "Entire owner-decision unit excluded; extraction does not depend on it"
+    },
+    {
+      "path": "src/tutor_demo/information.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/learner.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/loop.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/math_core/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/math_core/contracts.py",
+      "classification": "MIGRATE",
+      "current_owner": "Math Semantic Core",
+      "future_owner": "Math Semantic Core",
+      "reason": "Retain mathematical values, restricted validation or student-origin admission; no host lifecycle ownership.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: neutral refs, math_validation, contracts/tools; namespace changes only, no semantic change.",
+      "production_slices": [
+        "Problem facts/models, scoped artifacts/evidence, authored paths, dependency relations and path-relative closure"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/contracts.py"
+      ],
+      "oracle_coverage": [
+        "snapshots",
+        "dependencies",
+        "transformation",
+        "trajectory"
+      ],
+      "migration_mode": "namespace adaptation without semantic change",
+      "excluded_responsibility": "No learner mastery, teaching policy or generic graph framework",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "72469fc97aefe9dea2ab2dcc75348a04e343e5e9eb134a6cb1b08b8c762596eb",
+      "planning_source_sha256": "72469fc97aefe9dea2ab2dcc75348a04e343e5e9eb134a6cb1b08b8c762596eb"
+    },
+    {
+      "path": "src/tutor_demo/math_core/fixtures.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/math_core/instrumentation.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/math_core/openai_compat.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "DeepTutor provider owner replaces HTTP/env/model configuration; preserve only needed domain prompt/schema separately.",
+      "dependency_notes": "HOST_COUPLING: provider transport/configuration and reasoning-context prompt; do not port urllib/provider runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/math_core/reasoner.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Keep math proposal validation/materialization and budget semantics; use a host-supplied proposal runner and atomic domain store.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY to workspace/tools; mixed provider retries and ThreadPoolExecutor need host-runner ownership.",
+      "production_slices": [
+        "Bounded mathematical proposals, projection/tool-ref validation, materialization and necessary domain-attempt identity"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/reasoning.py",
+        "deeptutor/math_semantic/state.py"
+      ],
+      "oracle_coverage": [
+        "reasoning",
+        "proposal_schema",
+        "durable_boundary"
+      ],
+      "migration_mode": "pure proposal/materialization plus transaction-local domain ledger; injected provider protocol",
+      "excluded_responsibility": "Old MathReasoner orchestration, provider execution/retry/thread transport and Scripted provider excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "2b57d47bba34c0bed8b798aa8b0dd6985d2fb01d3d264af5daebff86f4e37842",
+      "planning_source_sha256": "2b57d47bba34c0bed8b798aa8b0dd6985d2fb01d3d264af5daebff86f4e37842"
+    },
+    {
+      "path": "src/tutor_demo/math_core/student_proposals.py",
+      "classification": "MIGRATE",
+      "current_owner": "Math Semantic Core",
+      "future_owner": "Math Semantic Core",
+      "reason": "Retain mathematical values, restricted validation or student-origin admission; no host lifecycle ownership.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: neutral refs, math_validation, contracts/tools; namespace changes only, no semantic change.",
+      "production_slices": [
+        "Grounded student-origin provenance, independent identity validation and partial candidate-path admission"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/student_proposals.py"
+      ],
+      "oracle_coverage": [
+        "alignment",
+        "validation",
+        "trajectory"
+      ],
+      "migration_mode": "namespace and accepted-evidence adaptation",
+      "excluded_responsibility": "No whole-method proof, authored-path absorption or learner completion upgrade",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "72d23a6508c9e69f06b4d60be604279179144b7404152250f6cc52d932651215",
+      "planning_source_sha256": "72d23a6508c9e69f06b4d60be604279179144b7404152250f6cc52d932651215"
+    },
+    {
+      "path": "src/tutor_demo/math_core/tools.py",
+      "classification": "MIGRATE",
+      "current_owner": "Math Semantic Core",
+      "future_owner": "Math Semantic Core",
+      "reason": "Retain mathematical values, restricted validation or student-origin admission; no host lifecycle ownership.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: neutral refs, math_validation, contracts/tools; namespace changes only, no semantic change.",
+      "production_slices": [
+        "Restricted operations, resource/deadline budgets and validation with typed scoped evidence"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/tools.py"
+      ],
+      "oracle_coverage": [
+        "validation",
+        "tools",
+        "transformation"
+      ],
+      "migration_mode": "restricted synchronous math tool boundary",
+      "excluded_responsibility": "No generic tool router, provider, host lifecycle or instrumentation owner",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "8ea66cc765c9212426ab262b06e5275e2a790e6c70d64c6848f0d833798e9770",
+      "planning_source_sha256": "8ea66cc765c9212426ab262b06e5275e2a790e6c70d64c6848f0d833798e9770"
+    },
+    {
+      "path": "src/tutor_demo/math_core/transformations.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain rational-linear transformation scope and dependency/evidence binding; adapt atomic SQLite materialization to the core store interface.",
+      "dependency_notes": "HOST_COUPLING: private workspace-store SQL; qualified relative equivalence is not absolute premise truth.",
+      "production_slices": [
+        "One-variable rational-linear transformations, input-relative equivalence, operation identity and eight-operation bound"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/transformations.py",
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "transformation",
+        "support",
+        "durable_boundary"
+      ],
+      "migration_mode": "pure evaluator plus atomic domain materialization",
+      "excluded_responsibility": "Private SQLite connection/transaction and absolute premise-truth authority excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "0cf7ffabcc00fe013b471a24e200494f6a01596abe20a72eb269b727fc26971e",
+      "planning_source_sha256": "0cf7ffabcc00fe013b471a24e200494f6a01596abe20a72eb269b727fc26971e"
+    },
+    {
+      "path": "src/tutor_demo/math_core/validation.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain ValidationRequest/Result, killable deadline and UNKNOWN behavior; replace legacy MathClaim construction.",
+      "dependency_notes": "HOST_COUPLING: lazy math_validation and teaching_claims imports in worker; no provider dependency.",
+      "production_slices": [
+        "Neutral validation request/result and killable process timeout fail-closed semantics"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/validation.py"
+      ],
+      "oracle_coverage": [
+        "validation",
+        "tools"
+      ],
+      "migration_mode": "neutral expression input instead of old teaching claim",
+      "excluded_responsibility": "Old PlannerOutputError and old MathClaim host contract excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "0fae57a7b66fab5367ae1ba68e16eeb6cb079bebe36fdf4677160d8a5d9a6996",
+      "planning_source_sha256": "0fae57a7b66fab5367ae1ba68e16eeb6cb079bebe36fdf4677160d8a5d9a6996"
+    },
+    {
+      "path": "src/tutor_demo/math_core/workspace.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain snapshot serialization, append-only revisions, expected-revision conflicts and domain-attempt identity through storage ports.",
+      "dependency_notes": "HOST_COUPLING: sqlite3 and private _connection/_lock are consumed by sibling ledgers; no session/HTTP imports.",
+      "production_slices": [
+        "Pinned snapshot codecs, revision append/CAS, supersession and domain-attempt records"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/workspace.py",
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "snapshots",
+        "dependencies",
+        "reasoning",
+        "durable_boundary"
+      ],
+      "migration_mode": "pure snapshot update and host-owned transaction-local math records",
+      "excluded_responsibility": "MathWorkspaceStore SQLite schema, connection, private lock, path/config and ordinary commit ownership excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "3ab03b33a23c6fef6e49d77c856b45f77f7e25d1aebaeeee0f10c89101454bc4",
+      "planning_source_sha256": "3ab03b33a23c6fef6e49d77c856b45f77f7e25d1aebaeeee0f10c89101454bc4"
+    },
+    {
+      "path": "src/tutor_demo/math_validation.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain bounded SymPy validation and content correspondence; remove dependency on teaching_claims.MathClaim and PlannerOutputError.",
+      "dependency_notes": "HOST_COUPLING: teaching_claims import at line 36; optional SymPy remains domain verification.",
+      "production_slices": [
+        "Bounded structural math verification, normalization, exact correspondence and not-checkable scopes"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/verification.py"
+      ],
+      "oracle_coverage": [
+        "validation",
+        "correspondence"
+      ],
+      "migration_mode": "neutral expression/error types; retain bounded mathematics",
+      "excluded_responsibility": "Generic planner contracts, teaching progression and host/provider wiring excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "48745a14feb2542e76e801f4208ca04040527a8a4ce518523203f7818d33f706",
+      "planning_source_sha256": "48745a14feb2542e76e801f4208ca04040527a8a4ce518523203f7818d33f706"
+    },
+    {
+      "path": "src/tutor_demo/planner_critic.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/question_publication.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/questions.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/responses.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Replace host submission lifecycle with an immutable accepted-response input/reader, retaining exact source text and ordinal.",
+      "dependency_notes": "HOST_COUPLING: LearnerRef, QuestionRef, timestamp and old StudentResponse representation.",
+      "production_slices": [
+        "Immutable actual accepted identity and exact raw source-content consumption; ordered prefix input"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/accepted.py",
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "accepted_boundary",
+        "grounding",
+        "reviewed_binding",
+        "durable_boundary"
+      ],
+      "migration_mode": "native accepted DTO; existing host seam owns acceptance",
+      "excluded_responsibility": "StudentResponse.text factory, timestamp/acceptance lifecycle, old attempt numbering and response registry excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "359b970ff9460cba9d60805a78d4e71ed5a6ae5a9faeb82db2ba0c5452e661e9",
+      "planning_source_sha256": "359b970ff9460cba9d60805a78d4e71ed5a6ae5a9faeb82db2ba0c5452e661e9"
+    },
+    {
+      "path": "src/tutor_demo/retrieval.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/structured_planner.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/adoption.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Keep exact revision, current applicability and non-self-grant invariants; delete old candidate/adoption orchestration and SQL after replacement passes.",
+      "dependency_notes": "HOST_COUPLING: Assessment, goal, support history, old candidate/action schema.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/assistance.py",
+      "classification": "REQUIRES_OWNER_DECISION",
+      "current_owner": "tutor_demo teaching boundary",
+      "future_owner": "Owner decision; default excluded from Math Core",
+      "reason": "Retain non-escalation invariant; decide measured reuse of math act/obligation checks rather than carrying the whole checker.",
+      "dependency_notes": "HOST_COUPLING: AdoptedTeachingAction, TutorProjection and ComplianceEvidenceView.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "default excluded; no Owner decision assumed and no slice extracted",
+      "excluded_responsibility": "Entire owner-decision unit excluded; extraction does not depend on it"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/compliance_evidence.py",
+      "classification": "REQUIRES_OWNER_DECISION",
+      "current_owner": "tutor_demo teaching boundary",
+      "future_owner": "Owner decision; default excluded from Math Core",
+      "reason": "Default exclude old execution evidence view; owner decides if a smaller authoritative projection satisfies guard needs.",
+      "dependency_notes": "HOST_COUPLING: Assessment, LearningGoal, old action, scoped policy and learner-evidence boundary.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "default excluded; no Owner decision assumed and no slice extracted",
+      "excluded_responsibility": "Entire owner-decision unit excluded; extraction does not depend on it"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/contracts.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "DeepTutor owns teaching action and delivery envelopes; Math Core exports only mathematical authority/projection values.",
+      "dependency_notes": "HOST_COUPLING: old planner budgets/policy, action and receipt layout.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/delivery.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Host owns Tutor wording, provider retries, final guard and delivery receipt; do not port combined module.",
+      "dependency_notes": "HOST_COUPLING: urllib/env/provider transport, sqlite3 receipts and old TutorProjection.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/disclosure.py",
+      "classification": "REQUIRES_OWNER_DECISION",
+      "current_owner": "tutor_demo teaching boundary",
+      "future_owner": "Owner decision; default excluded from Math Core",
+      "reason": "Default exclude old disclosure-risk pipeline; keep dependency and uncertainty invariants in replacement boundary.",
+      "dependency_notes": "HOST_COUPLING: FinalAnswerPolicy, old action/projection and bounded literal scanner.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "default excluded; no Owner decision assumed and no slice extracted",
+      "excluded_responsibility": "Entire owner-decision unit excluded; extraction does not depend on it"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/generation_experiment.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/pre_gate_contract.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/pre_guard_observer.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/pre_guard_shadow.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/projection.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Host consumes a bounded math output to build generation views; old TutorProjection builder is not canonical trajectory.",
+      "dependency_notes": "HOST_COUPLING: old adopted-action schema and legacy projection token.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_evaluation.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_event_evaluation.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_observer.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_provider.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_quotes.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_response_store.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_store.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow_wire.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/shadow.py",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Keep baseline fixtures, counters or experimental evidence outside the active runtime.",
+      "dependency_notes": "TEST_ONLY: historical dependencies are tolerated only in the frozen evaluation environment.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    },
+    {
+      "path": "src/tutor_demo/teaching_action/vertical_slice.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/teaching_claims.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Only legacy MathClaim/parser helpers required by math_validation may be adapted; grounding grades, planner repairs and progression policy stay out.",
+      "dependency_notes": "LEGACY mixed module: SourceRef is neutral; teaching-policy errors and evidence-grade contract are not minimum Math Core.",
+      "production_slices": [
+        "Only neutral math expression/check fields and necessary CJK/parser helper"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/expression.py"
+      ],
+      "oracle_coverage": [
+        "validation",
+        "correspondence"
+      ],
+      "migration_mode": "minimal expression dataclass instead of teaching claim subsystem",
+      "excluded_responsibility": "Grounding grades, repair/progression, planner output schema and generic teaching helpers excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "66c5979864bf41df978294547b9c60f82e9b73047e89b28822d0173c7d4fd436",
+      "planning_source_sha256": "66c5979864bf41df978294547b9c60f82e9b73047e89b28822d0173c7d4fd436"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/__init__.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Do not port old host state or module exports; preserve required invariants through the host-owned boundary.",
+      "dependency_notes": "LEGACY: host, provider, learning policy or eager package exports; no math_semantic import allowed.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/assistance.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Only mathematical content digest/support/grant value constraints are eligible; generic assistance choices, learner obligations and goal policy stay in host.",
+      "dependency_notes": "HOST_COUPLING: mixed pedagogical policy and math-content grants; split selected values, not all policy validators.",
+      "production_slices": [
+        "Exact mathematical content digest, finite grant/support value constraints and non-escalation relation keys"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/authority.py"
+      ],
+      "oracle_coverage": [
+        "support",
+        "authority"
+      ],
+      "migration_mode": "math-local values; no pedagogical assistance policy",
+      "excluded_responsibility": "AssistancePolicy, learner obligations, goal/compliance pipeline and generic assistance shell excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "d56d33f5d8848111fca342c4abdda35f5f37e94103df745e9ef9ca923b88bc8a",
+      "planning_source_sha256": "d56d33f5d8848111fca342c4abdda35f5f37e94103df745e9ef9ca923b88bc8a"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/contracts.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Only MethodConfirmation, TrajectoryProjection, mathematical artifact/alignment projection values migrate; teaching policy/candidates stay host-owned.",
+      "dependency_notes": "HOST_COUPLING: imports Assessment, LearningGoal and assistance policy; split mathematical values without copying old planner contracts.",
+      "production_slices": [
+        "Artifact/alignment projection, MethodConfirmation and TrajectoryProjection mathematical values"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/trajectory_types.py"
+      ],
+      "oracle_coverage": [
+        "trajectory",
+        "confirmation",
+        "authority"
+      ],
+      "migration_mode": "retain only mathematical DTOs",
+      "excluded_responsibility": "AssessmentProjection, GoalPlan, CandidateTeachingPlan, TeachingPolicyProposal and teaching budgets excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "ea2810fbc30137fa8468307c536ee1f237222de2ceca4da1822e67293ad76edd",
+      "planning_source_sha256": "ea2810fbc30137fa8468307c536ee1f237222de2ceca4da1822e67293ad76edd"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/evidence.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Keep reviewed source, complete accepted prefix and authoritative reconstruction checks; replace learning-store/Assessment readers and callback wiring.",
+      "dependency_notes": "HOST_COUPLING: SQLiteLearningStore, StudentResponse, Assessment and planner-ledger TYPE_CHECKING import.",
+      "production_slices": [
+        "Exact reviewed source, immutable accepted prefix, grounded/revision-pinned trajectory reconstruction and resolution basis checks"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "reviewed_binding",
+        "durable_boundary",
+        "trajectory",
+        "confirmation"
+      ],
+      "migration_mode": "native reviewed source and accepted prefix boundary; host supplies protected mutation",
+      "excluded_responsibility": "SQLiteLearningStore, generic Assessment, planner evidence/runtime and private host joins excluded; host acceptance validation remains outside Core",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "b342fb5fc02b912e71eb0a9948b001c9132113e043af59ebed9595fc6173e854",
+      "planning_source_sha256": "b342fb5fc02b912e71eb0a9948b001c9132113e043af59ebed9595fc6173e854"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/history.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Replace receipt-backed support-history SQL with host-delivered evidence references; never count tutor-provided content as independent student completion.",
+      "dependency_notes": "HOST_COUPLING: lazy adoption/delivery imports and joins ref receipts to old action tables.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/math_support.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Retain finite exact-content/operation support resolver; move its MathContentSupportBinding type out of teaching-policy module.",
+      "dependency_notes": "ACCEPTABLE_DOMAIN_DEPENDENCY: pinned snapshot plus rational-linear tool evidence; no semantic prose proof.",
+      "production_slices": [
+        "Finite exact-content support and rational-linear operation bindings with literal/relative scopes"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/support.py"
+      ],
+      "oracle_coverage": [
+        "support",
+        "authority",
+        "transformation"
+      ],
+      "migration_mode": "pinned snapshot resolver under mathematical authority ceiling",
+      "excluded_responsibility": "No arbitrary prose justification, premise truth, completion or pedagogy authority",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "2759075be7a4b6d783fa76e9a4af10d72e196fbb4c983e4c7a0bcb856090235f",
+      "planning_source_sha256": "2759075be7a4b6d783fa76e9a4af10d72e196fbb4c983e4c7a0bcb856090235f"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/projection.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Extract derive_trajectory and math/alignment projections; do not move build_teaching_planner_input orchestration.",
+      "dependency_notes": "HOST_COUPLING at module level: Assessment, LearningGoal, SQLiteSupportHistory, evidence and teaching contracts.",
+      "production_slices": [
+        "Pure grounded alignment/artifact projections and compatible/active/applicable trajectory reconstruction"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/trajectory.py"
+      ],
+      "oracle_coverage": [
+        "trajectory",
+        "second_seed",
+        "confirmation",
+        "authority"
+      ],
+      "migration_mode": "pure derivation from canonical mathematical basis",
+      "excluded_responsibility": "build_teaching_planner_input and whole generic planner builder excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "1e5979d1f96bfe89beca4d1a1f858aca2af7e5bc1640588810069025304c9628",
+      "planning_source_sha256": "1e5979d1f96bfe89beca4d1a1f858aca2af7e5bc1640588810069025304c9628"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/provider.py",
+      "classification": "DO_NOT_MIGRATE",
+      "current_owner": "tutor_demo host / namespace",
+      "future_owner": "DeepTutor existing product owners",
+      "reason": "Generic teaching policy belongs to DeepTutor; old Slim Planner prompt and provider do not enter Math Core.",
+      "dependency_notes": "HOST_COUPLING: teaching input plus OpenAI-compatible transport.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; existing DeepTutor product owner retains the responsibility",
+      "excluded_responsibility": "Entire old host/package/provider/learning component excluded"
+    },
+    {
+      "path": "src/tutor_demo/teaching_planner/service.py",
+      "classification": "MIGRATE_WITH_ADAPTATION",
+      "current_owner": "Math domain in old host modules",
+      "future_owner": "Math Semantic Core with host protocol",
+      "reason": "Only method_confirmations and bind_method_confirmation durable state machine plus applicability predicates are eligible; drop Slim Planner service/store.",
+      "dependency_notes": "HOST_COUPLING: confirmation table currently lives in planner store and calls resolution_scope(connection) while holding math commit.",
+      "production_slices": [
+        "Opaque exact token confirmation issue/resolve/invalidate semantics and mathematical applicability subset predicate"
+      ],
+      "new_owners": [
+        "deeptutor/math_semantic/confirmation.py",
+        "deeptutor/math_semantic/ceiling.py",
+        "deeptutor/math_semantic/state.py",
+        "deeptutor/services/session/math_semantic_persistence.py"
+      ],
+      "oracle_coverage": [
+        "confirmation",
+        "authority",
+        "durable_boundary"
+      ],
+      "migration_mode": "pure state machine and ceiling predicate; host transaction owns commit",
+      "excluded_responsibility": "SlimTeachingPlannerService/Store, planner attempt/schema, selection, pedagogy and provider orchestration excluded",
+      "disposition": "approved mathematical slice only; old host implementation remains in frozen oracle",
+      "frozen_source_sha256": "b549b4f7d778e87aadd4f177996d79910dbceecbc526303ece5620b73fa22bb6",
+      "planning_source_sha256": "b549b4f7d778e87aadd4f177996d79910dbceecbc526303ece5620b73fa22bb6"
+    },
+    {
+      "path": "src/tutor_demo/tutor_runtime.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/tutor.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/__init__.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/app.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/run_demo.py",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/static/app.js",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/static/index.html",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "src/tutor_demo/web/static/styles.css",
+      "classification": "DELETE_AFTER_CUTOVER",
+      "current_owner": "tutor_demo active host implementation",
+      "future_owner": "DeepTutor existing runtime / session / interaction",
+      "reason": "Remove from the active product only after DT-POC PASS plus Phase D PASS and replacement evidence; freeze original source.",
+      "dependency_notes": "LEGACY / HOST_COUPLING: old orchestration and concrete SQL lifecycle must not survive as a second runtime.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "not migrated; original retained until separately authorized cutover",
+      "excluded_responsibility": "Entire old active host component excluded; no premature deletion in tutor_demo"
+    },
+    {
+      "path": "tests/",
+      "classification": "REGRESSION_ONLY",
+      "current_owner": "Frozen tutor_demo evaluation",
+      "future_owner": "Frozen tutor_demo regression oracle",
+      "reason": "Baseline-only regression module; tests, CA02/SECOND-SEED, parity corpus or historical documentation remain a frozen oracle, not active product runtime.",
+      "dependency_notes": "TEST_ONLY: classification refers to the pinned base tree, excludes this audit's newly added report/manifest.",
+      "production_slices": [],
+      "new_owners": [],
+      "oracle_coverage": [],
+      "migration_mode": "excluded from native runtime",
+      "disposition": "frozen oracle/evaluation only; no production copy or import",
+      "excluded_responsibility": "Entire asset excluded from production; only canonical semantic test inputs/expectations may be captured"
+    }
+  ],
+  "subtraction_accounting": {
+    "eligible_source_files": 21,
+    "nonproduction_manifest_rows": 86,
+    "legacy_abstractions_absent": [
+      "StudentResponse acceptance factory",
+      "SQLiteLearningStore",
+      "MathWorkspaceStore connection/transaction owner",
+      "ResponseAlignmentService provider/retry loop",
+      "AlignmentStore concrete SQL owner",
+      "MathReasoner provider execution loop",
+      "SlimTeachingPlannerService",
+      "SlimTeachingPlannerStore",
+      "ReviewedMathTask old class/Assessment joins",
+      "generic CandidateTeachingPlan/TeachingPolicyProposal",
+      "old MathClaim teaching/progression shell",
+      "demo application/session/provider/web shell",
+      "PR #2 external engine/config/binding adapter"
+    ],
+    "existing_host_owners_reused": [
+      "TurnRuntimeContext accepted submission seam",
+      "TurnRuntimeManager and persisted user message rows",
+      "run_durable_turn_mutation",
+      "SQLiteSessionStore initialization/transaction/commit",
+      "MemoryCoordinator authority scope ordering"
+    ],
+    "duplicate_infrastructure_avoided": [
+      "acceptance lifecycle",
+      "session/turn manager",
+      "provider transport/retry loop",
+      "lease/coordinator",
+      "second database/connection owner",
+      "trajectory cache as canonical state",
+      "generic planner/tutor/delivery",
+      "Memory/Mastery",
+      "CA02 product seed"
+    ]
+  }
+}
