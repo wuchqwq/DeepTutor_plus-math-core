@@ -1,9 +1,9 @@
 """Optional math domain adapter for the audited host mutation port.
 
 No capability registers this in product routing. Trusted composition supplies
-reviewed episode/source and its accepted start row; the capability's port
-certifies the complete ordered prefix inside the protected transaction. The
-explicit-prefix port remains for extraction contract tests. SQL stays in this
+reviewed episode/source. The port recovers its durable start (or accepts an
+explicit start) and certifies the complete prefix in the protected transaction.
+The explicit-prefix port remains for extraction contract tests. SQL stays in this
 host owner. The mathematical value has no connection/commit dependency.
 """
 
@@ -40,8 +40,20 @@ class MathEpisodeBinding:
 
 
 def sqlite_episode_mutation(
-    runtime: TurnRuntimeContext, *, session_id: str, binding: MathEpisodeBinding
+    runtime: TurnRuntimeContext, *, session_id: str, binding: MathEpisodeBinding | ReviewedSource
 ) -> MathMutationAuthority:
+    """Certify an explicit binding, or recover history for reviewed source DI.
+
+    ReviewedSource carries no accepted row/history. Existing aggregates must
+    retain their certified start/basis; a new aggregate starts at this turn's
+    actual accepted row. A damaged existing aggregate is never reinitialized.
+    """
+    # Fresh composition needs only reviewed identity/content. The accepted
+    # start and history are recovered and certified under commit authority.
+    if isinstance(binding, ReviewedSource):
+        return sqlite_math_mutation(
+            runtime, session_id=session_id, source=binding, recover_episode=True
+        )
     if binding.session_id != session_id:
         raise ValueError("foreign host episode binding")
     return sqlite_math_mutation(
@@ -73,6 +85,7 @@ def sqlite_math_mutation(
     source: ReviewedSource,
     accepted_prefix: tuple[int, ...] | None = None,
     first_message_id: int | None = None,
+    recover_episode: bool = False,
 ) -> MathMutationAuthority:
     submission = accepted_submission(runtime, session_id=session_id)
     host_mutation = runtime.run_durable_turn_mutation
@@ -80,10 +93,12 @@ def sqlite_math_mutation(
         raise ValueError("mathematical mutation requires protected host commit authority")
     if type(submission.message_id) is not int:
         raise ValueError("SQLite mathematical persistence requires a native SQLite message ID")
-    if (accepted_prefix is None) == (first_message_id is None):
-        raise ValueError("exactly one accepted prefix or host episode start is required")
+    current_message_id = cast(int, submission.message_id)
+    if sum((accepted_prefix is not None, first_message_id is not None, recover_episode)) != 1:
+        raise ValueError("exactly one accepted prefix, episode start or recovery is required")
+    certified_episode = first_message_id is not None or recover_episode
     if first_message_id is not None and (
-        type(first_message_id) is not int or first_message_id > submission.message_id
+        type(first_message_id) is not int or first_message_id > current_message_id
     ):
         raise ValueError("episode start must be a prior or current accepted row")
     if accepted_prefix is not None and (
@@ -112,7 +127,7 @@ def sqlite_math_mutation(
         )
         if message_id == submission.message_id and value != submission:
             raise ValueError("accepted submission differs from the durable user row")
-        if first_message_id is not None:
+        if certified_episode:
             turns = sql("SELECT session_id FROM turns WHERE id = ?", (value.turn_id,))
             if len(turns) != 1 or turns[0][0] != session_id:
                 raise ValueError("accepted row has no matching host turn")
@@ -120,21 +135,32 @@ def sqlite_math_mutation(
 
     async def run(mutation: Callable[[MathMutation], Result]) -> Result:
         def commit(sql: TurnMutationSQL) -> Result:
+            records = sql(
+                "SELECT session_id, math_revision, payload_json FROM math_semantic_episodes WHERE episode_id = ?",
+                (source.identity.episode_id,),
+            )
+            if records and records[0][0] != session_id:
+                raise ValueError("mathematical episode belongs to a foreign host session")
+            start = first_message_id
+            if recover_episode:
+                recovered_start = (
+                    json.loads(records[0][2]).get("host_episode_first_message_id")
+                    if records
+                    else current_message_id
+                )
+                if type(recovered_start) is not int or recovered_start > current_message_id:
+                    raise ValueError("durable episode start is missing or invalid")
+                start = cast(int, recovered_start)
             ids = accepted_prefix
-            if first_message_id is not None:
+            if start is not None:
                 ids = tuple(
                     row[0]
                     for row in sql(
                         "SELECT id FROM messages WHERE session_id = ? AND role = 'user' AND id >= ? AND id <= ? ORDER BY id",
-                        (session_id, first_message_id, submission.message_id),
+                        (session_id, start, submission.message_id),
                     )
                 )
-                if (
-                    not ids
-                    or ids[0] != first_message_id
-                    or ids[-1] != submission.message_id
-                    or len(ids) > 32
-                ):
+                if not ids or ids[0] != start or ids[-1] != submission.message_id or len(ids) > 32:
                     raise ValueError("complete bounded host episode prefix is missing")
                 # Existing aggregates certify ownership of earlier intervals;
                 # no second response ledger or client-supplied assignment.
@@ -148,36 +174,32 @@ def sqlite_math_mutation(
                         other_id != source.identity.episode_id
                         and other_start is not None
                         and (
-                            other_start >= first_message_id
+                            other_start >= start
                             or set(ids) & set(other.get("host_accepted_message_ids", ()))
                         )
                     ):
                         raise ValueError("host episode interval was superseded")
             assert ids is not None
             prefix = tuple(read_submission(sql, message_id) for message_id in ids)
-            if first_message_id is not None and len({item.turn_id for item in prefix}) != len(
-                prefix
-            ):
+            if certified_episode and len({item.turn_id for item in prefix}) != len(prefix):
                 raise ValueError("accepted prefix repeats a host turn")
-            records = sql(
-                "SELECT session_id, math_revision, payload_json FROM math_semantic_episodes WHERE episode_id = ?",
-                (source.identity.episode_id,),
-            )
-            if records and records[0][0] != session_id:
-                raise ValueError("mathematical episode belongs to a foreign host session")
-            if first_message_id is not None and records:
+            if certified_episode and records:
                 old = json.loads(records[0][2])
                 old_ids = tuple(old.get("host_accepted_message_ids", ()))
                 if (
-                    old.get("host_episode_first_message_id") != first_message_id
+                    old.get("host_episode_first_message_id") != start
+                    or not old_ids
+                    or any(type(item) is not int for item in old_ids)
                     or ids[: len(old_ids)] != old_ids
                 ):
                     raise ValueError("host episode binding or accepted basis changed")
             state = MathMutation(source, submission, prefix, records[0][2] if records else None)
+            if records and state.snapshot().workspace.revision != records[0][1]:
+                raise ValueError("durable mathematical revision differs from the canonical head")
             result = mutation(state)
             payload = json.loads(state.serialize())
-            if first_message_id is not None:
-                payload["host_episode_first_message_id"] = first_message_id
+            if start is not None:
+                payload["host_episode_first_message_id"] = start
                 payload["host_accepted_message_ids"] = ids
             serialized = json.dumps(
                 payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")

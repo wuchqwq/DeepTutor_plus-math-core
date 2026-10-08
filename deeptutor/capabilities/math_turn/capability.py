@@ -25,7 +25,7 @@ from deeptutor.math_semantic.proposals import (
     AlignmentProposal,
     ResponseAlignmentProvider,
 )
-from deeptutor.math_semantic.state import MathMutation, confirm_method
+from deeptutor.math_semantic.state import MathMutation, ReviewedSource, confirm_method
 from deeptutor.math_semantic.support import resolve_math_content_support
 from deeptutor.math_semantic.trajectory_types import TrajectoryProjection
 from deeptutor.services.session.math_semantic_persistence import (
@@ -46,7 +46,7 @@ class MathTurnCapability(TurnCapability):
     def __init__(
         self,
         *,
-        resolve_episode: Callable[[AcceptedSubmission], MathEpisodeBinding],
+        resolve_episode: Callable[[AcceptedSubmission], MathEpisodeBinding | ReviewedSource],
         provider: ResponseAlignmentProvider,
     ) -> None:
         self._resolve_episode = resolve_episode
@@ -58,6 +58,7 @@ class MathTurnCapability(TurnCapability):
         if context.runtime.run_durable_turn_mutation is None:
             raise ValueError("mathematical mutation requires protected host commit authority")
         binding = self._resolve_episode(submission)
+        source = binding if isinstance(binding, ReviewedSource) else binding.source
         authority = sqlite_episode_mutation(
             context.runtime,
             session_id=context.session_id,
@@ -95,7 +96,7 @@ class MathTurnCapability(TurnCapability):
                 raise ValueError("method confirmation requires the host reply port")
             labels = {
                 path.path_id: path.method.replace("_", " ").capitalize()
-                for path in binding.source.authored.paths
+                for path in source.authored.paths
             }
             if any(path not in labels for _, path in issued.option_paths):
                 raise ValueError("confirmation path is not in the reviewed authored source")
@@ -177,7 +178,7 @@ class MathTurnCapability(TurnCapability):
             )
             state.authorize(selected, grants)
             return {
-                "episode_id": binding.source.identity.episode_id,
+                "episode_id": source.identity.episode_id,
                 "accepted_user_message_id": state.submission.message_id,
                 "alignment": json.loads(_payload(alignment)),
                 "trajectory": current.to_dict(),
