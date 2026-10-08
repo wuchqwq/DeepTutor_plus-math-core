@@ -193,6 +193,40 @@ describe("opaque option identity", () => {
 });
 
 describe("picking an option by its number", () => {
+  it("preserves a legacy selected label across reorder without creating an ID", async () => {
+    const legacy = question("legacy", "Choose a style", ["A", "B"]);
+    expect(
+      legacy.options.every((option) => option.option_id === undefined),
+    ).toBe(true);
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AskUserOptions data={card([legacy])} onSubmit={submit} />,
+    );
+    await user.click(screen.getByRole("button", { name: /B$/ }));
+    const reordered = {
+      ...legacy,
+      options: [legacy.options[1], legacy.options[0]],
+    };
+    rerender(<AskUserOptions data={card([reordered])} onSubmit={submit} />);
+    expect(screen.getByRole("button", { name: /B$/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: /A$/ })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(submit).toHaveBeenCalledWith({
+      text: "B",
+      answers: [{ questionId: "legacy", text: "B" }],
+    });
+    expect(submit.mock.calls[0][0].answers[0]).not.toHaveProperty(
+      "selected_option_id",
+    );
+  });
+
   it("selects the row carrying that number, and still waits for Submit", async () => {
     const submit = vi.fn();
     const user = userEvent.setup();

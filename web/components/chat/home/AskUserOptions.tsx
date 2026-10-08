@@ -983,12 +983,12 @@ AskUserOptions.displayName = "AskUserOptions";
 
 // ---------- interactive mode ----------
 
-// Older cards have no IDs. A position key keeps their display labels out of
-// selection state without pretending they supplied a backend identity.
-function optionKey(option: AskUserOption, index: number): string {
+// Legacy labels are UI-local keys; only a supplied option_id can be
+// submitted as structured choice identity.
+function optionKey(option: AskUserOption): string {
   return option.option_id !== undefined
     ? `id:${option.option_id}`
-    : `index:${index}`;
+    : `label:${option.label}`;
 }
 
 const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
@@ -1041,8 +1041,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
     for (const q of payload.questions) {
       const picked = (picks[q.id] ?? []).map(
         (key) =>
-          q.options.find((option, index) => optionKey(option, index) === key)
-            ?.label ?? "",
+          q.options.find((option) => optionKey(option) === key)?.label ?? "",
       );
       const custom = customSelected[q.id]
         ? (customText[q.id] ?? "").trim()
@@ -1076,7 +1075,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
       const list: AskUserAnswer[] = payload.questions.map((q) => {
         const text = (finalAnswers[q.id] ?? "").trim();
         const selected = q.options.find(
-          (option, index) => optionKey(option, index) === picks[q.id]?.[0],
+          (option) => optionKey(option) === picks[q.id]?.[0],
         );
         return {
           questionId: q.id,
@@ -1220,10 +1219,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
         return;
       }
       event.preventDefault();
-      pickOption(
-        activeQuestion,
-        optionKey(activeQuestion.options[picked - 1], picked - 1),
-      );
+      pickOption(activeQuestion, optionKey(activeQuestion.options[picked - 1]));
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -1457,7 +1453,7 @@ const QuestionBody = memo(function QuestionBody({
       {question.options.length > 0 ? (
         <div className="mt-1.5 flex flex-col">
           {question.options.map((option, idx) => {
-            const key = optionKey(option, idx);
+            const key = optionKey(option);
             const isPicked = question.multi_select
               ? pickedKeys.includes(key)
               : !customSelected && pickedKeys[0] === key;
