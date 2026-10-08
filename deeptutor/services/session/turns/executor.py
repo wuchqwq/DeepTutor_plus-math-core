@@ -920,6 +920,16 @@ class TurnExecutor:
                     model_history=getattr(history_result, "model_history", None),
                     previous_model_turn=getattr(history_result, "previous_model_turn", None),
                     turn_id=turn_id,
+                    accepted_user_message_id=new_user_message_id,
+                    accepted_user_content=(
+                        raw_user_content if new_user_message_id is not None else None
+                    ),
+                    client_submission_id=(
+                        payload.get("client_submission_id")
+                        if new_user_message_id is not None
+                        else None
+                    ),
+                    turn_lease=execution.lease,
                     wait_for_user_reply=_wait_for_user_reply,
                     subagent_consult_budget=payload.get("subagent_consult_budget"),
                     consult_partner_id=payload.get("consult_partner_id"),
