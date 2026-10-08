@@ -144,3 +144,31 @@ grep -n "install_progress_ports" deeptutor/api/main.py
 grep -n "websocket_progress\|tasks/{task_id}/stream" deeptutor/api/routers/knowledge.py
 grep -rn "EventType.CAPABILITY_COMPLETE" deeptutor --include="*.py"
 ```
+
+## 9. Capability 的 accepted submission 入口（DT-TRUSTED-TURN-SEAM-01）
+
+`TurnRuntimeManager` 的现有 executor 在成功 `store.add_message(role="user")`
+之后，把当前提交装配到 `UnifiedContext.runtime`。Capability 应从这里取得学生
+提交；`context.user_message` 仍是原有 capability 输入，可能含附加资料/context。
+
+| Runtime field | 来源 / 语义 |
+|---|---|
+| `accepted_user_message_id` | 本次真实 user-row 写入返回的 `int \| str` ID；不从 prompt、config 或文本推导 |
+| `accepted_user_content` | 写入该 row 的原始 content，保留空白；不使用拼接后的 prompt |
+| `client_submission_id` | 存在时与当前 accepted row metadata 对应的请求 causal ID；不代替 server message ID |
+| `turn_id` | 现有 host turn identity；regenerate 的新 turn 不意味着新 user row |
+| `turn_lease` | 现有不可变 `TurnLease` 的 context 装配时快照；session key 保留 coordinator 的 store scope 前缀 |
+
+branch/edit 新写入的 row 有自己的 accepted identity，旧 row 保持原样。
+`persist_user_message=False` 和标准 regenerate 不创建新 user row，因此前三个
+字段均为 `None`；不会按原文、client ID 或历史最近消息补造 identity。
+持久化失败时不会执行 capability；没有 coordinator 时 `turn_lease` 为 `None`。
+
+这些字段只在 private runtime context 暴露，不新增 wire schema 或 event metadata。
+lease 是 snapshot，不能据此认定它在后续 await/commit 时仍有效。本阶段仅证明
+真实 accepted submission 到 public capability seam，不证明数学 commit fencing、
+episode、Math Core、recovery、routing isolation 或 publication。
+
+定向回归：`tests/services/session/test_trusted_turn_seam.py` 使用真实 SQLite store、
+TurnRuntimeManager、TurnEngine/orchestrator 和已注册的 test TurnCapability；只隔离
+无关的标题生成/skill discovery，没有替换持久化或 context 装配。

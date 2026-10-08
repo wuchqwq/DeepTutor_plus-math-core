@@ -10,7 +10,10 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from deeptutor.runtime.coordination import TurnLease
 
 
 @dataclass
@@ -63,6 +66,16 @@ class TurnRuntimeContext:
     partner_discussion_group_id: str | None = None
     min_loop_rounds: int = 0
     workspace: WorkspaceRuntimeContext | None = None
+    # Only a user row persisted by this execution is a newly accepted
+    # submission. Regeneration/non-persisted input leaves all three unset.
+    # user_message may include context; accepted_user_content is exact raw text.
+    accepted_user_message_id: int | str | None = None
+    accepted_user_content: str | None = None
+    client_submission_id: str | None = None
+    # Existing immutable lease at context assembly, absent in uncoordinated
+    # execution. Its session_id is the coordinator's store-scoped key.
+    # This snapshot is not a live ownership check or commit fence.
+    turn_lease: TurnLease | None = None
 
 
 @dataclass
