@@ -696,6 +696,8 @@ Chat is the default capability and where most work begins. A single thread can t
 
 The loop is deliberately simple: the model thinks in rounds, calls tools when useful, observes the results, and finishes with a tool-free message. `ask_user` is special — instead of guessing, the agent can pause the turn, ask a structured clarifying question, and resume once you answer.
 
+Structured `ask_user` choices can carry an optional opaque `option_id`. The browser returns a single selected choice as `answers[].selected_option_id`, independently of its display label. Existing text-only choices and free-text replies remain supported.
+
 <div align="center">
 <img src="assets/figs/system/chat-agent-loop.png" alt="DeepTutor chat agent loop" width="900">
 </div>

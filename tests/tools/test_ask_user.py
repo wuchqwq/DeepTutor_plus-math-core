@@ -7,12 +7,15 @@ single-question shorthand which auto-wraps into a one-element list.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from deeptutor.tools.ask_user import (
     MAX_HEADER_CHARS,
     MAX_OPTION_CHARS,
     MAX_OPTION_DESC_CHARS,
+    MAX_OPTION_ID_CHARS,
     MAX_OPTIONS,
     MAX_QUESTION_CHARS,
     MAX_QUESTIONS,
@@ -573,3 +576,56 @@ def test_a_question_whose_every_option_was_cut_off_still_reads_as_free_text() ->
 
     assert err is None and payload is not None
     assert _labels(payload.questions[0]) == ()
+
+
+def test_option_identity_survives_display_normalization_and_preview() -> None:
+    questions = [
+        {
+            "prompt": "Choose a style",
+            "options": [
+                {"option_id": " opaque/α:1 ", "label": "Same", "description": "Same body"},
+                {"option_id": "opaque:2", "label": "Same", "description": "Same body"},
+                {"option_id": "opaque:3", "label": "Other"},
+            ],
+        }
+    ]
+    payload, error = build_ask_user_payload(questions=questions)
+    assert error is None and payload is not None
+    assert [o.option_id for o in payload.questions[0].options] == [
+        " opaque/α:1 ",
+        "opaque:2",
+        "opaque:3",
+    ]
+    assert build_ask_user_preview(json.dumps({"questions": questions})) == payload.to_dict()
+    renamed = [
+        {
+            **questions[0],
+            "options": [
+                {"option_id": "opaque:2", "label": "Renamed"},
+                {"option_id": " opaque/α:1 ", "label": "Changed"},
+            ],
+        }
+    ]
+    rebuilt, error = build_ask_user_payload(questions=renamed)
+    assert error is None and rebuilt is not None
+    assert [o.option_id for o in rebuilt.questions[0].options] == ["opaque:2", " opaque/α:1 "]
+
+
+@pytest.mark.parametrize("option_id", ["", "   ", 7, "x" * (MAX_OPTION_ID_CHARS + 1)])
+def test_invalid_option_identity_is_rejected(option_id) -> None:
+    payload, error = build_ask_user_payload(
+        question="Choose",
+        options=[{"label": "One", "option_id": option_id}],
+    )
+    assert payload is None and "option_id" in error
+
+
+def test_duplicate_option_identity_is_rejected_with_different_labels() -> None:
+    payload, error = build_ask_user_payload(
+        question="Choose",
+        options=[
+            {"label": "One", "option_id": "opaque"},
+            {"label": "Two", "option_id": "opaque"},
+        ],
+    )
+    assert payload is None and "duplicate `option_id`" in error

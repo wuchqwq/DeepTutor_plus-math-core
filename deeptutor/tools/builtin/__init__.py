@@ -1560,6 +1560,16 @@ class AskUserTool(_PromptHintsMixin, BaseTool):
                                 "items": {
                                     "type": "object",
                                     "properties": {
+                                        "option_id": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 128,
+                                            "pattern": r"\S",
+                                            "description": (
+                                                "Optional opaque choice identity, unique within "
+                                                "the question. Independent of display text."
+                                            ),
+                                        },
                                         "label": {
                                             "type": "string",
                                             "description": ("Concise display text (1-5 words)."),

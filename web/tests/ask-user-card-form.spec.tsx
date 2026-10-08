@@ -2,7 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { AskUserOptions } from "@/components/chat/home/AskUserOptions";
+import {
+  AskUserOptions,
+  extractAskUserPayload,
+  extractMessageSegments,
+} from "@/components/chat/home/AskUserOptions";
+import { buildSubmitUserReply } from "@/contracts/parse/turn-command";
+import type { StreamEvent } from "@/features/chat/model/protocol";
 import type {
   AskUserCardData,
   AskUserQuestion,
@@ -42,7 +48,185 @@ const pace = question("pace", "How fast should we go?", [
   "Deep dive",
 ]);
 
+describe("opaque option identity", () => {
+  const identified = question("style", "Choose a style", [], {
+    options: [
+      { option_id: " opaque/α:1 ", label: "Same", description: "First" },
+      { option_id: "opaque:2", label: "Same", description: "Second" },
+    ],
+  });
+
+  it("keeps identity through event extraction, click and submit_user_reply", async () => {
+    const event: StreamEvent = {
+      type: "tool_result",
+      timestamp: 1,
+      source: "chat",
+      stage: "responding",
+      content: "",
+      session_id: "session-1",
+      metadata: { tool_metadata: { ask_user: card([identified]).payload } },
+    };
+    const data = extractAskUserPayload([event])!;
+    const send = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AskUserOptions
+        data={data}
+        onSubmit={(reply) => {
+          send(
+            JSON.parse(
+              JSON.stringify(
+                buildSubmitUserReply({ turnId: "turn-1", ...reply }),
+              ),
+            ),
+          );
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Same\s*First/ }));
+    expect(
+      screen.getByRole("button", { name: /Same\s*Second/ }),
+    ).toHaveAttribute("aria-pressed", "false");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(send.mock.calls[0][0]).toMatchObject({
+      type: "submit_user_reply",
+      turn_id: "turn-1",
+      text: "Same",
+      answers: [
+        {
+          questionId: "style",
+          text: "Same",
+          selected_option_id: " opaque/α:1 ",
+        },
+      ],
+    });
+    const resolved: StreamEvent = {
+      ...event,
+      type: "progress",
+      metadata: {
+        ask_user_resolved: true,
+        answers: send.mock.calls[0][0].answers,
+      },
+    };
+    expect(
+      extractAskUserPayload([event, resolved])?.answers?.[0].selected_option_id,
+    ).toBe(" opaque/α:1 ");
+    const segment = extractMessageSegments([event, resolved]).find(
+      (s) => s.kind === "ask_user",
+    );
+    expect(
+      segment?.kind === "ask_user" &&
+        segment.data.answers?.[0].selected_option_id,
+    ).toBe(" opaque/α:1 ");
+  });
+
+  it("retains the pick when labels change and identified options reorder", async () => {
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AskUserOptions data={card([identified])} onSubmit={submit} />,
+    );
+    await user.keyboard("2");
+    const renamed = {
+      ...identified,
+      options: [
+        { ...identified.options[1], label: "Renamed" },
+        { ...identified.options[0], label: "Changed" },
+      ],
+    };
+    rerender(<AskUserOptions data={card([renamed])} onSubmit={submit} />);
+    expect(screen.getByRole("button", { name: /Renamed/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(submit).toHaveBeenCalledWith({
+      text: "Renamed",
+      answers: [
+        {
+          questionId: "style",
+          text: "Renamed",
+          selected_option_id: "opaque:2",
+        },
+      ],
+    });
+  });
+
+  it.each(["free text", "skip"])(
+    "does not assign a choice identity to %s",
+    async (mode) => {
+      const submit = vi.fn();
+      const user = userEvent.setup();
+      render(<AskUserOptions data={card([identified])} onSubmit={submit} />);
+      await user.keyboard("1");
+      if (mode === "free text") {
+        await user.click(
+          screen.getByRole("button", { name: /Something else/ }),
+        );
+        await user.type(screen.getByRole("textbox"), "Same");
+        await user.click(screen.getByRole("button", { name: "Submit" }));
+      } else {
+        await user.click(screen.getByRole("button", { name: "Skip" }));
+      }
+      expect(submit.mock.calls[0][0].answers).toEqual([
+        { questionId: "style", text: mode === "free text" ? "Same" : "" },
+      ]);
+    },
+  );
+
+  it("preserves multi-select text replies without claiming a single identity", async () => {
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AskUserOptions
+        data={card([{ ...identified, multi_select: true }])}
+        onSubmit={submit}
+      />,
+    );
+    await user.keyboard("12");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(submit).toHaveBeenCalledWith({
+      text: "Same, Same",
+      answers: [{ questionId: "style", text: "Same, Same" }],
+    });
+  });
+});
+
 describe("picking an option by its number", () => {
+  it("preserves a legacy selected label across reorder without creating an ID", async () => {
+    const legacy = question("legacy", "Choose a style", ["A", "B"]);
+    expect(
+      legacy.options.every((option) => option.option_id === undefined),
+    ).toBe(true);
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AskUserOptions data={card([legacy])} onSubmit={submit} />,
+    );
+    await user.click(screen.getByRole("button", { name: /B$/ }));
+    const reordered = {
+      ...legacy,
+      options: [legacy.options[1], legacy.options[0]],
+    };
+    rerender(<AskUserOptions data={card([reordered])} onSubmit={submit} />);
+    expect(screen.getByRole("button", { name: /B$/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: /A$/ })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(submit).toHaveBeenCalledWith({
+      text: "B",
+      answers: [{ questionId: "legacy", text: "B" }],
+    });
+    expect(submit.mock.calls[0][0].answers[0]).not.toHaveProperty(
+      "selected_option_id",
+    );
+  });
+
   it("selects the row carrying that number, and still waits for Submit", async () => {
     const submit = vi.fn();
     const user = userEvent.setup();

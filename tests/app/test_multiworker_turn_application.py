@@ -101,9 +101,23 @@ async def test_remote_worker_subscribes_and_cancels_owner_turn(monkeypatch, tmp_
     await runtime_b.close()
 
 
+@pytest.mark.parametrize(
+    "answers",
+    [
+        None,
+        [
+            {
+                "questionId": "q1",
+                "text": "yes",
+                "selected_option_id": " opaque/α:1 ",
+            }
+        ],
+    ],
+)
 @pytest.mark.asyncio
-async def test_remote_worker_reply_reaches_owner_waiter(monkeypatch, tmp_path) -> None:
+async def test_remote_worker_reply_reaches_owner_waiter(monkeypatch, tmp_path, answers) -> None:
     waiting = asyncio.Event()
+    replies: list[dict] = []
 
     class Engine:
         async def execute(self, context):
@@ -114,6 +128,7 @@ async def test_remote_worker_reply_reaches_owner_waiter(monkeypatch, tmp_path) -
             )
             waiting.set()
             reply = await context.runtime.wait_for_user_reply()
+            replies.append(reply)
             yield StreamEvent(
                 type=StreamEventType.CONTENT,
                 source="chat",
@@ -164,10 +179,19 @@ async def test_remote_worker_reply_reaches_owner_waiter(monkeypatch, tmp_path) -
             break
         await asyncio.sleep(0.01)
     assert any(event["type"] == "wait_for_input" for event in received)
-    assert await app_b.submit_user_reply(turn["id"], "yes", command_id="reply-from-b") is True
+    assert (
+        await app_b.submit_user_reply(
+            turn["id"],
+            "yes",
+            answers=answers,
+            command_id="reply-from-b",
+        )
+        is True
+    )
     await asyncio.wait_for(subscriber, timeout=3)
 
     assert any(event.get("content") == "reply:yes" for event in received)
+    assert replies == [{"text": "yes", "answers": answers}]
     # DONE is not the last frame of a completed turn: the runtime publishes
     # post-turn metadata (the LLM-written session title) after it, and a
     # subscriber has to receive that too — dropping it is what left finished

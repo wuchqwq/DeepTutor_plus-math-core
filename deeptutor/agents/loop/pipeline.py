@@ -135,7 +135,11 @@ def _normalise_user_reply(raw: Any) -> tuple[str, list[dict[str, str]] | None]:
                     continue
                 qid = str(entry.get("questionId") or entry.get("id") or "").strip()
                 if qid:
-                    answers.append({"questionId": qid, "text": str(entry.get("text") or "")})
+                    answer = {"questionId": qid, "text": str(entry.get("text") or "")}
+                    option_id = entry.get("selected_option_id")
+                    if isinstance(option_id, str) and option_id:
+                        answer["selected_option_id"] = option_id
+                    answers.append(answer)
             return text, answers or None
         return text, None
     return str(raw or ""), None
