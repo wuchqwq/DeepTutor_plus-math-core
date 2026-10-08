@@ -44,7 +44,7 @@ existing generic fence from being used as that proof.
 
 ## Focused probe results
 
-[Tests](../../tests/services/session/test_commit_fence_probe.py) intentionally
+[Probe](../../evaluation/commit_fence_probe/test_commit_fence_probe.py) intentionally
 assert observed counterexamples, so a green probe suite means the gap was
 reproduced. No ownership validator or guard is replaced with a fake success.
 MemoryCoordinator uses a controlled clock and its real lease operations.
@@ -105,9 +105,10 @@ basis of this test suite passing.
 
 ## Validation and reproduction
 
-On Windows / Python 3.13, the focused probe completed with **25 passed**.
-The related regression command below completed with **171 passed, 1 failed,
-2 warnings**. Its sole failure, the existing
+On Windows / Python 3.13, the explicitly invoked relocated probe completed with
+**25 passed**, retaining the original file unchanged (100% Git rename).
+The original related regression run, before relocation, included the probe and
+completed with **171 passed, 1 failed, 2 warnings**. Its sole failure, the existing
 `test_sqlite_store_migrates_legacy_chat_history_db` assertion that the old file
 was removed, also failed alone in a fresh process with an isolated home.
 That test and all product sources are unchanged from the pinned baseline;
@@ -115,9 +116,15 @@ the new probe module was not collected in the independent failure reproduction.
 This PR does not fix that unrelated migration failure or report the regression
 suite as fully passing. Ruff lint and format checks pass on the added test file.
 
+The 25 cases live under `evaluation/commit_fence_probe/`, outside the default
+`testpaths` (`tests`, `deeptutor/learning/tests`) and the ordinary CI regression
+roots. They retain their counterexample assertions and are opt-in evidence.
+The explicit probe command loads the existing test fixtures as a pytest plugin;
+it does not change default regression discovery.
+
 ```bash
-python -m pytest tests/services/session/test_commit_fence_probe.py -q
-python -m pytest tests/services/session/test_commit_fence_probe.py tests/services/session/test_sqlite_store.py tests/services/session/test_pocketbase_store_fallbacks.py tests/runtime/coordination/test_memory_coordinator.py tests/services/session/test_trusted_turn_seam.py tests/services/session/test_turn_runtime.py -q
+python -m pytest -p tests.conftest evaluation/commit_fence_probe/test_commit_fence_probe.py -q
+python -m pytest tests/services/session/test_sqlite_store.py tests/services/session/test_pocketbase_store_fallbacks.py tests/runtime/coordination/test_memory_coordinator.py tests/services/session/test_trusted_turn_seam.py tests/services/session/test_turn_runtime.py -q
 python -m pytest tests/services/session/test_sqlite_store.py::test_sqlite_store_migrates_legacy_chat_history_db -q
 ```
 
