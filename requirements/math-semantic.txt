@@ -1,0 +1,3 @@
+# Mirrors pyproject.toml's optional math-semantic extra.
+# Core imports without the verifier; semantic equivalence requires it.
+sympy>=1.14.0,<2

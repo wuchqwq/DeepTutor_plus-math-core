@@ -364,6 +364,15 @@ class SQLiteSessionStore:
                 CREATE INDEX IF NOT EXISTS idx_turn_events_turn_seq
                     ON turn_events(turn_id, seq);
 
+                -- Core-owned mathematical records share the existing database
+                -- and protected turn transaction; no second acceptance store.
+                CREATE TABLE IF NOT EXISTS math_semantic_episodes (
+                    episode_id TEXT PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    math_revision INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS notebook_entries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id TEXT REFERENCES sessions(id) ON DELETE SET NULL,
