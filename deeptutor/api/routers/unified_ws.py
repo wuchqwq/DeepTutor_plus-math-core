@@ -36,7 +36,11 @@ def _clean_answers(value: Any) -> list[dict[str, Any]] | None:
             continue
         question_id = str(entry.get("questionId") or entry.get("id") or "").strip()
         if question_id:
-            cleaned.append({"questionId": question_id, "text": str(entry.get("text") or "")})
+            answer = {"questionId": question_id, "text": str(entry.get("text") or "")}
+            option_id = entry.get("selected_option_id")
+            if isinstance(option_id, str) and option_id:
+                answer["selected_option_id"] = option_id
+            cleaned.append(answer)
     return cleaned or None
 
 

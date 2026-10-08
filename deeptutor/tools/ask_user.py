@@ -11,9 +11,11 @@ The schema is intentionally a list-of-questions even for the common
 single-question case — every call wraps a list so the frontend has one
 code path. Each option is a ``{label, description}`` pair (mirroring
 Claude Code's ``AskUserQuestion``): the label is the short clickable
-choice, the description explains what picking it means. Plain-string
-options are still accepted at the LLM-facing boundary and normalised to
-``{label, description: None}``. The legacy ``{question, options}``
+choice, the description explains what picking it means.
+An optional opaque ``option_id`` identifies a choice independently of its
+display copy and is returned as ``selected_option_id`` for a single choice.
+Plain-string options are still accepted at the LLM-facing boundary and
+normalised to ``{label, description: None}``. The legacy ``{question, options}``
 argument shape is likewise accepted (``build_ask_user_payload``) and
 normalised to a single-element list internally.
 """
@@ -30,6 +32,7 @@ from deeptutor.utils.text_display import decode_escaped_unicode_for_display
 MAX_QUESTIONS = 4
 MAX_OPTIONS = 8
 MAX_OPTION_CHARS = 120  # option label
+MAX_OPTION_ID_CHARS = 128
 MAX_OPTION_DESC_CHARS = 200
 MAX_HEADER_CHARS = 16
 MAX_QUESTION_CHARS = 800
@@ -48,9 +51,13 @@ class AskUserOption:
 
     label: str
     description: str | None = None
+    option_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"label": self.label, "description": self.description}
+        result = {"label": self.label, "description": self.description}
+        if self.option_id is not None:
+            result["option_id"] = self.option_id
+        return result
 
 
 @dataclass(frozen=True)
@@ -266,9 +273,22 @@ def _build_question(raw: Any, idx: int, used_ids: set[str]) -> AskUserQuestion |
         cleaned: list[AskUserOption] = []
         seen_labels: set[str] = set()
         seen_bodies: set[str] = set()
+        seen_option_ids: set[str] = set()
         for opt in options_raw:
             normalised = _build_option(opt)
+            if isinstance(normalised, str):
+                return f"Question #{idx + 1}: {normalised}"
             if normalised is None:
+                continue
+            # Explicit identity is opaque: display copy must never merge or
+            # remove two identified choices, even when their labels match.
+            if normalised.option_id is not None:
+                if normalised.option_id in seen_option_ids:
+                    return f"Question #{idx + 1}: duplicate `option_id`."
+                seen_option_ids.add(normalised.option_id)
+                cleaned.append(normalised)
+                if len(cleaned) >= MAX_OPTIONS:
+                    break
                 continue
             # The card auto-renders an "Other" free-text row; drop a
             # model-supplied duplicate so the user never sees two.
@@ -339,8 +359,15 @@ def _build_question(raw: Any, idx: int, used_ids: set[str]) -> AskUserQuestion |
     )
 
 
-def _build_option(raw: Any) -> AskUserOption | None:
+def _build_option(raw: Any) -> AskUserOption | None | str:
     """Normalise one option: ``{label, description?}`` dict or plain string."""
+    option_id = raw.get("option_id") if isinstance(raw, dict) else None
+    if option_id is not None and (
+        not isinstance(option_id, str)
+        or not option_id.strip()
+        or len(option_id) > MAX_OPTION_ID_CHARS
+    ):
+        return f"`option_id` must be a non-blank string of at most {MAX_OPTION_ID_CHARS} chars."
     if isinstance(raw, dict):
         label = _coerce_string(raw.get("label")).strip()
         description = _coerce_string(raw.get("description")).strip() or None
@@ -353,7 +380,7 @@ def _build_option(raw: Any) -> AskUserOption | None:
         label = label[:MAX_OPTION_CHARS].rstrip() + "…"
     if description and len(description) > MAX_OPTION_DESC_CHARS:
         description = description[:MAX_OPTION_DESC_CHARS].rstrip() + "…"
-    return AskUserOption(label=label, description=description)
+    return AskUserOption(label=label, description=description, option_id=option_id)
 
 
 def _coerce_string(value: Any) -> str:
@@ -373,6 +400,7 @@ __all__ = [
     "MAX_HEADER_CHARS",
     "MAX_INTRO_CHARS",
     "MAX_OPTION_CHARS",
+    "MAX_OPTION_ID_CHARS",
     "MAX_OPTION_DESC_CHARS",
     "MAX_OPTIONS",
     "MAX_PLACEHOLDER_CHARS",

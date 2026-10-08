@@ -5,6 +5,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import InlineMarkdown from "@/components/common/InlineMarkdown";
+import type { UserAnswer } from "@/contracts/generated/turn-protocol";
 import { useCardSubmission } from "@/hooks/use-card-submission";
 import { REPLY_NOT_DELIVERED } from "@/lib/ask-user-state";
 import { decodeEscapedUnicodeForDisplay } from "@/lib/markdown-display";
@@ -34,6 +35,7 @@ import type { StreamEvent } from "@/features/chat/model/protocol";
 export interface AskUserOption {
   label: string;
   description: string | null;
+  option_id?: string;
 }
 
 export interface AskUserQuestion {
@@ -51,8 +53,7 @@ export interface AskUserPayload {
   questions: AskUserQuestion[];
 }
 
-export interface AskUserAnswer {
-  questionId: string;
+export interface AskUserAnswer extends UserAnswer {
   /** Empty string = skipped / no answer. */
   text: string;
 }
@@ -197,12 +198,18 @@ export function extractAskUserPayload(
             ? meta.ask_user_tool_call_id
             : null,
         answers: answersRaw
-          .map((entry) => {
+          .map((entry): AskUserAnswer | null => {
             if (!entry || typeof entry !== "object") return null;
             const obj = entry as Record<string, unknown>;
             const qid = String(obj.questionId || obj.id || "").trim();
             if (!qid) return null;
-            return { questionId: qid, text: String(obj.text || "") };
+            return {
+              questionId: qid,
+              text: String(obj.text || ""),
+              ...(typeof obj.selected_option_id === "string"
+                ? { selected_option_id: obj.selected_option_id }
+                : {}),
+            };
           })
           .filter((a): a is AskUserAnswer => a !== null),
         text:
@@ -600,12 +607,18 @@ export function extractMessageSegments(
         ? (meta.answers as unknown[])
         : [];
       const answers: AskUserAnswer[] = answersRaw
-        .map((entry) => {
+        .map((entry): AskUserAnswer | null => {
           if (!entry || typeof entry !== "object") return null;
           const obj = entry as Record<string, unknown>;
           const qid = String(obj.questionId || obj.id || "").trim();
           if (!qid) return null;
-          return { questionId: qid, text: String(obj.text || "") };
+          return {
+            questionId: qid,
+            text: String(obj.text || ""),
+            ...(typeof obj.selected_option_id === "string"
+              ? { selected_option_id: obj.selected_option_id }
+              : {}),
+          };
         })
         .filter((a): a is AskUserAnswer => a !== null);
       const replyText =
@@ -829,7 +842,13 @@ function normaliseOption(raw: unknown): AskUserOption | null {
       typeof o.description === "string" && o.description.trim()
         ? displayText(o.description.trim())
         : null;
-    return { label, description };
+    return {
+      label,
+      description,
+      ...(typeof o.option_id === "string" && o.option_id
+        ? { option_id: o.option_id }
+        : {}),
+    };
   }
   const label = displayText(String(raw ?? "").trim());
   return label ? { label, description: null } : null;
@@ -931,7 +950,7 @@ export const AskUserOptions = memo(function AskUserOptions({
    */
   onSubmit: (payload: {
     text?: string;
-    answers?: Array<{ questionId: string; text: string }>;
+    answers?: AskUserAnswer[];
   }) => void | boolean | Promise<void | boolean>;
   /** When true, the resolved Q&A card renders with an inline toggle so
    * the user can hide / show the question + answer summary. Off by default:
@@ -964,6 +983,14 @@ AskUserOptions.displayName = "AskUserOptions";
 
 // ---------- interactive mode ----------
 
+// Older cards have no IDs. A position key keeps their display labels out of
+// selection state without pretending they supplied a backend identity.
+function optionKey(option: AskUserOption, index: number): string {
+  return option.option_id !== undefined
+    ? `id:${option.option_id}`
+    : `index:${index}`;
+}
+
 const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
   payload,
   onSubmit,
@@ -972,7 +999,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
   payload: AskUserPayload;
   onSubmit: (payload: {
     text?: string;
-    answers?: Array<{ questionId: string; text: string }>;
+    answers?: AskUserAnswer[];
   }) => void | boolean | Promise<void | boolean>;
   /** The model is still writing this card; see ``AskUserCardData``. */
   streaming?: boolean;
@@ -980,8 +1007,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
   const { t } = useTranslation();
   const totalQuestions = payload.questions.length;
 
-  // Picked option labels per question. Single-select questions hold at
-  // most one entry; multi-select questions accumulate toggled labels.
+  // Picked identity keys per question; labels are only used for display text.
   const [picks, setPicks] = useState<Record<string, string[]>>({});
   // Sticky free-text draft per question. Preserved across option picks
   // and tab switches so the user never loses what they typed.
@@ -1013,7 +1039,11 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
   const answers = useMemo(() => {
     const out: Record<string, string> = {};
     for (const q of payload.questions) {
-      const picked = picks[q.id] ?? [];
+      const picked = (picks[q.id] ?? []).map(
+        (key) =>
+          q.options.find((option, index) => optionKey(option, index) === key)
+            ?.label ?? "",
+      );
       const custom = customSelected[q.id]
         ? (customText[q.id] ?? "").trim()
         : "";
@@ -1043,11 +1073,22 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
    */
   const submitAnswers = useCallback(
     (finalAnswers: Record<string, string>) => {
-      const list: Array<{ questionId: string; text: string }> =
-        payload.questions.map((q) => ({
+      const list: AskUserAnswer[] = payload.questions.map((q) => {
+        const text = (finalAnswers[q.id] ?? "").trim();
+        const selected = q.options.find(
+          (option, index) => optionKey(option, index) === picks[q.id]?.[0],
+        );
+        return {
           questionId: q.id,
-          text: (finalAnswers[q.id] ?? "").trim(),
-        }));
+          text,
+          ...(!q.multi_select &&
+          !customSelected[q.id] &&
+          text &&
+          selected?.option_id
+            ? { selected_option_id: selected.option_id }
+            : {}),
+        };
+      });
       // Always include a flat ``text`` synopsis for back-compat with any
       // older server path that only looks at ``text``.
       const flat = list
@@ -1056,7 +1097,7 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
         .join(" | ");
       void submit({ text: flat, answers: list });
     },
-    [payload.questions, submit],
+    [payload.questions, picks, customSelected, submit],
   );
 
   const handleSubmit = useCallback(() => {
@@ -1065,20 +1106,20 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
   }, [locked, answers, submitAnswers]);
 
   const pickOption = useCallback(
-    (question: AskUserQuestion, label: string) => {
+    (question: AskUserQuestion, key: string) => {
       const qid = question.id;
       if (question.multi_select) {
         // Toggle — no auto-advance; the user may pick several.
         setPicks((prev) => {
           const cur = prev[qid] ?? [];
-          const next = cur.includes(label)
-            ? cur.filter((l) => l !== label)
-            : [...cur, label];
+          const next = cur.includes(key)
+            ? cur.filter((value) => value !== key)
+            : [...cur, key];
           return { ...prev, [qid]: next };
         });
         return;
       }
-      setPicks((prev) => ({ ...prev, [qid]: [label] }));
+      setPicks((prev) => ({ ...prev, [qid]: [key] }));
       setCustomSelected((prev) => ({ ...prev, [qid]: false }));
       // Single-select pick answers this question — hop to the next
       // unanswered one so the flow needs no extra "Next" click
@@ -1179,7 +1220,10 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
         return;
       }
       event.preventDefault();
-      pickOption(activeQuestion, activeQuestion.options[picked - 1].label);
+      pickOption(
+        activeQuestion,
+        optionKey(activeQuestion.options[picked - 1], picked - 1),
+      );
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -1263,14 +1307,14 @@ const InteractiveAskUserCard = memo(function InteractiveAskUserCard({
         <QuestionBody
           key={activeQuestion.id}
           question={activeQuestion}
-          pickedLabels={picks[activeQuestion.id] ?? []}
+          pickedKeys={picks[activeQuestion.id] ?? []}
           customDraft={customText[activeQuestion.id] ?? ""}
           customSelected={!!customSelected[activeQuestion.id]}
           locked={locked}
           spaced={
             Boolean(payload.intro) || status !== null || totalQuestions > 1
           }
-          onPickOption={(label) => pickOption(activeQuestion, label)}
+          onPickOption={(key) => pickOption(activeQuestion, key)}
           onSelectCustom={() => selectCustom(activeQuestion)}
           onCustomTextChange={(text) =>
             updateCustomText(activeQuestion.id, text)
@@ -1365,7 +1409,7 @@ InteractiveAskUserCard.displayName = "InteractiveAskUserCard";
  */
 const QuestionBody = memo(function QuestionBody({
   question,
-  pickedLabels,
+  pickedKeys,
   customDraft,
   customSelected,
   locked,
@@ -1375,13 +1419,13 @@ const QuestionBody = memo(function QuestionBody({
   onCustomTextChange,
 }: {
   question: AskUserQuestion;
-  pickedLabels: string[];
+  pickedKeys: string[];
   customDraft: string;
   customSelected: boolean;
   locked: boolean;
   /** Something is rendered above (intro, status, tabs) and needs clearing. */
   spaced: boolean;
-  onPickOption: (label: string) => void;
+  onPickOption: (key: string) => void;
   onSelectCustom: () => void;
   onCustomTextChange: (text: string) => void;
 }) {
@@ -1413,14 +1457,15 @@ const QuestionBody = memo(function QuestionBody({
       {question.options.length > 0 ? (
         <div className="mt-1.5 flex flex-col">
           {question.options.map((option, idx) => {
+            const key = optionKey(option, idx);
             const isPicked = question.multi_select
-              ? pickedLabels.includes(option.label)
-              : !customSelected && pickedLabels[0] === option.label;
+              ? pickedKeys.includes(key)
+              : !customSelected && pickedKeys[0] === key;
             return (
               <button
-                key={`${idx}-${option.label}`}
+                key={key}
                 type="button"
-                onClick={() => !locked && onPickOption(option.label)}
+                onClick={() => !locked && onPickOption(key)}
                 disabled={locked}
                 aria-pressed={isPicked}
                 className={

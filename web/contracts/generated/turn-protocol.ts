@@ -115,6 +115,7 @@ export type SessionId3 = string;
 export type Type7 = "regenerate";
 export type Answers = UserAnswer[] | null;
 export type Questionid = string;
+export type SelectedOptionId = string | null;
 export type Text1 = string;
 export type CommandId1 = string;
 export type ProtocolVersion7 = "2.0";
@@ -500,6 +501,7 @@ export interface SubmitUserReplyCommand {
  */
 export interface UserAnswer {
   questionId: Questionid;
+  selected_option_id?: SelectedOptionId;
   text?: Text1;
 }
 /**

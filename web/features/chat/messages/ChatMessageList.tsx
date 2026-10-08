@@ -1,5 +1,7 @@
 "use client";
 
+import type { UserReplyPayload } from "@/hooks/use-card-submission";
+
 import dynamic from "next/dynamic";
 import { UsageFooter } from "./UsageFooter";
 import { cumulativeMessageUsage, messageUsage } from "./usage-summary";
@@ -691,7 +693,7 @@ export const AssistantMessage = memo(function AssistantMessage({
       | string
       | {
           text?: string;
-          answers?: Array<{ questionId: string; text: string }>;
+          answers?: UserReplyPayload["answers"];
         },
   ) => void | boolean | Promise<void | boolean>;
   /**
@@ -793,7 +795,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   const submitReply = useCallback(
     (reply: {
       text?: string;
-      answers?: Array<{ questionId: string; text: string }>;
+      answers?: UserReplyPayload["answers"];
     }) => (onSubmitUserReply ? onSubmitUserReply(reply) : false),
     [onSubmitUserReply],
   );
@@ -1963,7 +1965,7 @@ export const ChatMessageList = memo(function ChatMessageList({
       | string
       | {
           text?: string;
-          answers?: Array<{ questionId: string; text: string }>;
+          answers?: UserReplyPayload["answers"];
         },
   ) => void | boolean | Promise<void | boolean>;
   /**

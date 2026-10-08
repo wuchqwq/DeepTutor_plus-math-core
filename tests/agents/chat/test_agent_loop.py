@@ -26,6 +26,7 @@ from deeptutor.learning.storage import LearningStore
 from deeptutor.runtime.stream_bus import StreamBus
 from deeptutor.services.llm import LLMProviderTransportError, LLMReasoningBudgetExhausted
 from deeptutor.services.llm.provider_core.openai_responses import convert_messages
+from deeptutor.tools.builtin import AskUserTool
 
 
 async def _collect_bus_events(bus: StreamBus) -> tuple[list[StreamEvent], asyncio.Task[Any]]:
@@ -2672,19 +2673,43 @@ async def test_ask_questions_uses_a_card_when_provider_rejects_tool_schemas(
     assert any(event.metadata.get("tool_schema_fallback") for event in events)
 
 
+@pytest.mark.parametrize(
+    "reply",
+    [
+        {"text": "Topic A"},
+        {
+            "text": "Topic A",
+            "answers": [
+                {
+                    "questionId": "q1",
+                    "text": "Topic A",
+                    "selected_option_id": " opaque/α:1 ",
+                }
+            ],
+        },
+    ],
+)
 @pytest.mark.asyncio
 async def test_ask_user_pause_resumes_and_streams_interleaved(
     monkeypatch: pytest.MonkeyPatch,
+    reply,
 ) -> None:
+    questions = [
+        {
+            "id": "q1",
+            "prompt": "Which topic?",
+            "options": [
+                {"option_id": " opaque/α:1 ", "label": "Topic A"},
+                {"option_id": "opaque:2", "label": "Topic B"},
+            ],
+        }
+    ]
+
     class _PausingRegistry(_Registry):
         async def execute(self, name: str, **kwargs):
             self.executed.append({"name": name, "kwargs": kwargs})
             if name == "ask_user":
-                return ToolResult(
-                    content="Asked the user.",
-                    success=True,
-                    pause_for_user={"questions": [{"id": "q1", "prompt": "Which topic?"}]},
-                )
+                return await AskUserTool().execute(**kwargs)
             return await super().execute(name, **kwargs)
 
     registry = _PausingRegistry()
@@ -2698,9 +2723,7 @@ async def test_ask_user_pause_resumes_and_streams_interleaved(
                         {
                             "id": "call-1",
                             "name": "ask_user",
-                            "arguments": json.dumps(
-                                {"questions": [{"id": "q1", "prompt": "Which topic?"}]}
-                            ),
+                            "arguments": json.dumps({"questions": questions}),
                         }
                     ]
                 ),
@@ -2715,7 +2738,7 @@ async def test_ask_user_pause_resumes_and_streams_interleaved(
     monkeypatch.setattr(pipeline, "_build_openai_client", lambda: client)
 
     async def _waiter():
-        return {"text": "Topic A"}
+        return reply
 
     events = await _run(
         pipeline,
@@ -2738,6 +2761,13 @@ async def test_ask_user_pause_resumes_and_streams_interleaved(
     # The persisted answer is the finish round's text.
     assert result.metadata["response"] == "The answer."
     assert result.metadata["completed"] is True
+    offered = next(event for event in events if event.type == StreamEventType.TOOL_RESULT)
+    assert (
+        offered.metadata["tool_metadata"]["ask_user"]["questions"][0]["options"][0]["option_id"]
+        == " opaque/α:1 "
+    )
+    resolution = next(event for event in events if event.metadata.get("ask_user_resolved"))
+    assert resolution.metadata.get("answers") == reply.get("answers")
 
 
 @pytest.mark.asyncio

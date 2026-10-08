@@ -1,9 +1,10 @@
 import { COMMAND_CONFIRMATION_FAILED } from "@/features/chat/transport/command-delivery";
+import type { UserAnswer } from "@/contracts/generated/turn-protocol";
 import { useCallback, useState } from "react";
 
 export interface UserReplyPayload {
   text?: string;
-  answers?: Array<{ questionId: string; text: string }>;
+  answers?: Array<UserAnswer & { text: string }>;
 }
 
 /** What a host does with a card's answers, and whether they landed. */

@@ -122,6 +122,9 @@ class RegenerateCommand(WireModel):
 class UserAnswer(WireModel):
     questionId: str = Field(min_length=1)
     text: str = ""
+    selected_option_id: str | None = Field(
+        default=None, min_length=1, max_length=128, pattern=r"\S"
+    )
 
 
 class SubmitUserReplyCommand(WireModel):

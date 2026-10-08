@@ -1,5 +1,7 @@
 "use client";
 
+import type { UserReplyPayload } from "@/hooks/use-card-submission";
+
 import { activeWorkspaceId } from "@/lib/workspace-scope";
 import {
   clearFailedSubmission,
@@ -1536,7 +1538,7 @@ interface ChatContextValue {
       | string
       | {
           text?: string;
-          answers?: Array<{ questionId: string; text: string }>;
+          answers?: UserReplyPayload["answers"];
         },
   ) => Promise<boolean>;
   regenerateLastMessage: () => void;
@@ -3145,7 +3147,7 @@ export function ChatStateAdapterProvider({
         | string
         | {
             text?: string;
-            answers?: Array<{ questionId: string; text: string }>;
+            answers?: UserReplyPayload["answers"];
           },
     ): Promise<boolean> => {
       const currentState = stateRef.current;

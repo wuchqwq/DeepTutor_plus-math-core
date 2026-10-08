@@ -23451,7 +23451,7 @@
     },
     "/api/knowledge-bases/rag-pipelines/llamaindex/config": {
       "get": {
-        "description": "Read the LlamaIndex engine's retrieval + chunking knobs.",
+        "description": "Read the LlamaIndex engine's retrieval + chunking knobs.\n\n``retrieval_profile`` is what is *configured*; ``effective_retrieval_profile``\nis what would actually run — a hybrid configuration degrades to vector-only\nwhen the BM25 package is missing (e.g. Python 3.14 installs, #1792).",
         "operationId": "get_llamaindex_pipeline_config_api_knowledge_bases_rag_pipelines_llamaindex_config_get",
         "parameters": [
           {
@@ -49786,7 +49786,7 @@
     },
     "/api/settings/fetch-models": {
       "post": {
-        "description": "List the model IDs an OpenAI-compatible provider exposes.\n\nThin HTTP surface over ``factory.fetch_models`` so the settings UI can\npopulate a model picker from ``base_url`` + ``api_key`` instead of making\nthe user type model IDs by hand.",
+        "description": "List selectable model IDs using the provider's own authentication.\n\nThin HTTP surface over ``factory.fetch_models`` so the settings UI can\npopulate a model picker. Copilot uses the caller's owner-private CLI login,\nnot the profile's API key or base URL.",
         "operationId": "fetch_models_from_provider_api_settings_fetch_models_post",
         "parameters": [
           {

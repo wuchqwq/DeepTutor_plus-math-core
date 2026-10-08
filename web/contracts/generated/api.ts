@@ -3064,6 +3064,10 @@ export interface paths {
     /**
      * Get Llamaindex Pipeline Config
      * @description Read the LlamaIndex engine's retrieval + chunking knobs.
+     *
+     *     ``retrieval_profile`` is what is *configured*; ``effective_retrieval_profile``
+     *     is what would actually run — a hybrid configuration degrades to vector-only
+     *     when the BM25 package is missing (e.g. Python 3.14 installs, #1792).
      */
     readonly get: operations["get_llamaindex_pipeline_config_api_knowledge_bases_rag_pipelines_llamaindex_config_get"];
     /**
@@ -7730,11 +7734,11 @@ export interface paths {
     readonly put?: never;
     /**
      * Fetch Models From Provider
-     * @description List the model IDs an OpenAI-compatible provider exposes.
+     * @description List selectable model IDs using the provider's own authentication.
      *
      *     Thin HTTP surface over ``factory.fetch_models`` so the settings UI can
-     *     populate a model picker from ``base_url`` + ``api_key`` instead of making
-     *     the user type model IDs by hand.
+     *     populate a model picker. Copilot uses the caller's owner-private CLI login,
+     *     not the profile's API key or base URL.
      */
     readonly post: operations["fetch_models_from_provider_api_settings_fetch_models_post"];
     readonly delete?: never;

@@ -12,6 +12,11 @@ from deeptutor.api.routers import auth, unified_ws
 class _Turns:
     def __init__(self) -> None:
         self.cancelled: list[tuple[str, str]] = []
+        self.replies: list[dict] = []
+
+    async def submit_user_reply(self, turn_id, text=None, *, answers=None, command_id):
+        self.replies.append({"turn_id": turn_id, "text": text, "answers": answers})
+        return True
 
     async def cancel_turn(self, turn_id: str, *, command_id: str) -> bool:
         self.cancelled.append((turn_id, command_id))
@@ -114,3 +119,58 @@ def test_ws_requires_command_ids_for_retryable_mutations(protocol_client) -> Non
     assert frame["error_code"] == "invalid_command"
     assert frame["protocol_version"] == "2.0"
     assert turns.cancelled == []
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        {
+            "answers": [
+                {"questionId": "q1", "text": "Display", "selected_option_id": " opaque/α:1 "}
+            ]
+        },
+        {"answers": [{"questionId": "q1", "text": "Legacy label"}]},
+        {"answers": [{"questionId": "q1", "text": "Free text"}]},
+        {"answers": [{"questionId": "q1", "text": ""}]},
+        {"text": "Legacy flat reply"},
+    ],
+)
+def test_ws_reply_preserves_identity_and_legacy_shapes(protocol_client, reply) -> None:
+    client, turns = protocol_client
+    with client.websocket_connect("/ws") as socket:
+        socket.send_json(
+            {
+                "type": "submit_user_reply",
+                "turn_id": "turn-1",
+                "command_id": "reply-1",
+                "protocol_version": "2.0",
+                **reply,
+            }
+        )
+        ack = socket.receive_json()
+    assert ack["type"] == "command_ack" and ack["accepted"] is True
+    assert turns.replies == [
+        {
+            "turn_id": "turn-1",
+            "text": reply.get("text"),
+            "answers": reply.get("answers"),
+        }
+    ]
+
+
+@pytest.mark.parametrize("option_id", ["", "   ", "x" * 129, 7])
+def test_ws_rejects_malformed_selected_identity(protocol_client, option_id) -> None:
+    client, turns = protocol_client
+    with client.websocket_connect("/ws") as socket:
+        socket.send_json(
+            {
+                "type": "submit_user_reply",
+                "turn_id": "turn-1",
+                "command_id": "reply-1",
+                "protocol_version": "2.0",
+                "answers": [{"questionId": "q1", "selected_option_id": option_id}],
+            }
+        )
+        frame = socket.receive_json()
+    assert frame["type"] == "protocol_error" and frame["error_code"] == "invalid_command"
+    assert turns.replies == []
