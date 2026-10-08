@@ -186,7 +186,7 @@ def episodes(host):
 
 
 def result(host):
-    return host.contexts[-1].capability_output.event_metadata["math"]
+    return host.contexts[-1].extension_state["math_turn"]["calculation"]
 
 
 async def wait_for_choice(host, turn):
@@ -268,7 +268,7 @@ async def test_same_question_new_episode_is_independent_and_old_interval_closed(
     assert result(host)["trajectory"]["cutoff_turn"] == 1
     assert (
         result(host)["trajectory"]["compatible_path_refs"]
-        != host.contexts[0].capability_output.event_metadata["math"]["trajectory"][
+        != host.contexts[0].extension_state["math_turn"]["calculation"]["trajectory"][
             "compatible_path_refs"
         ]
     )

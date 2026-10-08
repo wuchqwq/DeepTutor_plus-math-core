@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import json
-from typing import cast
+from typing import Any, cast
 
 from deeptutor.core.capability_protocol import CapabilityManifest, StreamBusProtocol, TurnCapability
 from deeptutor.core.context import UnifiedContext
@@ -34,6 +34,8 @@ from deeptutor.services.session.math_semantic_persistence import (
     sqlite_episode_mutation,
 )
 from deeptutor.tools.ask_user import AskUserOption, AskUserPayload, AskUserQuestion
+
+from .output import accept_response, generate_response, publication_input
 
 
 class MathTurnCapability(TurnCapability):
@@ -161,7 +163,7 @@ class MathTurnCapability(TurnCapability):
                 )
             )
 
-        def calculate(state: MathMutation) -> dict[str, object]:
+        def calculate(state: MathMutation) -> dict[str, Any]:
             current = state.trajectory()
             snapshot = state.snapshot()
             selected = current.applicable_artifact_refs
@@ -192,15 +194,42 @@ class MathTurnCapability(TurnCapability):
                 "authority": tuple(grant.to_dict() for grant in grants),
             }
 
-        result = await authority(calculate)
-        # No free-form final mathematical answer is generated here. The host
-        # owns ordinary result transport; publication guarantees are deferred.
-        context.capability_output.agent_output = "Mathematical evidence recorded."
-        context.capability_output.event_metadata = {"math": result}
+        def prepare_publication(state: MathMutation) -> tuple[dict[str, Any], dict[str, Any]]:
+            calculation = calculate(state)
+            return calculation, publication_input(state, calculation)
+
+        result, inputs = await authority(prepare_publication)
+        # Canonical domain detail is private. In particular raw claim quotes
+        # and confirmation ledgers are never final-response metadata.
+        context.extension_state["math_turn"] = {"calculation": result}
+        raw_candidate = await generate_response(context, inputs)
+        publication_authority = sqlite_episode_mutation(
+            context.runtime,
+            session_id=context.session_id,
+            binding=binding,
+            record_publication=True,
+        )
+        accepted = await publication_authority(
+            lambda state: accept_response(state, calculate(state), inputs, raw_candidate)
+        )
+        # Acceptance commits under the existing fence before any answer bytes
+        # reach the host stream. There is no ordinary math-answer fallback.
+        context.capability_output.accepted_output = accepted
+        context.capability_output.agent_output = accepted.content
+        context.capability_output.event_metadata = json.loads(accepted.metadata_json)
+        await stream.emit(
+            StreamEvent(
+                type=StreamEventType.CONTENT,
+                source=self.name,
+                content=accepted.content,
+                metadata=json.loads(accepted.metadata_json),
+            )
+        )
         await stream.emit(
             StreamEvent(
                 type=StreamEventType.RESULT,
                 source=self.name,
-                metadata={"response": context.capability_output.agent_output, "math": result},
+                metadata={"response": accepted.content, **json.loads(accepted.metadata_json)},
             )
         )
+        context.capability_output.answer_published = True
