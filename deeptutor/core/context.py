@@ -10,10 +10,23 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from deeptutor.runtime.coordination import TurnLease
+
+
+# A transaction-local statement runner, never a connection/cursor or commit API.
+TurnMutationSQL = Callable[[str, tuple[Any, ...]], list[tuple[Any, ...]]]
+TurnMutation = Callable[[TurnMutationSQL], Any]
+
+
+class DurableTurnMutation(Protocol):
+    """Host-bound synchronous mutation, protected until durable commit finishes."""
+
+    async def __call__(
+        self, mutation: TurnMutation, *, expected_state_version: int | None = None
+    ) -> Any: ...
 
 
 @dataclass
@@ -76,6 +89,9 @@ class TurnRuntimeContext:
     # execution. Its session_id is the coordinator's store-scoped key.
     # This snapshot is not a live ownership check or commit fence.
     turn_lease: TurnLease | None = None
+    # Optional host-bound commit authority; unsupported backends leave it unset.
+    # The caller supplies only synchronous transaction work, not liveness checks.
+    run_durable_turn_mutation: DurableTurnMutation | None = None
 
 
 @dataclass

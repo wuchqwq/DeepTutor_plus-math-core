@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from contextvars import copy_context
 from dataclasses import replace
 import time
 from typing import Any
@@ -86,6 +88,46 @@ class MemoryCoordinator:
         async with self._lock:
             lease = self._turn_leases.get(turn_id)
             return lease if self._active(lease) else None
+
+    async def run_turn_mutation(self, lease: TurnLease, mutation: Callable[[], Any]) -> Any:
+        """Serialize lease invalidation with a host-owned durable worker.
+
+        Lease expiry is observed under the same lock as acquisition/release.
+        An already expired owner cannot enter; once admitted, expiry/replacement
+        can only become authoritative after this worker finishes (including its
+        commit/rollback). This is single-process protection, not a Redis port.
+        """
+        async with self._lock:
+            current = self._turn_leases.get(lease.turn_id)
+            if (
+                self._closed
+                or not self._active(current)
+                or current is None
+                or current.owner_id != lease.owner_id
+                or current.fencing_token != lease.fencing_token
+                or current.session_id != lease.session_id
+                or self._session_turns.get(lease.session_id) != lease.turn_id
+            ):
+                raise RuntimeError("Turn authority lost")
+            # Use the executor future itself, not a cancellable to_thread Task.
+            # Cancelling an asyncio wrapper must not mark the SQL worker done.
+            context = copy_context()
+            worker = asyncio.get_running_loop().run_in_executor(None, context.run, mutation)
+            cancelled = False
+            try:
+                while not worker.done():
+                    try:
+                        await asyncio.shield(worker)
+                    except asyncio.CancelledError:
+                        # Shield alone is insufficient: keep owning the lock
+                        # until the worker actually ends, even on repeated cancel.
+                        cancelled = True
+                    except Exception:
+                        break
+                return worker.result()
+            finally:
+                if cancelled:
+                    raise asyncio.CancelledError
 
     async def list_expired_turn_ids(self) -> list[str]:
         async with self._lock:
@@ -249,7 +291,8 @@ class MemoryCoordinator:
         return not self._closed
 
     async def close(self) -> None:
-        self._closed = True
+        async with self._lock:
+            self._closed = True
 
 
 __all__ = ["MemoryCoordinator"]

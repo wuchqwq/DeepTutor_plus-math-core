@@ -898,6 +898,15 @@ class TurnExecutor:
                 )
                 source_manifest_text += task_context
 
+            durable_mutation = None
+            if execution.lease is not None:
+                from deeptutor.services.session.sqlite_store import SQLiteSessionStore
+
+                if isinstance(self.store, SQLiteSessionStore):
+                    durable_mutation = self.store.bind_durable_turn_mutation(
+                        self.coordinator, execution.lease, session_id=session_id
+                    )
+
             context = UnifiedContext(
                 session_id=session_id,
                 user_message=effective_user_message,
@@ -930,6 +939,7 @@ class TurnExecutor:
                         else None
                     ),
                     turn_lease=execution.lease,
+                    run_durable_turn_mutation=durable_mutation,
                     wait_for_user_reply=_wait_for_user_reply,
                     subagent_consult_budget=payload.get("subagent_consult_budget"),
                     consult_partner_id=payload.get("consult_partner_id"),

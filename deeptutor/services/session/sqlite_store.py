@@ -8,6 +8,8 @@ import asyncio
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -28,6 +30,10 @@ from deeptutor.core.assessment import (
     ASSESSMENT_TYPES,
     QUESTION_ORIGIN_TYPES,
 )
+from deeptutor.core.context import DurableTurnMutation, TurnMutation
+from deeptutor.runtime.coordination.memory import MemoryCoordinator
+from deeptutor.runtime.coordination.protocol import RuntimeCoordinator
+from deeptutor.runtime.coordination.types import TurnLease
 from deeptutor.services.path_service import get_path_service
 from deeptutor.services.session.protocol import ActiveTurnConflict
 from deeptutor.utils.secret_files import ensure_private_directory, ensure_private_file
@@ -1100,6 +1106,114 @@ class SQLiteSessionStore:
     async def _run(self, fn, *args):
         async with self._lock:
             return await asyncio.to_thread(fn, *args)
+
+    def bind_durable_turn_mutation(
+        self,
+        coordinator: RuntimeCoordinator | None,
+        lease: TurnLease,
+        *,
+        session_id: str,
+    ) -> DurableTurnMutation | None:
+        """Bind the audited SQLite/single-process contract, or fail closed.
+
+        No store/coordinator/connection is exposed to the capability. Authority
+        values are captured here; editing a context lease cannot rebind them.
+        """
+        if type(coordinator) is not MemoryCoordinator:
+            return None
+        from .scope import store_scope
+
+        scope = store_scope(self).cache_key
+        session_key = f"{hashlib.sha256(scope.encode()).hexdigest()[:16]}:{session_id}"
+
+        async def run(mutation: TurnMutation, *, expected_state_version: int | None = None) -> Any:
+            if lease.session_id != session_key or store_scope(self).cache_key != scope:
+                raise RuntimeError("Turn scope mismatch")
+
+            async with self._lock:
+                return await coordinator.run_turn_mutation(
+                    lease,
+                    lambda: self._durable_turn_mutation_sync(
+                        lease, session_id, mutation, expected_state_version
+                    ),
+                )
+
+        return run
+
+    def _durable_turn_mutation_sync(
+        self,
+        lease: TurnLease,
+        session_id: str,
+        mutation: TurnMutation,
+        expected_state_version: int | None,
+    ) -> Any:
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            turn = conn.execute(
+                "SELECT session_id, status, owner_id, fencing_token, state_version FROM turns WHERE id=?",
+                (lease.turn_id,),
+            ).fetchone()
+            if (
+                turn is None
+                or turn["session_id"] != session_id
+                or turn["owner_id"] != lease.owner_id
+                or turn["fencing_token"] != lease.fencing_token
+                or turn["status"] != "running"
+            ):
+                raise RuntimeError("Turn authority lost")
+            if (
+                expected_state_version is not None
+                and turn["state_version"] != expected_state_version
+            ):
+                raise RuntimeError("Turn state version changed")
+
+            active = True
+
+            def execute(sql: str, parameters: tuple[Any, ...]) -> list[tuple[Any, ...]]:
+                if not active:
+                    raise RuntimeError("Turn mutation scope closed")
+                return [tuple(row) for row in conn.execute(sql, parameters).fetchall()]
+
+            def authorize(action: int, table: str | None, *_args: Any) -> int:
+                # Transaction control, DDL, PRAGMA and attachments belong to the
+                # host. The body also cannot overwrite its authority/version row.
+                allowed = {
+                    sqlite3.SQLITE_SELECT,
+                    sqlite3.SQLITE_READ,
+                    sqlite3.SQLITE_FUNCTION,
+                    sqlite3.SQLITE_RECURSIVE,
+                    sqlite3.SQLITE_INSERT,
+                    sqlite3.SQLITE_UPDATE,
+                    sqlite3.SQLITE_DELETE,
+                }
+                if action not in allowed or (
+                    table == "turns"
+                    and action
+                    in {
+                        sqlite3.SQLITE_INSERT,
+                        sqlite3.SQLITE_UPDATE,
+                        sqlite3.SQLITE_DELETE,
+                    }
+                ):
+                    return sqlite3.SQLITE_DENY
+                return sqlite3.SQLITE_OK
+
+            conn.set_authorizer(authorize)
+            try:
+                result = mutation(execute)
+                if inspect.isawaitable(result):
+                    if inspect.iscoroutine(result):
+                        result.close()
+                    raise TypeError("Turn mutation must be synchronous")
+            finally:
+                active = False
+                conn.set_authorizer(None)
+            conn.execute(
+                "UPDATE turns SET state_version=state_version+1, updated_at=? WHERE id=?",
+                (time.time(), lease.turn_id),
+            )
+        # _connect has committed and closed before the coordinator unlocks.
+        return result
 
     @contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
