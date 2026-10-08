@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
 from typing import Any, AsyncIterator
 import uuid
@@ -37,8 +38,17 @@ def completion_event_fields(context: UnifiedContext, cap_name: str) -> tuple[str
     Only the explicit output dict is forwarded, never compatibility metadata.
     """
     meta = context.metadata or {}
-    agent_output = str(context.capability_output.agent_output or meta.get(AGENT_OUTPUT) or "")
-    published = context.capability_output.event_metadata or meta.get(EVENT_METADATA)
+    accepted = context.capability_output.accepted_output
+    agent_output = (
+        accepted.content
+        if accepted is not None
+        else str(context.capability_output.agent_output or meta.get(AGENT_OUTPUT) or "")
+    )
+    published = (
+        json.loads(accepted.metadata_json)
+        if accepted is not None
+        else context.capability_output.event_metadata or meta.get(EVENT_METADATA)
+    )
     extras = dict(published) if isinstance(published, dict) else {}
     return agent_output, {
         **extras,
@@ -160,8 +170,22 @@ class ChatOrchestrator:
                     for key in ("error_code", "retryable", "partial_response")
                     if key in error_metadata
                 }
+                if cap_name == "math_turn":
+                    # Provider/candidate exceptions can contain unapproved
+                    # mathematics. Keep details in logs, never in publication.
+                    context.capability_output.agent_output = ""
+                    context.capability_output.event_metadata = {}
+                    context.capability_output.accepted_output = None
+                    context.metadata.pop(AGENT_OUTPUT, None)
+                    context.metadata.pop(EVENT_METADATA, None)
+                    error_metadata = {
+                        "turn_terminal": True,
+                        "status": "failed",
+                        "error_code": "math_publication_rejected",
+                    }
+                    terminal_error_metadata = {"error_code": "math_publication_rejected"}
                 await bus.error(
-                    str(exc),
+                    "Mathematical publication failed." if cap_name == "math_turn" else str(exc),
                     source=cap_name,
                     metadata=error_metadata,
                 )

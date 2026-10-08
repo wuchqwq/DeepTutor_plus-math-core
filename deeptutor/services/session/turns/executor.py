@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 import contextlib
 from contextvars import Token
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -1117,10 +1118,21 @@ class TurnExecutor:
             # capability retracted (that text stayed in the trace). Apply
             # the CJK Markdown repair only after every streamed segment has
             # arrived, so no incomplete response is ever rewritten.
-            assistant_content = _repair_chinese_emphasis_for_persistence(
-                _persisted_answer(),
-                str(payload.get("language", "en") or "en"),
-            )
+            accepted_output = context.capability_output.accepted_output
+            if accepted_output is not None:
+                if _persisted_answer() != accepted_output.content:
+                    raise ValueError("accepted output differs from the published content")
+                # A post-publication formatter cannot change approved bytes.
+                assistant_content = accepted_output.content
+                assistant_provider_metadata = {
+                    **(assistant_provider_metadata or {}),
+                    "accepted_output": json.loads(accepted_output.metadata_json),
+                }
+            else:
+                assistant_content = _repair_chinese_emphasis_for_persistence(
+                    _persisted_answer(),
+                    str(payload.get("language", "en") or "en"),
+                )
 
             # Assistant continues the same branch as the user message it
             # answers. If we just persisted a new user row we chain off

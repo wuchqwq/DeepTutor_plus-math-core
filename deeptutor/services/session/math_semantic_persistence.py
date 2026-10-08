@@ -10,11 +10,16 @@ host owner. The mathematical value has no connection/commit dependency.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import json
 from typing import TypeVar, cast
 
-from deeptutor.core.context import CapabilityBinding, TurnMutationSQL, TurnRuntimeContext
+from deeptutor.core.context import (
+    AcceptedTurnOutput,
+    CapabilityBinding,
+    TurnMutationSQL,
+    TurnRuntimeContext,
+)
 from deeptutor.math_semantic.accepted import AcceptedSubmission
 from deeptutor.math_semantic.state import MathMutation, MathMutationAuthority, ReviewedSource
 
@@ -40,7 +45,11 @@ class MathEpisodeBinding:
 
 
 def sqlite_episode_mutation(
-    runtime: TurnRuntimeContext, *, session_id: str, binding: MathEpisodeBinding | ReviewedSource
+    runtime: TurnRuntimeContext,
+    *,
+    session_id: str,
+    binding: MathEpisodeBinding | ReviewedSource,
+    record_publication: bool = False,
 ) -> MathMutationAuthority:
     """Certify an explicit binding, or recover history for reviewed source DI.
 
@@ -53,7 +62,11 @@ def sqlite_episode_mutation(
     # start and history are recovered and certified under commit authority.
     if isinstance(binding, ReviewedSource):
         return sqlite_math_mutation(
-            runtime, session_id=session_id, source=binding, recover_episode=True
+            runtime,
+            session_id=session_id,
+            source=binding,
+            recover_episode=True,
+            record_publication=record_publication,
         )
     if binding.session_id != session_id:
         raise ValueError("foreign host episode binding")
@@ -62,6 +75,7 @@ def sqlite_episode_mutation(
         session_id=session_id,
         source=binding.source,
         first_message_id=binding.first_message_id,
+        record_publication=record_publication,
     )
 
 
@@ -87,6 +101,7 @@ def sqlite_math_mutation(
     accepted_prefix: tuple[int, ...] | None = None,
     first_message_id: int | None = None,
     recover_episode: bool = False,
+    record_publication: bool = False,
 ) -> MathMutationAuthority:
     submission = accepted_submission(runtime, session_id=session_id)
     host_mutation = runtime.run_durable_turn_mutation
@@ -98,6 +113,8 @@ def sqlite_math_mutation(
     if sum((accepted_prefix is not None, first_message_id is not None, recover_episode)) != 1:
         raise ValueError("exactly one accepted prefix, episode start or recovery is required")
     certified_episode = first_message_id is not None or recover_episode
+    if record_publication and not certified_episode:
+        raise ValueError("publication requires a certified host episode")
     if certified_episode and runtime.capability_binding != CapabilityBinding(
         "math_turn", source.identity.episode_id
     ):
@@ -278,6 +295,30 @@ def sqlite_math_mutation(
                 raise ValueError("durable mathematical revision differs from the canonical head")
             result = mutation(state)
             payload = json.loads(state.serialize())
+            if "host_math_publications" in old:
+                payload["host_math_publications"] = old["host_math_publications"]
+            if record_publication:
+                if not isinstance(result, AcceptedTurnOutput):
+                    raise ValueError("publication requires accepted host output")
+                trace = json.loads(result.metadata_json)["math_publication"]
+                basis = trace["basis"]
+                if (
+                    basis["session_id"] != session_id
+                    or basis["turn_id"] != submission.turn_id
+                    or basis["accepted_user_message_id"] != submission.message_id
+                    or basis["episode_id"] != source.identity.episode_id
+                    or basis["math_revision"] != state.snapshot().workspace.revision
+                    or trace["publication_id"] != result.publication_id
+                ):
+                    raise ValueError("publication differs from the protected host scope")
+                ledger = dict(payload.get("host_math_publications", {}))
+                entry = asdict(result)
+                if submission.turn_id in ledger and ledger[submission.turn_id] != entry:
+                    raise ValueError("immutable accepted publication changed")
+                ledger[submission.turn_id] = entry
+                if len(ledger) > 32:
+                    raise ValueError("bounded host publication ledger exceeded")
+                payload["host_math_publications"] = ledger
             if start is not None:
                 payload["host_episode_first_message_id"] = start
                 payload["host_accepted_message_ids"] = ids

@@ -286,7 +286,7 @@ class RoutingHost:
         return self.episodes()[self.source.identity.episode_id]
 
     def result(self):
-        return self.math_contexts[-1].capability_output.event_metadata["math"]
+        return self.math_contexts[-1].extension_state["math_turn"]["calculation"]
 
     async def choice(self, turn):
         async with asyncio.timeout(15):

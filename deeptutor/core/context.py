@@ -133,6 +133,20 @@ class CapabilityOutput:
     agent_output: str = ""
     event_metadata: dict[str, Any] = field(default_factory=dict)
     answer_published: bool = False
+    accepted_output: AcceptedTurnOutput | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AcceptedTurnOutput:
+    """Host-approved bytes and trace, sealed before entering result transport.
+
+    This value does not grant authority. Its producer must obtain acceptance
+    from its existing owner before supplying it to the publication seam.
+    """
+
+    publication_id: str
+    content: str
+    metadata_json: str
 
 
 @dataclass
@@ -210,6 +224,7 @@ class UnifiedContext:
 
 
 __all__ = [
+    "AcceptedTurnOutput",
     "Attachment",
     "CapabilityBinding",
     "CapabilityOutput",

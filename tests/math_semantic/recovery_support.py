@@ -32,6 +32,17 @@ B = "3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2"
 C = "3*(x^2+x*y+y^2)-(x^2-x*y+y^2)=2*(x+y)^2"
 
 
+async def harmless_generation(*_args, prompt, **_kwargs):
+    """Offline transport for the actual native completion/generation seam."""
+    inputs = json.loads(prompt)
+    ids = [
+        offer["grant_id"]
+        for offer in inputs["offers"]
+        if offer["grant"]["act_kind"] == "orientation"
+    ][:1]
+    return json.dumps({"authority_basis": inputs["authority_basis"], "grant_ids": ids})
+
+
 def reviewed_source(*, unknown: bool = False) -> ReviewedSource:
     value = json.loads(
         Path(__file__).with_name("fixtures").joinpath("oracle.json").read_text(encoding="utf-8")
@@ -97,6 +108,11 @@ class RecoveryHost:
             )
         )
         self.patches.enter_context(patch("deeptutor.services.llm.config._LLM_CONFIG_CACHE", None))
+        self.patches.enter_context(
+            patch(
+                "deeptutor.services.llm.factory._complete_with_resolved_config", harmless_generation
+            )
+        )
         host = self
 
         class Provider:
@@ -270,7 +286,7 @@ class RecoveryHost:
         )
 
     def result(self):
-        return self.contexts[-1].capability_output.event_metadata["math"]
+        return self.contexts[-1].extension_state["math_turn"]["calculation"]
 
 
 def durable(db: Path):
