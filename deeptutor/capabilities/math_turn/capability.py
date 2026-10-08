@@ -57,8 +57,13 @@ class MathTurnCapability(TurnCapability):
         # Reject unsupported backends before any proposal/provider work.
         if context.runtime.run_durable_turn_mutation is None:
             raise ValueError("mathematical mutation requires protected host commit authority")
+        selected = context.runtime.capability_binding
+        if selected is None or selected.capability != self.name:
+            raise ValueError("math turn requires a trusted host capability binding")
         binding = self._resolve_episode(submission)
         source = binding if isinstance(binding, ReviewedSource) else binding.source
+        if selected.scope_id != source.identity.episode_id:
+            raise ValueError("host capability binding differs from reviewed math episode")
         authority = sqlite_episode_mutation(
             context.runtime,
             session_id=context.session_id,

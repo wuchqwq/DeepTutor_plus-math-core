@@ -15,6 +15,7 @@ import pytest
 import pytest_asyncio
 
 from deeptutor.capabilities.math_turn.capability import MathTurnCapability
+from deeptutor.core.context import CapabilityBinding
 from deeptutor.math_semantic.accepted import EpisodeIdentity
 from deeptutor.math_semantic.codec import _decode
 from deeptutor.math_semantic.refs import LearnerRef, QuestionRef
@@ -116,12 +117,19 @@ async def host(tmp_path, monkeypatch):
 
     registry = CapabilityRegistry()
     registry.register(ObservedMath)
+
+    async def host_scope(_reference):
+        episode = value.binding.source.identity.episode_id if value.binding else value.episode
+        return CapabilityBinding("math_turn", episode)
+
     value.store = SQLiteSessionStore(tmp_path / "capability.db")
     value.runtime = TurnRuntimeManager(
         value.store,
         coordinator=MemoryCoordinator(),
         owner_id="native-math-worker",
-        turn_engine=TurnEngine(capability_registry=registry),
+        turn_engine=TurnEngine(
+            capability_registry=registry, resolve_accepted_capability=host_scope
+        ),
     )
 
     async def no_title(**_kwargs):
@@ -527,7 +535,11 @@ async def test_missing_historical_accepted_basis_rejects_new_math_write(host):
 async def test_plain_user_row_without_host_acceptance_turn_is_not_prefix_evidence(host):
     session, _ = await submit(host)
     before = episodes(host)
-    await host.store.add_message(session["id"], "user", "a stored row without accepted turn")
-    _, turn = await start(host, session_id=session["id"])
-    await finish(host, turn, error="no matching host turn")
-    assert episodes(host) == before
+    unowned_id = await host.store.add_message(
+        session["id"], "user", "a stored row without accepted turn"
+    )
+    await submit(host, session_id=session["id"])
+    after = episodes(host)["episode-one"]
+    assert unowned_id not in after["host_accepted_message_ids"]
+    assert len(after["host_accepted_message_ids"]) == result(host)["trajectory"]["cutoff_turn"] == 2
+    assert len(after["alignments"]) == len(before["episode-one"]["alignments"]) + 1

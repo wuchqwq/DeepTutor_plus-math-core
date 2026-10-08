@@ -62,6 +62,27 @@ class WorkspaceRuntimeContext:
     security_level: str = "off"
 
 
+@dataclass(frozen=True, slots=True)
+class TurnRoutingReference:
+    """Host identity for selection DI; no prompt, text or request options."""
+
+    session_id: str
+    turn_id: str
+    accepted_user_message_id: int | str | None
+
+
+@dataclass(frozen=True, slots=True)
+class CapabilityBinding:
+    """Host-owned capability/scope decision, never a request field or grant."""
+
+    capability: str
+    scope_id: str
+
+    def __post_init__(self) -> None:
+        if not self.capability.strip() or not self.scope_id.strip():
+            raise ValueError("host capability binding requires an exact capability and scope")
+
+
 @dataclass
 class TurnRuntimeContext:
     """Non-serializable execution state owned by the runtime adapter."""
@@ -92,6 +113,9 @@ class TurnRuntimeContext:
     # Optional host-bound commit authority; unsupported backends leave it unset.
     # The caller supplies only synchronous transaction work, not liveness checks.
     run_durable_turn_mutation: DurableTurnMutation | None = None
+    # Optional reviewed host decision. Selection alone grants no math truth;
+    # the domain adapter rechecks durable accepted-row attribution at commit.
+    capability_binding: CapabilityBinding | None = None
 
 
 @dataclass
@@ -187,9 +211,11 @@ class UnifiedContext:
 
 __all__ = [
     "Attachment",
+    "CapabilityBinding",
     "CapabilityOutput",
     "InteractionState",
     "TurnRuntimeContext",
+    "TurnRoutingReference",
     "UnifiedContext",
     "WorkspaceRuntimeContext",
 ]
