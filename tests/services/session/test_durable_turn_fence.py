@@ -214,7 +214,73 @@ def pause_sqlite(monkeypatch):
 
 
 @pytest.mark.parametrize("window", ["after_validation", "during_transaction", "before_commit"])
-@pytest.mark.parametrize("invalidation", ["release", "expiry", "replacement"])
+async def test_unrelated_session_renews_while_sqlite_mutation_is_paused(
+    fence, pause_sqlite, window
+) -> None:
+    store, coordinator, lease, clock = fence
+    await store.create_session(session_id="s-b", title="unrelated")
+    session_b = lease.session_id.rsplit(":", 1)[0] + ":s-b"
+    lease_b = await coordinator.acquire_turn("t-b", session_b, "worker-b")
+    assert lease_b is not None
+    await store.begin_turn(
+        "s-b", turn_id="t-b", owner_id="worker-b", fencing_token=lease_b.fencing_token
+    )
+    entered, proceed, committed, timeouts = pause_sqlite(store, window)
+    task = asyncio.create_task(_bind(store, coordinator, lease)(_write))
+    contenders = []
+    try:
+        assert await asyncio.to_thread(entered.wait, 10)
+
+        async def release_a():
+            released = await coordinator.release_turn(lease)
+            assert committed.is_set()  # A's invalidation must follow its real COMMIT.
+            return released
+
+        release = asyncio.create_task(release_a())
+        contenders.append(release)
+        await asyncio.sleep(0)
+        assert not release.done()
+        clock[0] += coordinator.lease_ttl_seconds / 3  # B's normal renewal interval.
+        renewal_started = asyncio.Event()
+
+        async def renew_b():
+            renewal_started.set()
+            return await coordinator.renew_turn(lease_b)
+
+        renewal = asyncio.create_task(renew_b())
+        contenders.append(renewal)
+        await renewal_started.wait()
+        # The renewal has run to its next suspension point. No deadline or
+        # wall-clock sleep decides whether B got stuck behind A's SQL worker.
+        assert renewal.done(), "Unrelated B renewal blocked behind A's durable mutation"
+        renewed = await renewal
+        assert renewed is not None and renewed.expires_at > lease_b.expires_at
+        assert renewed.fencing_token == lease_b.fencing_token
+        clock[0] = lease_b.expires_at + 1
+        assert await coordinator.get_lease("t-b") == renewed
+        independent = await coordinator.acquire_turn("t-c", session_b + "-c", "worker-c")
+        assert independent is not None and independent.fencing_token > renewed.fencing_token
+        assert _read(store) == ("original", 1)
+        assert not release.done() and not committed.is_set()
+
+        proceed.set()
+        assert await task == "result" and await release is True
+        assert committed.is_set() and not any(timeouts)
+        assert _read(store) == ("committed", 2)
+        assert await coordinator.get_lease("t-b") == renewed
+        with pytest.raises(RuntimeError, match="authority"):
+            await _bind(store, coordinator, lease)(_write)
+        assert _read(store) == ("committed", 2)
+    finally:
+        proceed.set()
+        await asyncio.gather(task, *contenders, return_exceptions=True)
+
+
+@pytest.mark.parametrize("window", ["after_validation", "during_transaction", "before_commit"])
+@pytest.mark.parametrize(
+    "invalidation",
+    ["release", "expiry", "replacement", "next_turn", "moved_session", "scan", "ack", "close"],
+)
 async def test_commit_serializes_before_invalidation(
     fence, pause_sqlite, window, invalidation
 ) -> None:
@@ -227,12 +293,29 @@ async def test_commit_serializes_before_invalidation(
         assert _read(store) == ("original", 1)
         clock[0] = lease.expires_at + 1
         if invalidation == "release":
-            change = asyncio.create_task(coordinator.release_turn(lease))
+            operation = coordinator.release_turn(lease)
         elif invalidation == "expiry":
-            change = asyncio.create_task(coordinator.get_lease("t"))
+            operation = coordinator.get_lease("t")
+        elif invalidation == "next_turn":
+            operation = coordinator.acquire_turn("t-next", lease.session_id, "b")
+        elif invalidation == "moved_session":
+            operation = coordinator.acquire_turn("t", lease.session_id + "-other", "b")
+        elif invalidation == "scan":
+            operation = coordinator.list_expired_turn_ids()
+        elif invalidation == "ack":
+            operation = coordinator.acknowledge_expired_turn("t")
+        elif invalidation == "close":
+            operation = coordinator.close()
         else:
-            change = asyncio.create_task(coordinator.acquire_turn("t", lease.session_id, "b"))
-        # Let the contender reach the existing coordinator lock; no timed race.
+            operation = coordinator.acquire_turn("t", lease.session_id, "b")
+
+        async def invalidate():
+            result = await operation
+            assert committed.is_set()
+            return result
+
+        change = asyncio.create_task(invalidate())
+        # Let the contender reach the affected authority guard; no timed race.
         await asyncio.sleep(0)
         assert not change.done() and not committed.is_set()
         proceed.set()
@@ -240,7 +323,14 @@ async def test_commit_serializes_before_invalidation(
         result = await change
         assert committed.is_set() and not any(timeouts)
         assert _read(store) == ("committed", 2)
-        assert result is not None if invalidation != "expiry" else result is None
+        if invalidation in {"replacement", "next_turn", "moved_session"}:
+            assert result.fencing_token > lease.fencing_token
+        elif invalidation == "release":
+            assert result is True
+        elif invalidation == "scan":
+            assert result == ["t"]
+        else:
+            assert result is None
         with pytest.raises(RuntimeError):
             await _bind(store, coordinator, lease)(_write)
         assert _read(store) == ("committed", 2)
@@ -546,6 +636,44 @@ async def test_closed_coordinator_refuses_mutation(fence):
     with pytest.raises(RuntimeError, match="authority"):
         await _bind(store, coordinator, lease)(_write)
     assert _read(store) == ("original", 1)
+
+
+async def test_close_refuses_new_session_admission_while_draining_worker(
+    fence, pause_sqlite, tmp_path
+):
+    store, coordinator, lease, _ = fence
+    other = SQLiteSessionStore(tmp_path / "other.db")
+    await other.create_session(session_id="s", title="unrelated")
+    entered, proceed, committed, timeouts = pause_sqlite(store, "before_commit")
+    task = asyncio.create_task(_bind(store, coordinator, lease)(_write))
+    closing = None
+    try:
+        assert await asyncio.to_thread(entered.wait, 10)
+        closing = asyncio.create_task(coordinator.close())
+        await asyncio.sleep(0)
+        assert not closing.done() and not committed.is_set()
+        # This authority is created after close's drain snapshot. The admission
+        # barrier must also cover keys that were not in that snapshot.
+        scope = hashlib.sha256(store_scope(other).cache_key.encode()).hexdigest()[:16]
+        new_lease = await coordinator.acquire_turn("t-new", f"{scope}:s", "b")
+        assert new_lease is not None
+        await other.begin_turn(
+            "s", turn_id="t-new", owner_id="b", fencing_token=new_lease.fencing_token
+        )
+        with pytest.raises(RuntimeError, match="authority"):
+            await _bind(other, coordinator, new_lease)(_write)
+        assert (await other.get_session("s"))["title"] == "unrelated"
+        assert (await other.get_turn("t-new"))["state_version"] == 1
+        assert not closing.done() and not committed.is_set()
+        proceed.set()
+        assert await task == "result"
+        await closing
+        assert not await coordinator.health()
+        assert committed.is_set() and not any(timeouts)
+        assert _read(store) == ("committed", 2)
+    finally:
+        proceed.set()
+        await asyncio.gather(task, *([closing] if closing else []), return_exceptions=True)
 
 
 async def test_bound_port_rejects_changed_owner_scope(fence, monkeypatch):

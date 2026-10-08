@@ -61,21 +61,27 @@ transaction body; no math schema, basis or authority logic is introduced here.
 
 The protected window is:
 
-1. Acquire the existing store lock, then the existing coordinator lock.
-2. Validate live coordinator authority while holding its lock.
+1. Acquire the existing store lock, then MemoryCoordinator's authority locks
+   for the affected session and turn (session key first, turn key second).
+2. Validate live coordinator authority under its short global state lock, then
+   release that global lock before starting any external worker.
 3. Start the worker, enter SQLite `BEGIN IMMEDIATE`, validate the durable row
    and optional host version, then execute the synchronous body.
 4. Advance the host revision; the existing `_connect` context performs the real
    COMMIT (or ROLLBACK on failure) and closes the connection.
-5. Observe completion of the executor future, then release coordinator/store
-   protection. Only then may an ownership change finish.
+5. Observe completion of the executor future, then release session/turn/store
+   protection. Only then may an affected ownership change finish.
 
-Acquisition, renewal, release, lease lookup and expiry acknowledgement already
-use that coordinator lock; close now also uses it. An owner released, expired or
-replaced **before admission** cannot enter. Once admitted, an ownership change
-queues until the transaction has finished. SQLite's write transaction separately
-orders a concurrent terminal/version update, including one from another store
-instance, after the protected commit or before its validation.
+Acquisition, renewal and release use the same session and turn authority keys.
+The session key orders a successor with a different turn ID in the same session;
+the turn key also orders lookups, expiry scans/acknowledgement, and an acquisition
+using the same turn ID with another session. Global map/token changes remain
+under the short existing `_lock`, always acquired after authority locks. An owner
+released, expired or replaced **before admission** cannot enter. Once admitted,
+an affected ownership change queues until the transaction has finished. SQLite's
+write transaction separately orders a concurrent terminal/version update,
+including one from another store instance, after the protected commit or before
+its validation.
 
 **Expiry ordering is explicit:** admission checks wall-clock expiry. Expiry for
 already admitted work becomes observable/authoritative only after the protected
@@ -85,18 +91,26 @@ the worker finishes. Thus the permitted order is commit first, invalidation
 second. This is not a promise that every in-flight mutation is rolled back when
 its original TTL passes.
 
-The shared lock is coordinator-wide, so lease/command/event operations can queue
-behind a protected body. Bodies must be bounded synchronous transaction work;
-do not put provider calls, retrieval, arbitrary waits or external side effects
-inside them. No per-turn lock registry, second lease owner, transaction service
-or cross-backend protocol is added.
+Unrelated sessions/turns can renew, acquire leases and use the existing command/
+event APIs while the worker is paused. SQLite still has its existing store lock
+and single-writer transaction semantics; this does not promise concurrent SQL
+writes. Bodies must be bounded synchronous transaction work; do not put provider
+calls, retrieval, arbitrary waits or external side effects inside them.
+
+Authority locks are private state in the existing MemoryCoordinator and are
+retained for its lifetime, avoiding split protection if queued waiters still use
+an older lock. They are acquired in a consistent order. Shutdown closes admission
+first, then drains all affected authority locks without holding the global state
+lock. Already admitted work remains protected until real commit/rollback; only
+after that drain does `close()` mark the coordinator closed and return. No second
+lease owner, transaction service or cross-backend protocol is added.
 
 ## Cancellation
 
 Shielding a `to_thread` Task alone would let a cancelled wrapper look finished
-while SQL continues. The coordinator instead holds the lock and waits on the
-executor future for the synchronous worker itself, with copied contextvars.
-It catches cancellation (including repeated cancellation), keeps draining that
+while SQL continues. The coordinator instead holds the affected authority locks
+and waits on the executor future for the synchronous worker itself, with copied
+contextvars. It catches cancellation (including repeated cancellation), keeps draining that
 future, and re-raises cancellation only after the worker has actually completed
 commit/rollback. Cancellation while waiting to enter schedules no protected SQL
 work. An admitted operation may commit successfully despite cancellation, but
@@ -116,7 +130,23 @@ runner; forbidden transaction control; and deterministic races after validation,
 during the transaction and immediately before COMMIT. They also cover repeated
 cancellation, cancellation before admission, concurrent terminal status changes,
 real accepted user → runtime context → registered capability → protected commit,
-default wiring and ordinary PocketBase/uncoordinated runtime behavior.
+default wiring and ordinary PocketBase/uncoordinated runtime behavior. The
+ordering cases also cover same-session successors with different turn IDs,
+same-turn acquisition using another session, expiry scan/acknowledgement and
+coordinator shutdown, each in all three transaction windows. A separate shutdown
+case rejects a new session's protected admission while A's worker is draining,
+including authority keys created after close took its drain snapshot.
+
+The two-session regression pauses A in each real SQLite window, queues A's
+release, advances the fake lease clock to B's normal renewal interval, and runs
+B's public `renew_turn`. An asyncio event marks the renewal's execution so a
+task-completion assertion detects blocking without any timed race or deadline.
+B renews before A resumes and remains authoritative after its original expiry;
+an unrelated lease can also be acquired while A is paused. A's release cannot
+return until its actual SQLite COMMIT completes, and its old bound port rejects
+subsequent work. At pre-refinement HEAD
+`59588fc0fd477acb43b12cfb18f29e7ca34db598`, all three renewal cases deterministically
+failed because B was blocked behind A's global coordinator lock.
 
 The related runtime suites cover normal capabilities, regeneration, context,
 ordinary events/messages, application/WS entry points and existing coordination/
@@ -141,16 +171,21 @@ canonical trajectory authority.
 
 ```bash
 python -m pytest tests/services/session/test_durable_turn_fence.py -q
+
+# Just the deterministic cross-session renewal regression:
+python -m pytest tests/services/session/test_durable_turn_fence.py -q -k unrelated_session_renews
 ```
 
 Use the current worktree's import path, an isolated `DEEPTUTOR_HOME` and a
 worktree-local pytest temporary directory. The tests use existing schema only;
 session titles/messages are test witnesses, not mathematical storage design.
 
-Final focused result: **47 passed**. The related runtime run completed with
-**255 passed, 6 warnings** (including the then-current 43 desired cases). A
-separate SQLite native regression run plus the then-current 46 desired cases
-completed with **91 passed, 1 deselected**. The deselection was explicitly
+Final focused result: **66 passed**. The current related runtime run completed
+with **277 passed, 6 warnings** (including the then-current 65 desired cases;
+the last shutdown-admission case was added afterward and passed in the focused
+run). Before this locking refinement, the SQLite native regression run plus the
+then-current 46 desired cases completed with **91 passed, 1 deselected**. The
+deselection was explicitly
 `test_sqlite_store_migrates_legacy_chat_history_db`, the independently reproduced
 baseline failure already recorded by PR #4, not an ownership/commit case.
 Ruff lint/format and diff whitespace checks pass on all changed source/test files.

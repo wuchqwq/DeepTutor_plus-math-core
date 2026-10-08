@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import AsyncExitStack, asynccontextmanager
 from contextvars import copy_context
 from dataclasses import replace
 import time
@@ -18,6 +19,7 @@ class MemoryCoordinator:
     def __init__(self, *, lease_ttl_seconds: float = 30.0) -> None:
         self.lease_ttl_seconds = float(lease_ttl_seconds)
         self._lock = asyncio.Lock()
+        self._authority_locks: dict[tuple[str, str], asyncio.Lock] = {}
         self._fencing_token = 0
         self._turn_leases: dict[str, TurnLease] = {}
         self._session_turns: dict[str, str] = {}
@@ -29,6 +31,7 @@ class MemoryCoordinator:
         self._background_command_ids: set[str] = set()
         self._background_cursor = "0-0"
         self._leader: LeaderLease | None = None
+        self._closing = False
         self._closed = False
 
     def _expires_at(self) -> float:
@@ -38,8 +41,25 @@ class MemoryCoordinator:
     def _active(lease: TurnLease | LeaderLease | None) -> bool:
         return lease is not None and lease.expires_at > time.time()
 
+    @asynccontextmanager
+    async def _turn_authority(
+        self, turn_id: str, session_id: str | None = None
+    ) -> AsyncIterator[None]:
+        # Both keys matter: a successor may use another turn in the same
+        # session, and turn-only lookups/expiry acknowledgement need ordering.
+        keys = [("turn", turn_id)]
+        if session_id is not None:
+            keys.append(("session", session_id))
+        # Retain locks for this coordinator's lifetime: removing a lock with
+        # queued waiters could split one authority across two lock instances.
+        guards = [self._authority_locks.setdefault(key, asyncio.Lock()) for key in sorted(keys)]
+        async with AsyncExitStack() as stack:
+            for guard in guards:
+                await stack.enter_async_context(guard)
+            yield
+
     async def acquire_turn(self, turn_id: str, session_id: str, owner_id: str) -> TurnLease | None:
-        async with self._lock:
+        async with self._turn_authority(turn_id, session_id), self._lock:
             current_turn_id = self._session_turns.get(session_id)
             current = self._turn_leases.get(current_turn_id or "")
             if self._active(current):
@@ -58,7 +78,7 @@ class MemoryCoordinator:
             return lease
 
     async def renew_turn(self, lease: TurnLease) -> TurnLease | None:
-        async with self._lock:
+        async with self._turn_authority(lease.turn_id, lease.session_id), self._lock:
             current = self._turn_leases.get(lease.turn_id)
             if not self._active(current) or current is None:
                 return None
@@ -73,7 +93,7 @@ class MemoryCoordinator:
             return renewed
 
     async def release_turn(self, lease: TurnLease) -> bool:
-        async with self._lock:
+        async with self._turn_authority(lease.turn_id, lease.session_id), self._lock:
             current = self._turn_leases.get(lease.turn_id)
             if current is None or (
                 current.owner_id != lease.owner_id or current.fencing_token != lease.fencing_token
@@ -85,30 +105,34 @@ class MemoryCoordinator:
             return True
 
     async def get_lease(self, turn_id: str) -> TurnLease | None:
-        async with self._lock:
+        async with self._turn_authority(turn_id), self._lock:
             lease = self._turn_leases.get(turn_id)
             return lease if self._active(lease) else None
 
     async def run_turn_mutation(self, lease: TurnLease, mutation: Callable[[], Any]) -> Any:
         """Serialize lease invalidation with a host-owned durable worker.
 
-        Lease expiry is observed under the same lock as acquisition/release.
+        Lease expiry is observed under the same authority locks as acquisition/
+        release, scoped to this turn and session. The global state lock is never
+        held across the worker, so unrelated leases can renew independently.
         An already expired owner cannot enter; once admitted, expiry/replacement
         can only become authoritative after this worker finishes (including its
         commit/rollback). This is single-process protection, not a Redis port.
         """
-        async with self._lock:
-            current = self._turn_leases.get(lease.turn_id)
-            if (
-                self._closed
-                or not self._active(current)
-                or current is None
-                or current.owner_id != lease.owner_id
-                or current.fencing_token != lease.fencing_token
-                or current.session_id != lease.session_id
-                or self._session_turns.get(lease.session_id) != lease.turn_id
-            ):
-                raise RuntimeError("Turn authority lost")
+        async with self._turn_authority(lease.turn_id, lease.session_id):
+            async with self._lock:
+                current = self._turn_leases.get(lease.turn_id)
+                if (
+                    self._closing
+                    or self._closed
+                    or not self._active(current)
+                    or current is None
+                    or current.owner_id != lease.owner_id
+                    or current.fencing_token != lease.fencing_token
+                    or current.session_id != lease.session_id
+                    or self._session_turns.get(lease.session_id) != lease.turn_id
+                ):
+                    raise RuntimeError("Turn authority lost")
             # Use the executor future itself, not a cancellable to_thread Task.
             # Cancelling an asyncio wrapper must not mark the SQL worker done.
             context = copy_context()
@@ -131,14 +155,18 @@ class MemoryCoordinator:
 
     async def list_expired_turn_ids(self) -> list[str]:
         async with self._lock:
-            return sorted(
-                turn_id
-                for turn_id in self._known_turns
-                if not self._active(self._turn_leases.get(turn_id))
-            )
+            turn_ids = sorted(self._known_turns)
+        expired = []
+        for turn_id in turn_ids:
+            async with self._turn_authority(turn_id), self._lock:
+                if turn_id in self._known_turns and not self._active(
+                    self._turn_leases.get(turn_id)
+                ):
+                    expired.append(turn_id)
+        return expired
 
     async def acknowledge_expired_turn(self, turn_id: str) -> None:
-        async with self._lock:
+        async with self._turn_authority(turn_id), self._lock:
             self._known_turns.discard(turn_id)
             lease = self._turn_leases.get(turn_id)
             if lease is not None and not self._active(lease):
@@ -292,7 +320,15 @@ class MemoryCoordinator:
 
     async def close(self) -> None:
         async with self._lock:
-            self._closed = True
+            # Stop new protected admissions, then drain affected authorities
+            # without holding the global state lock across any SQL worker.
+            self._closing = True
+            guards = [guard for _, guard in sorted(self._authority_locks.items())]
+        async with AsyncExitStack() as stack:
+            for guard in guards:
+                await stack.enter_async_context(guard)
+            async with self._lock:
+                self._closed = True
 
 
 __all__ = ["MemoryCoordinator"]
