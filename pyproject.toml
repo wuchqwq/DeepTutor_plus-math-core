@@ -96,6 +96,12 @@ dependencies = [
 deeptutor = "deeptutor_cli.main:main"
 deeptutor-export-frontend-contracts = "deeptutor.api.contracts.export:main"
 
+[project.entry-points."deeptutor.extensions"]
+# Protected-math turn capability. It is discovered through the canonical
+# extension group and consumes the standalone `tutor_demo` Math Semantic Core
+# as its mathematical authority; it adds no core routing and no second runtime.
+math_turn = "deeptutor.capabilities.math_turn.capability:MathTurnCapability"
+
 [project.entry-points."deeptutor.reading_extensions"]
 read_aloud = "deeptutor.reading.read_aloud:ReadAloudExtension"
 guided_learning = "deeptutor.reading.study_guidance:StudyGuidanceExtension"
