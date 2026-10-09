@@ -1,0 +1,276 @@
+{
+  "scope": "Actual raw SDK selector request/response -> persisted Core alignment -> accepted public output; no new execution",
+  "chains": [
+    {
+      "run": "thinking-off-v2",
+      "case": "integrated-S1",
+      "accepted_user_message_id": 1,
+      "alignment_status": "aligned",
+      "matched_artifact_refs": [
+        "artifact_fb25443eaa34f31dc6d60c08"
+      ],
+      "validated_artifact_refs": [],
+      "offer_count": 12,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "a7324bea0d77b67c47f23a0b3b5886add1eb7082154a2ab9ad2d3eae099e5533",
+          "basis": {
+            "accepted_prefix_digest": "b4a02f7c5a81efff046ea6a32bbcb6a783cb0244531db1c86c26274c84c192b1",
+            "accepted_user_message_id": 1,
+            "authority_digest": "9963513e6487360391d12ed4b45f0a5cba01139390c59ea925d0ec48ed50a99f",
+            "episode_id": "phase_d_cee4097cf2647742b121baca",
+            "math_revision": 1,
+            "semantic_state_digest": "584e56e85ed9bea329522addbacddbce5b872824b4aa09b10ad0c853fefed90e",
+            "session_id": "unified_1791533916395_73a75311",
+            "trajectory_ref": "4d5a722901f8bb630b8d0cfc8739cd262972cc5ec5ff8d896827d0338e7d360c",
+            "turn_id": "turn_1791533916745_0cbfd14da8"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_591e06723cb2ea337cf9a4c8fcc0eb2fd3518543f3f0d619fe302fdf4640d37c",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v2",
+      "case": "integrated-S4",
+      "accepted_user_message_id": 1,
+      "alignment_status": "aligned",
+      "matched_artifact_refs": [
+        "artifact_9a49636c63aee4fba96c5985"
+      ],
+      "validated_artifact_refs": [
+        "artifact_f04c36d8514bb94865b96fae"
+      ],
+      "offer_count": 7,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "ef5dddf3391a6b701c4dad56350c9ee276ed4f6fd849738a044909ad1f326e8d",
+          "basis": {
+            "accepted_prefix_digest": "3656150bfead6bb693b5d0c8dcfd902eed317c27de41521fe4eb99260e74a295",
+            "accepted_user_message_id": 1,
+            "authority_digest": "958ffffaccc0d913c02ecb1a7616eea3eb754dd9279f272199da988807953537",
+            "episode_id": "phase_d_76a83bf029ee2daf829fd792",
+            "math_revision": 2,
+            "semantic_state_digest": "752365837b84be6d4390d8f4aac208b5a10f90e48d3e91657e372042f0f7173f",
+            "session_id": "unified_1791534150282_b3c0f44d",
+            "trajectory_ref": "c8233c11b9868b957c55f77dd736976fb5f252b5b4597b77f589e32669b3d17a",
+            "turn_id": "turn_1791534153735_191397c16c"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_8b1b38b8ee4d8ed4ed4c61bd90601e1cc199ca36d0adacda32d6ac96c5cd63df",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v3",
+      "case": "integrated-S8",
+      "accepted_user_message_id": 1,
+      "alignment_status": "aligned",
+      "matched_artifact_refs": [
+        "artifact_1d837bd32ddc526b43262d26"
+      ],
+      "validated_artifact_refs": [],
+      "offer_count": 12,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "3b96210463b1cf85be7a780aac2180af542eace8328258e17d5c34f97f1718c7",
+          "basis": {
+            "accepted_prefix_digest": "479a152e99b6e5d5619ae5a1942598ec434d00486f950d3a765d44866e2c3e6d",
+            "accepted_user_message_id": 1,
+            "authority_digest": "9963513e6487360391d12ed4b45f0a5cba01139390c59ea925d0ec48ed50a99f",
+            "episode_id": "phase_d_41b0efc86cce22318996a737",
+            "math_revision": 1,
+            "semantic_state_digest": "858366e07e2fb1756154e92f52e4d7cfc3022f735bff95f244b7892afd29ec55",
+            "session_id": "unified_1791534741315_ee36bc8e",
+            "trajectory_ref": "cea1c7b9221a202fc7c72e701f21a8287ef08bc56b719b1e909b6462965a28a8",
+            "turn_id": "turn_1791534741653_4d1673cc9d"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_d11af47be2c561af4958b5677896cb7a812c8b315b4f10748368d58f82bc3bac",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v3",
+      "case": "integrated-S8",
+      "accepted_user_message_id": 3,
+      "alignment_status": "aligned",
+      "matched_artifact_refs": [
+        "artifact_9a49636c63aee4fba96c5985"
+      ],
+      "validated_artifact_refs": [],
+      "offer_count": 3,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "ccfcefedcd9afd731b9f56c16ae5fdf17ef52df3cbe74707bb2226137777eced",
+          "basis": {
+            "accepted_prefix_digest": "dd4688e5560828fed7563df09052ff03f740c18cbfdd54e4a65a70afd016d439",
+            "accepted_user_message_id": 3,
+            "authority_digest": "e971eb6c39edb8fd3d865dc596dbaf39054b680196c7bcdf82ac04827e77888a",
+            "episode_id": "phase_d_41b0efc86cce22318996a737",
+            "math_revision": 1,
+            "semantic_state_digest": "15635c02c0aa8c1515e37703bb1b0cf40a6c8a4537ba8c562efb0666d34c39f4",
+            "session_id": "unified_1791534741315_ee36bc8e",
+            "trajectory_ref": "78d47c1cf9bcf84fbd5e6d63233200a8a5231e7114c0674ba581577298dc96be",
+            "turn_id": "turn_1791534745275_659e7f07d6"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_c0fd1a4024c48d8c31c85b913688b685951836fb1fd960e81e49bc8eefc8e3d1",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v3",
+      "case": "integrated-S8",
+      "accepted_user_message_id": 5,
+      "alignment_status": "unresolved",
+      "matched_artifact_refs": [],
+      "validated_artifact_refs": [],
+      "offer_count": 7,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "df2521600f10a1ded48e1e3b73982c6d18a73cbe0dbb1a157526e713c452d4c3",
+          "basis": {
+            "accepted_prefix_digest": "7311ecc4bb6b94a5d6342aaf968775405bfc23c2666bc51a53c2b38e06525c14",
+            "accepted_user_message_id": 5,
+            "authority_digest": "958ffffaccc0d913c02ecb1a7616eea3eb754dd9279f272199da988807953537",
+            "episode_id": "phase_d_41b0efc86cce22318996a737",
+            "math_revision": 1,
+            "semantic_state_digest": "3342fc0d7d1673cc971d75da74c08916157729a06a27e3bdcb4a58673f05d40a",
+            "session_id": "unified_1791534741315_ee36bc8e",
+            "trajectory_ref": "21eb8fb8d9df8df969c8dd1f8bd24263b9b94f5a66711619dfdb7fc3bc135896",
+            "turn_id": "turn_1791534749167_56e62c8cee"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_d1fc299359834de1edd40e4b09011b81e710e34e7a7b2cf516ff2608e48c05f3",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v3",
+      "case": "integrated-S8",
+      "accepted_user_message_id": 7,
+      "alignment_status": "unresolved",
+      "matched_artifact_refs": [],
+      "validated_artifact_refs": [],
+      "offer_count": 7,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "cec0a8efca45418ef37f698278702e89bd4f648136f7867372e50a9f0f74bad0",
+          "basis": {
+            "accepted_prefix_digest": "c2cec71dc2eac68d3cdfd8407b3e91273c683b65560724b099860041cf8a820a",
+            "accepted_user_message_id": 7,
+            "authority_digest": "958ffffaccc0d913c02ecb1a7616eea3eb754dd9279f272199da988807953537",
+            "episode_id": "phase_d_41b0efc86cce22318996a737",
+            "math_revision": 1,
+            "semantic_state_digest": "927f0fb1d5ad5201e4aa0f123d4f7fce6766e4bf9ad181a3c032323abbf19378",
+            "session_id": "unified_1791534741315_ee36bc8e",
+            "trajectory_ref": "462844e419f28d1e980de2ea66697bd7cc918ca79dc3be5e7960075bf278555a",
+            "turn_id": "turn_1791534755490_9330b012f5"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_fd02bd126dbc535a63d8fbd9cc7026318ef384f7a895a1606695461b7907296e",
+          "selected_grants": []
+        }
+      }
+    },
+    {
+      "run": "thinking-off-v3",
+      "case": "integrated-S8",
+      "accepted_user_message_id": 9,
+      "alignment_status": "aligned",
+      "matched_artifact_refs": [
+        "artifact_bbcec6e40fe9e649d294830e"
+      ],
+      "validated_artifact_refs": [],
+      "offer_count": 7,
+      "offer_kinds": [
+        "orientation"
+      ],
+      "offer_texts": [
+        "Mathematical evidence recorded."
+      ],
+      "selected_grant_ids": [],
+      "selected_ids_belong_to_offers": true,
+      "final_content": "Mathematical evidence recorded.",
+      "publication": {
+        "math_publication": {
+          "authority_basis": "66a01417327794f31d068923382828a472cc1a86c1e0cdecfd277a67b1506b2b",
+          "basis": {
+            "accepted_prefix_digest": "14f46d2797824504501277c7c5de5533deb450684f08df87a520accaed544fcc",
+            "accepted_user_message_id": 9,
+            "authority_digest": "958ffffaccc0d913c02ecb1a7616eea3eb754dd9279f272199da988807953537",
+            "episode_id": "phase_d_41b0efc86cce22318996a737",
+            "math_revision": 1,
+            "semantic_state_digest": "3e2e88dd19bc6dce8af6f6bdf6a884df65e122bfe4d48d050876d40719e33709",
+            "session_id": "unified_1791534741315_ee36bc8e",
+            "trajectory_ref": "b7fadf5f1f4b6752aa68d4484a2fb603c515462136f1fcc6657f6913acec5404",
+            "turn_id": "turn_1791534760793_916f7a1f81"
+          },
+          "content_digest": "12885adc58ee143e58291872983d606f6c11a26c2f7bf97063b4a82689d228c9",
+          "publication_id": "math_output_6a47fdfa7f2bcd89e4982b28b84b60319c2073ab6c59db5c795f2788b31497dc",
+          "selected_grants": []
+        }
+      }
+    }
+  ]
+}

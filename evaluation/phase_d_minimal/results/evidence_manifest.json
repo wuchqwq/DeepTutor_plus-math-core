@@ -1,0 +1,2268 @@
+{
+  "archive_relative_path": "data/phase-d-delivery/phase-d-first-round-final.zip",
+  "archive_bytes": 7397164,
+  "archive_sha256": "363a6d3ca62d35d8486f9856ae61ef24352dbbe6f8352192a62f81b0afafc96c",
+  "file_count": 450,
+  "exclusion": "No runtime homes, model Catalog, key files, auth headers or cookies. SDK/http/browser observation already uses field whitelists. Credential-shaped text scan passed; never compared against or read a key.",
+  "known_early_gaps": [
+    "Original native ordinary S1 main requests missed SDK wire observation; actual persisted usage retained.",
+    "Some early Tee console logs are empty; raw provider/SQLite failures retained.",
+    "Failed-case background HTTP request may have no observed response/usage."
+  ],
+  "files": [
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/actual_sqlite_evidence.json",
+      "bytes": 2299110,
+      "sha256": "862ae43265c87c07935628207ace27971a3f3795507aaecc72fbb39df7dde325"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/after-refresh.png",
+      "bytes": 101923,
+      "sha256": "c87c89e176950fa1f3953c06c5b2398ab518d5cd8de5c2bcf4a3d43cc1fc66ce"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/after-refresh.txt",
+      "bytes": 3344,
+      "sha256": "ff395f946684ffb72c1b99aa75afe3fe619ff66d7302b176bfaed1b612906107"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/api.log",
+      "bytes": 11302,
+      "sha256": "86fefccbf57c045385dd6460034542e5762818850a90e3a5343154abad817a47"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/before-refresh.txt",
+      "bytes": 3476,
+      "sha256": "66dcc4a2168c124a93e117d2511ae098198473befd179210cb64f897f4df3295"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/browser_events.jsonl",
+      "bytes": 1959812,
+      "sha256": "704de59903f3f7828bda6832c6157a8d5cc0554c1a200dfee4928a7296417b56"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/experiment_context.json",
+      "bytes": 490,
+      "sha256": "d1ff3d5350a57ab01575d0106013bbbb9b5da9c7651d01eb522af84df6f97822"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/http_requests.jsonl",
+      "bytes": 692,
+      "sha256": "724b09b48da86b95629184be93b0b2d907e81b52fba5f9b0876a3e668973dd77"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/provider_calls.jsonl",
+      "bytes": 43891,
+      "sha256": "bf3236366b014573afaadd4e5d6784618711fa21a03b8fdd898bb18f830327dc"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/run_config.json",
+      "bytes": 1090,
+      "sha256": "fc0a60326c920bbb0f623af296d62f986cb18904d54689f192fa72130e301887"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/sqlite_evidence_hash.json",
+      "bytes": 336,
+      "sha256": "fd9ebe1fc10460a6d66af6a6dc886356cf4ca4dc69e4c3423518578db69e8c67"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/startup.png",
+      "bytes": 42859,
+      "sha256": "1ec74c273e5de95a53834ef0af4d3a86367c0085700e16c696e613b4209c8aa2"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/turn-0-body.txt",
+      "bytes": 3322,
+      "sha256": "47a36548bc509cae54bf0f78ce96503939ac40fa479ff8a852c0134945aa63d2"
+    },
+    {
+      "path": "data/phase-d-evidence/ordinary-S1/turn-0.png",
+      "bytes": 118301,
+      "sha256": "5286cf9b6a758e859496fd8d5a0aa069b3d28eaaef23bf1264fdf837ec46cbca"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/actual_sqlite_evidence.json",
+      "bytes": 34442,
+      "sha256": "0d80e11f73d914a29ab1660cf50c1b9228600ad7cf9f089bb53e915169d0fd95"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/alignment_calls.jsonl",
+      "bytes": 7286,
+      "sha256": "24cb9a9a7b6e8e53185fd37ca4ff1ed8e9a93e86e76d25ee0244643eaa93fec9"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/api.log",
+      "bytes": 8948,
+      "sha256": "5afd4dc2bff5d0c08975dfe7fca5d4867044e1db44e0c98573a591f64f346f64"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/browser.log",
+      "bytes": 58,
+      "sha256": "e711e3050fcc73818e41683d1a38755ab332cc26afd2edda18efcb4cfa806fa5"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/browser_events.jsonl",
+      "bytes": 5513,
+      "sha256": "1226c29980dbcf2170c971d6dd5366336a32d332f15660316035131ce097864a"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/failure.png",
+      "bytes": 78001,
+      "sha256": "feed73301aa46d2b1ade44bbcf04bf3780bd27d7e6477c83bfae2d113936a80f"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/http_requests.jsonl",
+      "bytes": 346,
+      "sha256": "b2d8c42616cb619ed7d8a1312fcdefee58dc239bd8c78458be492a0a92ce5cde"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/provider_calls.jsonl",
+      "bytes": 12378,
+      "sha256": "9171896028888daaf1d247b5f83053b90e51337750e48cc95d00b27d2c4996de"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/run_config.json",
+      "bytes": 1097,
+      "sha256": "b1cb4433870b97be6e4846d90c3a86b8d7e783341c87518459134f0eadca5313"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "d9d78d4875bec0f0b7a9a919797bae72b2c1a555ae55c1dd24a278529a6272e6"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/startup.png",
+      "bytes": 40965,
+      "sha256": "b8b9be0e3f28acefd744be1b12e04c423f50876ebdee2b100a648f49d736cb5c"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/turn-0-body.txt",
+      "bytes": 1189,
+      "sha256": "4f188944f0be494fca9e48ee509678e2d3214b3c39bedd59dff30e4d98e669bd"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/turn-0.png",
+      "bytes": 78029,
+      "sha256": "db03e27f1ff1aae79b6ff5e4a83ca1b8e511e27a7858f383bea77c74df616d71"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/sources/phase_d_0ab103615c09bc016ed405e8/alignment_projection.json",
+      "bytes": 8015,
+      "sha256": "17a2326b83c6af190fce4673b22f14b18d83a06a35ea77946d5a9fd0fed95e1c"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/sources/phase_d_0ab103615c09bc016ed405e8/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "21ccfcbbf209e5d7f72a164ed0fc6a4c288fb85915a0767b362651592e1cb631"
+    },
+    {
+      "path": "data/phase-d-evidence/integrated-S1/sources/phase_d_0ab103615c09bc016ed405e8/source_hashes.json",
+      "bytes": 200,
+      "sha256": "05c0ea036dbf9620fbef9f94eb17ca08307bec14d3541f7590d49c9c698e6cb6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/actual_sqlite_evidence.json",
+      "bytes": 34419,
+      "sha256": "f699c69776ff5cfa26282dac8ad356545c073d01263489c36f2bc1ad16401821"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/alignment_calls.jsonl",
+      "bytes": 7519,
+      "sha256": "393b750924514f56a25d47a40e59d9217799163f3d679133b8b3d497608f63ce"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/api.log",
+      "bytes": 8841,
+      "sha256": "211bf93cdb8691e5da1c082defec4b77202515ff2da255c1da0c8dcd118df748"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/browser_events.jsonl",
+      "bytes": 5320,
+      "sha256": "6232f0352e79030a2b30060971b547d820c12ec3bbe6c0c46803452a8fdae675"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/failure.png",
+      "bytes": 78114,
+      "sha256": "707ade1699da9c4243092c77a8dcc91f522155e5b23f4e0800b6ba147e4c8033"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/http_requests.jsonl",
+      "bytes": 699,
+      "sha256": "061a814be85b2e778348a006ce5b96ebe18f272e8a727e621e604a67661a3ac4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/provider_calls.jsonl",
+      "bytes": 12570,
+      "sha256": "8aa46f334bd9c73b4d2465f863695882c2af11730035ae236ce259e0c62b8e0e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/run_config.json",
+      "bytes": 1225,
+      "sha256": "0864b64631cbc45ffaf347d9d32862ddbcbaf09a3a1304274bbefdf7b70ea0bd"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "b5c8773bbd2939defb72ddd1794e1c2c6f822c89abe4000ee0ce5cba51b6257b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/startup.png",
+      "bytes": 42162,
+      "sha256": "1c4411e4489e4c2feb45cd76143252a7e60deb6a8c56e7097a5a3b29ef0e887a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/turn-0-body.txt",
+      "bytes": 1189,
+      "sha256": "4f188944f0be494fca9e48ee509678e2d3214b3c39bedd59dff30e4d98e669bd"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/turn-0.png",
+      "bytes": 78164,
+      "sha256": "8d9d3f3709e9eb856ad5d10d3a75096d83389f204512b11c78a9410da8984008"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/sources/phase_d_660586fcb6104b4e5580ede5/alignment_projection.json",
+      "bytes": 8015,
+      "sha256": "a4c67ca31e976ca277dcfe02c3c0ba77396cea121ebce3d10a6dd789dcddbdd7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/sources/phase_d_660586fcb6104b4e5580ede5/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "321bd5b3b515fde47e2c8ab3c70ad8dff3d21c23f70fdc806836acbdaa70b247"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v1/integrated-S1/sources/phase_d_660586fcb6104b4e5580ede5/source_hashes.json",
+      "bytes": 200,
+      "sha256": "0d9aedccd04c2cbde5be08130b6b23f23054fb35f795c4f2b8b539598205b1bb"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/aggregate.json",
+      "bytes": 35789,
+      "sha256": "12fabfd4aa68b545b2254d67c4785e0ea2a3b9043b2b479679b3b3fd4bf217a9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/actual_sqlite_evidence.json",
+      "bytes": 41840,
+      "sha256": "c4c7109875812542b63bb61f827042d143ebf11ae5a72f30f7d69d1c0146b2a7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/after-refresh.png",
+      "bytes": 78696,
+      "sha256": "1d1a8745aba64521b7b8009f144041a26e4c5e209bf0bf8531c533b642879484"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/after-refresh.txt",
+      "bytes": 1355,
+      "sha256": "2eebefd5b56cf1c43697326311663cb45e4765617fddb381686d0635e1bd2df9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/alignment_calls.jsonl",
+      "bytes": 7478,
+      "sha256": "d0cca1487ac6680628077978d75d4a9069985291c59df12c6a1641632237da84"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/api.log",
+      "bytes": 10225,
+      "sha256": "31c1734240d9cf8569fc0dc2c896fb5d93a81b353283f74e7c55a8ded520129a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/before-refresh.txt",
+      "bytes": 1214,
+      "sha256": "8f0138c81039a080d907b9d30f460076f189f29895c96c904ba59d7b757cda0f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/browser_events.jsonl",
+      "bytes": 8951,
+      "sha256": "78038c7bffc27e2850158fb4574a08eb671ea6db7fd3542319ad199637e4ed3d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/execution.json",
+      "bytes": 1768,
+      "sha256": "ea67e0f359a256d0fdecdaa5a99879a0f5e75ded49e7e84d90ad21712fa25b53"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/export.log",
+      "bytes": 286,
+      "sha256": "b911ef734d81f2e26dadeffce09562f60290ff9410e32f37400ec9c1d8c52476"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/http_requests.jsonl",
+      "bytes": 1027,
+      "sha256": "f88a2e4e2b4c5b8e978c8c3ed3ce32432bfeef19f02343dacf7799a17b3f3e22"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/provider_calls.jsonl",
+      "bytes": 21017,
+      "sha256": "b28cc437d03d9ac6cc9fa0f88930581e33b004926574e049714a4608d18ad278"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/run_config.json",
+      "bytes": 1225,
+      "sha256": "42832e8741c9f5b65ff4381daf28d3355b2b3a0d7421fcfca42a504ef1d45804"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "62fcf27bb2481248cb06792a1174128ba8298f5e96f168321341a06e31ca9fd1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/turn-0-body.txt",
+      "bytes": 1214,
+      "sha256": "8f0138c81039a080d907b9d30f460076f189f29895c96c904ba59d7b757cda0f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/turn-0.png",
+      "bytes": 79902,
+      "sha256": "d055c1b8203f6dc9e8da494d566cbe6d4f55c4ad0dd2d063b89db7e57010af2a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/actual_sqlite_evidence.json",
+      "bytes": 41697,
+      "sha256": "63b964a24852d716c15b4e9e415502dd254876af483788389a91bbfbfe55adf8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/after-refresh.png",
+      "bytes": 76469,
+      "sha256": "4a3aefce52e00353dfc271e8569b8b0dfb645372c31ce447054f100f97d47af4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/after-refresh.txt",
+      "bytes": 1282,
+      "sha256": "0b3401ec0641ba4a522a4d369d1a825d11f936590c74a9cfacb14486ee710d83"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/alignment_calls.jsonl",
+      "bytes": 7432,
+      "sha256": "d485406d079aa28f581bdcc63564de5ba9b0f1a7a900d951cf8ac914b8366caa"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/api.log",
+      "bytes": 10140,
+      "sha256": "294aa53b2bc6298837a2a6d0f2d002ad7acbfde78b149c168be5a6435fed5fe2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/before-refresh.txt",
+      "bytes": 1169,
+      "sha256": "bbc8ef1038f7129b226846efba7587e8b927f435a85f2a84954dec59dabc3d1b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/browser_events.jsonl",
+      "bytes": 9094,
+      "sha256": "a57e30b63bea91464c90fbed94661cc26fcd908989faae44350aff90091cbc06"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/execution.json",
+      "bytes": 1768,
+      "sha256": "179a2e78f4c351ad6fe628f332e239c402089f77f0c14c73149da6b17cce19ef"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/export.log",
+      "bytes": 286,
+      "sha256": "5fa31f574d9be124cdf90eaab3803d38f95887db60b292cc606721954635f3d9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/http_requests.jsonl",
+      "bytes": 1027,
+      "sha256": "c2638ce1399dd6bd1a5a85ff04116ba7f04e6aedd7106d3e06b0694028e6abac"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/provider_calls.jsonl",
+      "bytes": 17092,
+      "sha256": "ef6bb87739e1f9ac213f0903ae84ae2ac73d9277908bd71d630b0054f77465a3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/run_config.json",
+      "bytes": 1225,
+      "sha256": "ef66ec6d0f3e60c8492efb4747ed61783247a33fc30c3a3a8eb3a9f91d88cdc3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "8b4f2bea73991256a6973d3e29502cb63140d0db2ffd5e0b478cef939dc0b25b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/startup.png",
+      "bytes": 37412,
+      "sha256": "9ec4f43b869d323cd91761f8a332394963aba343043f44925a18e2d3e04e976b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/turn-0-body.txt",
+      "bytes": 1135,
+      "sha256": "3847c8a3b9314d0e05a589d6170634d9b047b8af329a3725223448d3656beb3d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/turn-0.png",
+      "bytes": 78582,
+      "sha256": "024521c7af811ed7a3c1870bc7a18e6c375f2b04dbdb2a810d850f241f1aad6c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/actual_sqlite_evidence.json",
+      "bytes": 42280,
+      "sha256": "ab57d14f01b82b3cb357bc4d22120be58765debbac79aedd131d8fcd99650427"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/after-refresh.png",
+      "bytes": 67199,
+      "sha256": "1437de22ee218ac9deda072760cc3c6bbef5330e60af9cee6300d41a8b59144f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/after-refresh.txt",
+      "bytes": 1319,
+      "sha256": "ba02a40a6d21555d1882cb6830cb8870d497f24a531d575a78976327d32b412a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/alignment_calls.jsonl",
+      "bytes": 7682,
+      "sha256": "7c8bf4764525536d82bf3d791966b1a836e02631feb27b9e821d705778a19eec"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/api.log",
+      "bytes": 10251,
+      "sha256": "d687883701837867a6399c27eaddd4426baa23598ad71e48516614b1928e76e6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/before-refresh.txt",
+      "bytes": 1198,
+      "sha256": "7843a56f853cd144886f884eedd10ebaf900883389d0179d3cb819d8dcca9e0d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/browser_events.jsonl",
+      "bytes": 6225,
+      "sha256": "bea58aa0cbd07c0cf5eb1216d6b359bd998f6c035d880c3d3ab3b545269a42b1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/execution.json",
+      "bytes": 1768,
+      "sha256": "cfc5bc9d4cb77a155f5b11a1784699afa50b5565c53ef349743f26723033008b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/export.log",
+      "bytes": 286,
+      "sha256": "c29013a48915838495c9c9d01310a11ed93b5250b309df46127bdf5fad7b8159"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/http_requests.jsonl",
+      "bytes": 1027,
+      "sha256": "cff67ce59b92c22f8458fd8e0cd2a747f7afb5853c3b8db61ecbce1f75edb153"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/provider_calls.jsonl",
+      "bytes": 17414,
+      "sha256": "b1c3adf0382109664f22896dd2eb41c5935b258a9d64315e437744b7528262a1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/run_config.json",
+      "bytes": 1225,
+      "sha256": "4112b585365aaaeac247395e23350e2eaebfd80dd9ce1850c0fb630e4244680b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "0196ef1e90713e2a7ce876e643fbbe90cd39edf6622fcde0bf83932b06ff3bde"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/startup.png",
+      "bytes": 37412,
+      "sha256": "9ec4f43b869d323cd91761f8a332394963aba343043f44925a18e2d3e04e976b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/turn-0-body.txt",
+      "bytes": 1198,
+      "sha256": "7843a56f853cd144886f884eedd10ebaf900883389d0179d3cb819d8dcca9e0d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/turn-0.png",
+      "bytes": 79898,
+      "sha256": "33970372b4fd35ef522ef77c7b72963216a2fed523f3b68b16e69e9b797bf4c1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/actual_sqlite_evidence.json",
+      "bytes": 59225,
+      "sha256": "2638e89542d1d5519e85cf33b84536171f1fa1476f18230a30dfda7e7bf483d5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/after-refresh.png",
+      "bytes": 70115,
+      "sha256": "4cf231cf0561cf646776be1cc7921d04957a53a8878e1c8474f8588752806ed9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/after-refresh.txt",
+      "bytes": 1367,
+      "sha256": "1e2c0d03acdb77ad460a6fbae2b83550c07e38ce776b75923ace6f6e99d20c4f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/alignment_calls.jsonl",
+      "bytes": 7675,
+      "sha256": "eb10693e34b0b36ca8567a3d1cea21d043b86e5bf5c4ff70b236b2966e28cb25"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/api.log",
+      "bytes": 10225,
+      "sha256": "bba46286f1219d700d04eb9eb5c6627857bb07b7037423d6b44a46948a83ff50"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/before-refresh.txt",
+      "bytes": 1249,
+      "sha256": "dbda9e45e3f2bf9fc9410def7046c5070fa8803fa993bb05f85374ba7da6b870"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/browser_events.jsonl",
+      "bytes": 9105,
+      "sha256": "3dd327462b7c556fdad87734436bc19ed4e2cc176f42f0a4e828ffd5aaf70dba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/execution.json",
+      "bytes": 1768,
+      "sha256": "ba9ff99109d8b67315252f48e97a5dd3cfddd15b92fc4abc9f16195e1dce6d78"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/export.log",
+      "bytes": 286,
+      "sha256": "de47da0c908726b0866cc46cda79a82b5385a6a4db6692811138d0a3f76682ba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/http_requests.jsonl",
+      "bytes": 1027,
+      "sha256": "6c5d6cd28ff9b9633ac3cb90e0f8d4cc712e549bd503f20c570423bb40445f95"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/provider_calls.jsonl",
+      "bytes": 19178,
+      "sha256": "3556d0303d500f7dad91f6331fcd6aaf491abc5c6a28a487ee5499aba150cd2b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/run_config.json",
+      "bytes": 1225,
+      "sha256": "daa191494d806b67bdc88d1f57d83b6db61a951809972966bd42c572cdad5b87"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "802c5a53ef9b341a3d6726ce470fe5c38e25129a6775e2b313be7d57911dfc3a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/startup.png",
+      "bytes": 40965,
+      "sha256": "b8b9be0e3f28acefd744be1b12e04c423f50876ebdee2b100a648f49d736cb5c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/turn-0-body.txt",
+      "bytes": 1249,
+      "sha256": "dbda9e45e3f2bf9fc9410def7046c5070fa8803fa993bb05f85374ba7da6b870"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/turn-0.png",
+      "bytes": 83207,
+      "sha256": "298c8d53bf2c97668e8f4e60dfe970f836bb9f07bde3798cd3977ec88aa4d250"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/actual_sqlite_evidence.json",
+      "bytes": 41135,
+      "sha256": "779310486525955c4ade48c3103e378d3132aff900b535098743828d2e42aab1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/after-refresh.png",
+      "bytes": 75519,
+      "sha256": "1d816074a5eac546d41385d82d4832272c517464edebff6e0098da10fd76f97d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/after-refresh.txt",
+      "bytes": 1311,
+      "sha256": "7e06dbd78c1898040503546e9bc87cf9c4e69322c13a48a84a6dfaa45833fad3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/alignment_calls.jsonl",
+      "bytes": 7275,
+      "sha256": "cbff0339e512f47dbafcd6ed601c80ac8e1cb43a2fd12c71c6df7c313a875215"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/api.log",
+      "bytes": 10141,
+      "sha256": "ff0956dbc3b44dda61f23cc2ea81ed75a3e4d10eb7cc9de2fab8615c81516678"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/before-refresh.txt",
+      "bytes": 1206,
+      "sha256": "3633f54d5ecada458e1a704734c1beb80e0236235e00224c5f051cc8ac25a502"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/browser_events.jsonl",
+      "bytes": 9007,
+      "sha256": "a8c2ac73a22a9725a9e9d63415d589b40ecc3de34a6b9638d163c48906b0fe1d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/execution.json",
+      "bytes": 1768,
+      "sha256": "ddfca6e5c8ae169c4f34de64815958bc3c07b7c1634101f6cc1e6eec15eaaeac"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/export.log",
+      "bytes": 286,
+      "sha256": "544e1d3c4e24f59efc2174cee80244981019d8ef0f977123e391352bd7ae4c05"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/http_requests.jsonl",
+      "bytes": 1027,
+      "sha256": "1babdd0890b81f3549b664fb8b52fbb85a9a1f20c31399eb40a1ba2c61738df1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/provider_calls.jsonl",
+      "bytes": 17001,
+      "sha256": "8350bd4f056fcea59f570d82e783a0e1a37b5a96236882d70b78c8969f91d872"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/run_config.json",
+      "bytes": 1225,
+      "sha256": "dc1e521615ea00255b9f6fae73645b7806df18f6111529e752d9cd25a74debc3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "47d8392a290dae7ef8b42f9fa11148f9351fc2fa322a1658d0848dec8c149962"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/startup.png",
+      "bytes": 43580,
+      "sha256": "5d958967712f37feb209c512e80fdf30f01f21f4d9bc59c9210a1264d5443299"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/turn-0-body.txt",
+      "bytes": 1206,
+      "sha256": "3633f54d5ecada458e1a704734c1beb80e0236235e00224c5f051cc8ac25a502"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/turn-0.png",
+      "bytes": 79394,
+      "sha256": "fbda1bc2e9531e844a1857da0ef17cb4576131e2169a98364e5756c85e0daa81"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/actual_sqlite_evidence.json",
+      "bytes": 41139,
+      "sha256": "6d66088b89f6160432851ab1e6c75b0b44b9effe7e752f9daad749c43aeeb1de"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/after-refresh.png",
+      "bytes": 75782,
+      "sha256": "c49de05bccf28a7f6be072d33928f04e5d02fd9e352a189882619fda00bdddbe"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/after-refresh.txt",
+      "bytes": 1265,
+      "sha256": "ef9bcff82cda7e75269efbbb2e7cb4b92ffbd50c4254e55f69bf7e565c0e0229"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/alignment_calls.jsonl",
+      "bytes": 7274,
+      "sha256": "49abcd9ff3c644804e805fbc2aecb3b7ee2a6af9969a3ea06d9e4bd33d2ed846"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/api.log",
+      "bytes": 10285,
+      "sha256": "d47d2db48d2f8753ed9ab692d757e7e2a0c08951384138eb7f2b34d482ae002e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/before-refresh.txt",
+      "bytes": 1210,
+      "sha256": "d2dabbfdee7685a0e4e5bcfb4e9a98cc506e81df5b65f6d4523cdee9afa9f591"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/browser_events.jsonl",
+      "bytes": 9015,
+      "sha256": "44d7c7ebda0c36b57ff20b94549b178992ad4f75828e5f116a6add1cde909dbe"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/execution.json",
+      "bytes": 1768,
+      "sha256": "45ca271b40dbe0c98b91c0715c96c15ee69fd28a203d44075463e77c225edde1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/export.log",
+      "bytes": 286,
+      "sha256": "ab3c48727dedd76a1ec98c3739e72ad8506f6e0deb7856472efcfd1a57a8b7b9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/http_requests.jsonl",
+      "bytes": 1354,
+      "sha256": "59611375c2bbb25140eec1565f52a09f70f3e4e23207bdb981f38f6b4e7e72fe"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/provider_calls.jsonl",
+      "bytes": 19180,
+      "sha256": "bbe8314938b744b6fd9871dcd3f04bac7da1899faf524349510a5a0c46c11cd8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/run_config.json",
+      "bytes": 1225,
+      "sha256": "304caa9bce32074545d9327eec14931fc04fbeb5b8b43f6ab72ef54186745f42"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "88a10f1e8b5f1975e48602404be788f3d50f4014d0b96dcd8d36f789383da95c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/turn-0-body.txt",
+      "bytes": 1210,
+      "sha256": "d2dabbfdee7685a0e4e5bcfb4e9a98cc506e81df5b65f6d4523cdee9afa9f591"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/turn-0.png",
+      "bytes": 79420,
+      "sha256": "064f8d1f4e57171efe7403e02eab168cd5f1fc25495dd651282f476cfb223c77"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/actual_sqlite_evidence.json",
+      "bytes": 55566,
+      "sha256": "70480ef505232061cef23c3ae8cafbac7b9a6284d8fb533aa7a1a54649b4b26e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/after-refresh.png",
+      "bytes": 66644,
+      "sha256": "0b4f4f8bb458986c259c129a65a968ba6b7c7a306231a00502a0c6a4e646397c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/after-refresh.txt",
+      "bytes": 1522,
+      "sha256": "57fa97c27e7c026a30a42051aea7802678729320d1988c486098440789719a94"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/alignment_calls.jsonl",
+      "bytes": 14922,
+      "sha256": "83d709c8e8d96a6ee8f7d2feef825882c2e9b22c28b6b470a3f098b015b95e31"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/api.log",
+      "bytes": 12061,
+      "sha256": "9f0027d9302abb9da12d987e186738f2f0c8673369f662f37d806ebb31896fcc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/before-refresh.txt",
+      "bytes": 1413,
+      "sha256": "84c46796fe4f9f1c278104150d6cb52392cff087193dd6f0fd7d52bd26c825c4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/browser_events.jsonl",
+      "bytes": 14554,
+      "sha256": "a29f9cf86b149cae92e766ae19c3aeb2b25adfc57bacf5aad1bcd28badc036e4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/execution.json",
+      "bytes": 1768,
+      "sha256": "b1f854537bfd5bebb94f959d1cbe67ca4731e554bc4b647dff0df927475cccd1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/export.log",
+      "bytes": 286,
+      "sha256": "c35648e213c81ce643f5c5975ce7f8d4fc454452647da13f81181ba2ac97a60a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/http_requests.jsonl",
+      "bytes": 2054,
+      "sha256": "7f58b20d17becf5de12b4e0d867cee0b5ef44119a42455f1226dce620a853609"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/provider_calls.jsonl",
+      "bytes": 34057,
+      "sha256": "2d97eca9b0d36deee4c4ae1d23f18fe656775a5467f6df49cfc1abf18c275670"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/run_config.json",
+      "bytes": 1225,
+      "sha256": "498964912ce3e8f97bfe9ecf22412556108f2d69fb759f9b1310245ced73ba4a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "d05f4ebdcd09fd179378d34e27b4d15c563b4ce2db533b35b8be6cb7b95045a3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/startup.png",
+      "bytes": 37412,
+      "sha256": "9ec4f43b869d323cd91761f8a332394963aba343043f44925a18e2d3e04e976b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/turn-0-body.txt",
+      "bytes": 1218,
+      "sha256": "83eef875e8d435c7b7abf8ef97123efb99beefcafb17fd42356fa8b86c4426a7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/turn-0.png",
+      "bytes": 79449,
+      "sha256": "022fd9b494ac22da4d6379ce98964c76c6d623f5e5b423870a64cb0383f446b9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/turn-1-body.txt",
+      "bytes": 1413,
+      "sha256": "84c46796fe4f9f1c278104150d6cb52392cff087193dd6f0fd7d52bd26c825c4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/turn-1.png",
+      "bytes": 76977,
+      "sha256": "3d99e0b5f099078f57267d7e0a96b253c82890a3dd52552d39e29490339ec4f9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/actual_sqlite_evidence.json",
+      "bytes": 93050,
+      "sha256": "8faf43aeddc701a836dcf6cd089d24d5cc6155d1b7a29928aa259e08f811bcdf"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/after-refresh.png",
+      "bytes": 68931,
+      "sha256": "13afe3a169e75951ff2ecea9477803613ce109433b4a175d90c00e1b22876e60"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/after-refresh.txt",
+      "bytes": 2253,
+      "sha256": "e8d8d95c18e29a79b4c5d8c7ea2a078ea2644a8e848c970f130fdabbd6bd7ec2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/alignment_calls.jsonl",
+      "bytes": 36069,
+      "sha256": "ea126fee732d918064437cfcf847ea5fbf4ae7608fae86cbad8a19180b0c13e6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/api.log",
+      "bytes": 17045,
+      "sha256": "b61d1132f42f0c0813a83c7121bc16cf40a47e433b7ca5ffef6f51edb98f8823"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/before-refresh.txt",
+      "bytes": 1966,
+      "sha256": "c4278f48920b000abbd599b6da7d127eba28ee9efbf21d3a74b4cdd15642b913"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/browser_events.jsonl",
+      "bytes": 41975,
+      "sha256": "9eb48c58befc703c6b650b6ce7806285a033fbfae57f3a95c5f58c838a6d3580"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/execution.json",
+      "bytes": 1768,
+      "sha256": "f55b93a30da80e70ccff035a4f1589c693a825420579f0624b0a09884b683ede"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/export.log",
+      "bytes": 288,
+      "sha256": "a0896937f6f5d805468695071ae39a870fc1115481e0eec128f59481f2e26d96"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/http_requests.jsonl",
+      "bytes": 5141,
+      "sha256": "4eeb315a1d794b751313c1076a27363df701769ca7e4b97bbd65d7007590d652"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/provider_calls.jsonl",
+      "bytes": 89525,
+      "sha256": "5ce2ff31a80cb81c1e0ae76a4ae603d1040609d56ffb2f79c834c7b6434d71da"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/run_config.json",
+      "bytes": 1225,
+      "sha256": "1253c836f257479e9a8f48e6a56284d1777cb2d53e284ce14f7143c954e1873f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "46d9c2afe00b53054749226150115165bb598384f2d93af04543be64837eedab"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/startup.png",
+      "bytes": 44308,
+      "sha256": "1b3e8649a369816f0c983e1a0ac73bd64f5283a93c3a098946982360715f80aa"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-0-body.txt",
+      "bytes": 1159,
+      "sha256": "acd71380c4aca64c163f6af26be3e5c7ca8b59fa45c30b1722884eb06ba82c9a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-0.png",
+      "bytes": 77646,
+      "sha256": "62f84b2d4b27d93a372ab4bd936f155e4eeeaf956b1b5609dcdefafa69a050e7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-1-body.txt",
+      "bytes": 1371,
+      "sha256": "d6eacfb98d5618b77d79db682a37dba57fe6dc17f94873e94abcfa572911b265"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-1.png",
+      "bytes": 75396,
+      "sha256": "36dfb64b7fc97e45baa3919777198f052c5b2fe989261866c8d6ae8a75ca9276"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-2-body.txt",
+      "bytes": 1570,
+      "sha256": "db19065fe20dc9a61130731b3168373e6e862387eedcfcc875ef16c9b170c138"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-2.png",
+      "bytes": 76019,
+      "sha256": "91116362928c93e35036f03168604ad9f02e866ec380169b362989eed72b1868"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-3-body.txt",
+      "bytes": 1745,
+      "sha256": "7edcc061a7fc3b3e4091dc254af5fd1498c7d0792d7d037185784bafc009bf2f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-3.png",
+      "bytes": 74218,
+      "sha256": "f25f4e905ece8b3de4ee2166569f18398b9ee964816fbb2c7e2589fac9b74da7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-4-body.txt",
+      "bytes": 1966,
+      "sha256": "c4278f48920b000abbd599b6da7d127eba28ee9efbf21d3a74b4cdd15642b913"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/turn-4.png",
+      "bytes": 74549,
+      "sha256": "dd69fb3d9a9f10886bd802f80ab42fda8caa1196d4481dc36751566c64451e92"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/actual_sqlite_evidence.json",
+      "bytes": 358498,
+      "sha256": "75967ead93c6ff50b0f92d4fa7b546c006894a99c8c1b51e56da7975110c8d8e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/after-refresh.png",
+      "bytes": 95448,
+      "sha256": "ae623cea47ab3ebe2636b5ba97241e4d3f1468cd6229add4bc0ba70ab36541f6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/after-refresh.txt",
+      "bytes": 3138,
+      "sha256": "8e897eeb8f1dba8c05b181e6d7cd6a665c267795f1dbdf07aeaf785cbb788bd8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/api.log",
+      "bytes": 10584,
+      "sha256": "6454c07792dab58ab8ac154fbb4d5f7463073f57cdc643f352adbb7b98139cde"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/before-refresh.txt",
+      "bytes": 3099,
+      "sha256": "4c223537db063a03c832e0912f546bfdae64667d6a49c9d4f93c293973fdda34"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/browser_events.jsonl",
+      "bytes": 277163,
+      "sha256": "4d1d73dc6a9b44a1df0e5b2ff100aff47caa508ea24468179cd0d48889e65d63"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/execution.json",
+      "bytes": 1760,
+      "sha256": "3cc4982f8e355086b052ccfd8aeee17f9e62dab63fe7ab44d6203d580a105848"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/export.log",
+      "bytes": 288,
+      "sha256": "9b44dc909535d488a6b2e29b7f600a4b30943155ba70861e38b629f058874cbe"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/http_requests.jsonl",
+      "bytes": 1308,
+      "sha256": "7dcfa6c85b640cdc3c46636106979fcdac83bb96f33410a07173ef1584e1d099"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/provider_calls.jsonl",
+      "bytes": 207769,
+      "sha256": "ef308d6faf7fdd795e50f5f9c21a320a1f767ff46f9ebf7b40df3c2316aca71c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/run_config.json",
+      "bytes": 1219,
+      "sha256": "251db595a2ea7c9e639d17e9c1d5e42311a93b7afdcb30649c1cc0f085150c95"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "f6f285e3ad858d44f0e4379907b1c9ca86390a8c013abbcb8f94f00e7bf6eca9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/turn-0-body.txt",
+      "bytes": 3099,
+      "sha256": "4c223537db063a03c832e0912f546bfdae64667d6a49c9d4f93c293973fdda34"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S1/turn-0.png",
+      "bytes": 143396,
+      "sha256": "17238fe779a05d1015549a5a933ab7fd187ca7504eaabade690e4b5580fc554c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/actual_sqlite_evidence.json",
+      "bytes": 228312,
+      "sha256": "3e09f3e83845c7dfc8abbfb1123d90c6984747072234b26ae6ed2c5bc1622cff"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/after-refresh.png",
+      "bytes": 79461,
+      "sha256": "08450b49706e3efe3097490f8ca9c12a87b87e852111b9e358af22f3c07cf00d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/after-refresh.txt",
+      "bytes": 2181,
+      "sha256": "09f532c7530c2faf246699cd36bec6e5dd939cb369fe62c21be7f63bdcf0627c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/api.log",
+      "bytes": 10665,
+      "sha256": "d668a64f6eafa30471cd32789eafb4652d5155f60d789694a7697fe58a5743ba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/before-refresh.txt",
+      "bytes": 2190,
+      "sha256": "da399e521a51fe82445bfbfd1a19af36cb45a3e05d8342493d5329d2d3249abc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/browser_events.jsonl",
+      "bytes": 163865,
+      "sha256": "62c1865533bdecb572ca10e904fb10c2740aa021fce91a5555f62f4bfdbfebba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/execution.json",
+      "bytes": 1760,
+      "sha256": "dbf9fd1a9a8cb5328411589ad777c4af294c90897f7da3339a236315137073ba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/export.log",
+      "bytes": 288,
+      "sha256": "30390dbc23146847b092bc4d0b71596c320f0ca924fa0b8184e989826155b929"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/http_requests.jsonl",
+      "bytes": 1308,
+      "sha256": "5b7fcdda339a8e6669bb707dc8634294d623c48230a98387fa334d82c28c65f8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/provider_calls.jsonl",
+      "bytes": 140850,
+      "sha256": "5882314570ff66887a87ca9307446740fa8ee556f25a0aca85bc50dc2eaf7b65"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/run_config.json",
+      "bytes": 1219,
+      "sha256": "cd83fecfa1f9eb3b63c7eaae0af02caf1cd4494bb037e2f7285ee7f70b68cfa7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "dd615284eacd66fe32532dfef1dcc424a4db117dcd167bb79ef8fa1aa51091e2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/startup.png",
+      "bytes": 43987,
+      "sha256": "a15a04d1d71f49236f92f3c4522b935c192b7df11f6799c08c19c958edc9935c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/turn-0-body.txt",
+      "bytes": 2190,
+      "sha256": "da399e521a51fe82445bfbfd1a19af36cb45a3e05d8342493d5329d2d3249abc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S2/turn-0.png",
+      "bytes": 105635,
+      "sha256": "82c9276dca725d43cb2c5117db71459dcd3d76c3177ecd9d930c93b6f58b94bb"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/actual_sqlite_evidence.json",
+      "bytes": 137902,
+      "sha256": "46316bb04a6a400fea75f7c460fb101707bc81f4bd2a18e342bfa22bf98fcde5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/after-refresh.png",
+      "bytes": 83187,
+      "sha256": "b369718275898c1a9230ccb26c9f268d18f8fde6d62c555a19ca06b0d206beee"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/after-refresh.txt",
+      "bytes": 2848,
+      "sha256": "a15f71a6037a8b070cbc005db72046d3f2762ac580844d0bdb4d67e5996ad183"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/api.log",
+      "bytes": 10582,
+      "sha256": "7ab638319533828e9860304cb34ee314cd36aced63a4b962b9c5b80dd5d18be5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/before-refresh.txt",
+      "bytes": 2809,
+      "sha256": "ec362c79940858345199e4c0a0375b636676d337ebe9529550e11c56fe389455"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/browser_events.jsonl",
+      "bytes": 83514,
+      "sha256": "676c8f31c36ad12cf88851beef5080d4bd932fca2f9618216a8ba5b06f592499"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/execution.json",
+      "bytes": 1760,
+      "sha256": "f01abf54059a3b197f33b1862c2595d46e9cf660a88030fbd71339c4722def5f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/export.log",
+      "bytes": 288,
+      "sha256": "afa519a61d56dfe07bc4e94ecf8b6f02d13a255b7843b75cb5d23ed7426180fe"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/http_requests.jsonl",
+      "bytes": 1308,
+      "sha256": "5908347069cf2389719a4e8c9a08f4f7508d6d97f074b650896f2843214a27ba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/provider_calls.jsonl",
+      "bytes": 200342,
+      "sha256": "eb7376d3494abc9518b4c7e79b9f04b4e44759241a0b59a172f83a69118bda8e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/run_config.json",
+      "bytes": 1219,
+      "sha256": "ded76381eabb7e8f17b4abda5a88b5e4b235f53761bbb952ed38b642a5279584"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "6838b1a1baed5012cf171446dc22d4308f21df422ff3f9299d6bb3eb4148e3f5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/startup.png",
+      "bytes": 41873,
+      "sha256": "f58b920a049f0d204b8203deadefa436bffdffc30d81cb235f0a5b8b797be016"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/turn-0-body.txt",
+      "bytes": 2809,
+      "sha256": "ec362c79940858345199e4c0a0375b636676d337ebe9529550e11c56fe389455"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S3/turn-0.png",
+      "bytes": 107572,
+      "sha256": "0ddd14b1dd2c0d06a7a1c3fd772e93ba0fc1ecf05d556d5ae3b351299e1a3683"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/actual_sqlite_evidence.json",
+      "bytes": 406759,
+      "sha256": "9ed6e9525815d1f51c83ccac8fa398ac80812a679c6f9af64673b567028834aa"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/after-refresh.png",
+      "bytes": 83440,
+      "sha256": "9ad84eaccd8144fe9d4c889fdf23cb8d0cbb3704c20ddad48e9f1cab8f6b2706"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/after-refresh.txt",
+      "bytes": 3253,
+      "sha256": "f3bc7a4d53cedd10458633dba920cc19f7bfdc2aea489cb54aa47e431789f9ba"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/api.log",
+      "bytes": 12027,
+      "sha256": "8b9e9ef1e6aee13f07d6063692030e18bd5bf3315ab5e4fc6d4b0715a11a63eb"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/before-refresh.txt",
+      "bytes": 3292,
+      "sha256": "2b98febe167ffeb7e3ae363fb3b918e42ee2878fdae244444ac99526237e6e62"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/browser_events.jsonl",
+      "bytes": 317697,
+      "sha256": "82373c060e2623eafcff4cf976e129df56eec043961e44fe05aa8f867c92036c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/execution.json",
+      "bytes": 1760,
+      "sha256": "b12dd738524898a8c555d11f48281320fab0b262b0028bc8cbde098084b89fe7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/export.log",
+      "bytes": 288,
+      "sha256": "faa79bed63a53c50e8d5cc143f0155a7a2b75d8a2e6ebcd561c7d999befde0b8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/http_requests.jsonl",
+      "bytes": 2292,
+      "sha256": "a903aaa1435caaf38d87660368543ce7cadbc0b2add090af1fd43bda3f3f6ecc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/provider_calls.jsonl",
+      "bytes": 582875,
+      "sha256": "30f61be1ee82541b0be4e56f7d45fbdff5606d8028c1b51c510216aba086ed56"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/run_config.json",
+      "bytes": 1219,
+      "sha256": "b2f1c56c56a35792aaae124102b62263fb2ee6a74efa59e119245c9a1d09a2b8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "f5722ea07ce64932269d95044986751278305d388dc19d48ee902224aef640dc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/startup.png",
+      "bytes": 42162,
+      "sha256": "1c4411e4489e4c2feb45cd76143252a7e60deb6a8c56e7097a5a3b29ef0e887a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/turn-0-body.txt",
+      "bytes": 3292,
+      "sha256": "2b98febe167ffeb7e3ae363fb3b918e42ee2878fdae244444ac99526237e6e62"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S4/turn-0.png",
+      "bytes": 97910,
+      "sha256": "e2659ea65f5bfec5484cfbc77fcb00a081ae0f2ff721e80f3fb2169cf9e7dbee"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/actual_sqlite_evidence.json",
+      "bytes": 195179,
+      "sha256": "0fa67bb5cdecbabbc9ec1845b01179f6ffcf79df8ac97f231d43e235bdfebeda"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/after-refresh.png",
+      "bytes": 85702,
+      "sha256": "0c409b051e9cb44836f273b1c72829c25a4546a6052113e7cfa558c053999eb3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/after-refresh.txt",
+      "bytes": 2062,
+      "sha256": "996110579f2fee952dee197dd2e87fe136a505d55cb6540c57ce52623d3daae0"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/api.log",
+      "bytes": 10666,
+      "sha256": "f7e984a3a65cf4139e3e95f2500fabbc9bba00e86b3df8a0e87b90989d0552d2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/before-refresh.txt",
+      "bytes": 2095,
+      "sha256": "0a18d19201dad8ed0ff201748a3b034759d0ff29b19e375c33a47ba18a985ea6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/browser_events.jsonl",
+      "bytes": 134995,
+      "sha256": "0ec71829d796e7492ffd9a838a2af28bd414682baab2b4ef2145aa82529836f8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/execution.json",
+      "bytes": 1760,
+      "sha256": "c81edaf7d7895f96d805f7c049665a25ce565c1d624ee59c85c43b982f8fbd51"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/export.log",
+      "bytes": 288,
+      "sha256": "2e6d7ce36d662343591c2d55bc362decea5b60026b7504ce1a42edcdb30945e4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/http_requests.jsonl",
+      "bytes": 1308,
+      "sha256": "84894c48b872227bbb532d2b7fad0de2d1405adaccce710600da0693bec4b674"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/provider_calls.jsonl",
+      "bytes": 122985,
+      "sha256": "d4487d68a4fd2cb697a191653e31bd1649c044b5784469509afa23760971d834"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/run_config.json",
+      "bytes": 1219,
+      "sha256": "757588125cd9afa17a758ca539df82894e5a22169858755ea812e3b11739a467"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "f3a5cbba41ffd598a595f94aa05cccdc228df875fb7f5084e2a99a09db894552"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/startup.png",
+      "bytes": 37903,
+      "sha256": "c258237cda8e4bb3a1cd9e097869b4b4e57185635359779175b56772c5024091"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/turn-0-body.txt",
+      "bytes": 2079,
+      "sha256": "05821fa076dc5c8a1322eabc05b4c90d3ef9d9e1aa4a463f2bde29e39bd9b86e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S5/turn-0.png",
+      "bytes": 110363,
+      "sha256": "7ea955eedf23a663602f61cbe93873e48af86da21fb679411acc9c5a57bb9acc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/actual_sqlite_evidence.json",
+      "bytes": 648782,
+      "sha256": "bd2f069c71185bfc01bdcfd0fa0e2d4c39710cca4503f0571bed5968c4185469"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/after-refresh.png",
+      "bytes": 123217,
+      "sha256": "832458d7eb4cfc0c63f6b302e91f10c41546ec08d62b62cae1b3382bff781f30"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/after-refresh.txt",
+      "bytes": 4624,
+      "sha256": "16192fb0ba9a5089cfb7fded5d25b00fa7d364bcd1477e285f3e38ecaea11278"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/api.log",
+      "bytes": 10668,
+      "sha256": "6727c1f3a0a489ae5c32f1a50c39e918140e452a801a720bdc0945cdea58df04"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/before-refresh.txt",
+      "bytes": 4639,
+      "sha256": "cf73dadc95a14f0dd444b1e624c6354189526d0a0884cc829cdaa579fdd23d0e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/browser_events.jsonl",
+      "bytes": 530644,
+      "sha256": "37b03097173df950bda50ba9c6981110fedf8df9da7bd2b97a0a7ba2d3df821d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/execution.json",
+      "bytes": 1760,
+      "sha256": "fec7883e21104d4befaa8a0052ced1fa5bcf8753f83a5467f4b9f45b5b71e591"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/export.log",
+      "bytes": 288,
+      "sha256": "fd3f4efec18368a9f277987158e89d32fbcff5ffbaa3c5571259b5348d627ec8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/http_requests.jsonl",
+      "bytes": 1308,
+      "sha256": "8e8a55904958d535158139d6ad40b18734ab2b6000386a2c76eece4b51da25fd"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/provider_calls.jsonl",
+      "bytes": 355591,
+      "sha256": "71a527c19ba0363b8216bd17baad57fbd4e34c25b82236b25916ef1bad4dddb4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/run_config.json",
+      "bytes": 1219,
+      "sha256": "18a42aea334f647eda993e24dfec17f6cd4830428db7dd490601b36ecc61965a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "7c7df42f90271a681e31df8d898aeca55c6d48f3cbf10b80e75bbc77009267b4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/turn-0-body.txt",
+      "bytes": 4441,
+      "sha256": "3608379adde350886647d229121f9073dd5e082f302a2367261197a77ecaf407"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S6/turn-0.png",
+      "bytes": 101619,
+      "sha256": "913c3b20a901637aeaed554aff575e64c60739ad77dc55e0f0038af917754d40"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/actual_sqlite_evidence.json",
+      "bytes": 582998,
+      "sha256": "af35c6a5d9fd6282751945f2d9b8734e8d3ed9aced814889d7d1e9ff24123cc8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/api.log",
+      "bytes": 9191,
+      "sha256": "403cf91b3cd81095203cbd85bb1e921f9b60e86412ef31e580f2ed113a148243"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/browser.log",
+      "bytes": 82,
+      "sha256": "bd1762a56aabcc4a21cd9fe7f0402373ef92015f41d1e3e823dbaf1feaf06801"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/browser_events.jsonl",
+      "bytes": 474652,
+      "sha256": "2bb261a409574a92f7913e1982bcf5c7137e03247cfd5412fd442009b8f0dab4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/execution.json",
+      "bytes": 1760,
+      "sha256": "2ff79c4d3271192ea569ef8c5f7812d20410a65c3d16d127ae0156c9bc310ed0"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/export.log",
+      "bytes": 288,
+      "sha256": "6917c13d37c67c2830157eaf93474c8385552816c8e3171e9232719519904ad3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/failure.png",
+      "bytes": 91968,
+      "sha256": "4959d9a4ee5764262931b9c49723f88cc47ab1c6ea55db531dfc8535fc70f0f9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/http_requests.jsonl",
+      "bytes": 1309,
+      "sha256": "7138428c7ae5c50eb752c6e11c5d064ba1e123a2fd0ce41d9319149f6f1a5f52"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/provider_calls.jsonl",
+      "bytes": 341596,
+      "sha256": "e243afedb50f5f689a1e7d02ec82674b14ad5fe293860fa31881e9bddc091889"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/result.json",
+      "bytes": 121,
+      "sha256": "b10299fb18aa4e19df36ff11f4214c85a2623d416cf8645bad00d1f197ffbf25"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/run_config.json",
+      "bytes": 1219,
+      "sha256": "58711afbda714184f29a652a583ac0f1c803f51433a051d511883c98dfeee649"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "5170d1eb74ee214468ff4a87a9bc471f64152c39f2b5fa2e49de905d0ecaefae"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/turn-0-body.txt",
+      "bytes": 3783,
+      "sha256": "a8332e5c728969f69a370d79ca96926bbed55af14f14c9251a58e84646cd06e8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/turn-0.png",
+      "bytes": 107082,
+      "sha256": "2e1b654201764c2a07e5e8f008752a150097a7c359f1eb167df3613fda80add7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/turn-1-body.txt",
+      "bytes": 3959,
+      "sha256": "464bed218d7ad557f1628db3abc35cf09a6c46c7f8fcff44e4eb9ec588b9e894"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S7/turn-1.png",
+      "bytes": 91968,
+      "sha256": "4959d9a4ee5764262931b9c49723f88cc47ab1c6ea55db531dfc8535fc70f0f9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/actual_sqlite_evidence.json",
+      "bytes": 2254612,
+      "sha256": "8e44f69fabc442583335db37388d74344f4b185308e6bfed6f8de9b2eb571ee6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/after-refresh.png",
+      "bytes": 127853,
+      "sha256": "74780aaa748dcfece337e8c20faa5012c3ee9abcd9c1949edc558f04b72cad9e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/after-refresh.txt",
+      "bytes": 13008,
+      "sha256": "0a3d94a5f98150ef51e90db63c3886344194797381f207fac0f39d82c05becdd"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/api.log",
+      "bytes": 19215,
+      "sha256": "e02396bdc637fe4d3fa8f7c8a7a4612fe55d83dd715748d59ed83e21aa534a2f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/before-refresh.txt",
+      "bytes": 12915,
+      "sha256": "84a2785e13740a60e340772e00e699cb65b7cad2493d7f8639c8f1aba5cc7c6c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/browser_events.jsonl",
+      "bytes": 1813877,
+      "sha256": "918417e9badfb5f7d291ec6ebf44b88d824077dc1cba7547e0a24e907e23fe58"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/execution.json",
+      "bytes": 1760,
+      "sha256": "81852fb22830f0cd78a6395c9940e9a46afc5f3c80924ee066d92565a41a27bf"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/export.log",
+      "bytes": 290,
+      "sha256": "00b0c1131bb5110ea3648830d041c21d92b5cc87ae1db6a45bad409643400dfc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/http_requests.jsonl",
+      "bytes": 4260,
+      "sha256": "0c50e39f814bc6b2fe8bf4c45be548380c5d953f28a70c77d35edc0482bbdcd6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/provider_calls.jsonl",
+      "bytes": 1291381,
+      "sha256": "f0269d06a9bd95891e7ba6387aa819aaaed7346f301729235e92cdf40c1342d6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/result.json",
+      "bytes": 121,
+      "sha256": "9c04f9e3b800b4575f35f6c8173d85d51f45d9881fba2c276b3c38f498753ec5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/run_config.json",
+      "bytes": 1219,
+      "sha256": "de5715fee280739dc516f828c86d8edeb6232dc5b8c337036bedac37ee1b6a6f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/sqlite_evidence_hash.json",
+      "bytes": 337,
+      "sha256": "402c017bc1b3707abc7cf0527ca1ce4584609f4c5e815e49f1f78a250b0574ed"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/startup.png",
+      "bytes": 41294,
+      "sha256": "d1667c46d2c7200f5b0692fe62b40fc740889d86e65dd2a4ba82e9d8ee498c88"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-0-body.txt",
+      "bytes": 3682,
+      "sha256": "8d3b1e60b4629748f690204e7ac1ba0d09343f8a8b0d9506258ba8d14ed68016"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-0.png",
+      "bytes": 118906,
+      "sha256": "2277e823bfeb9895a84bcb761e01048f582a5135f598f799365db2b6e654f7f4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-1-body.txt",
+      "bytes": 5020,
+      "sha256": "d99615faaab66cb0527758a4ed2ec0d8a1caa0b34c57401f04982e227dd915bc"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-1.png",
+      "bytes": 87506,
+      "sha256": "9081a20ac2276a4d3c4c8990aef05d71841e378a8fa77a917cb163c864a6746d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-2-body.txt",
+      "bytes": 7973,
+      "sha256": "6cd87480841f05ed8bdefcb4ccc84a0d96600cddf541000a9669b231f9ca1325"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-2.png",
+      "bytes": 92139,
+      "sha256": "e804a5f811d9fc41d7f2320f72100a8563c3c734521e5c5cdc0ceb8589a3f9a4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-3-body.txt",
+      "bytes": 10227,
+      "sha256": "eb9d0f396131737c270fcf382ee9e89e19879acf5c13b0be13d0bbc175fb3db7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-3.png",
+      "bytes": 104789,
+      "sha256": "76bd8649fc717207c11831ae6b5ea3945cc1aa1d6336c825b5eb264b63903894"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-4-body.txt",
+      "bytes": 12915,
+      "sha256": "84a2785e13740a60e340772e00e699cb65b7cad2493d7f8639c8f1aba5cc7c6c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/ordinary-S8/turn-4.png",
+      "bytes": 93258,
+      "sha256": "59ba6a197b0636abf29165ac90f03be56da93595e56dce2c9e166420ce540144"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/sources/phase_d_ed6f4d8e380c78dda09bdabc/alignment_projection.json",
+      "bytes": 7687,
+      "sha256": "831e04209f474c2df165c5ecd506bbde45c75111c25e5e2b47119d2a81e4a70c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/sources/phase_d_ed6f4d8e380c78dda09bdabc/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "71592bdc0e1867571e41499e184aef7579aebe6c3fdb3999d194ca0b15bda92e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S8/sources/phase_d_ed6f4d8e380c78dda09bdabc/source_hashes.json",
+      "bytes": 200,
+      "sha256": "82c2c9323393b18ce068e568c847dbb4b2a0d7abd98b3679841c40ed48db2122"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/sources/phase_d_d100e9d1ceece6d2b7913289/alignment_projection.json",
+      "bytes": 7675,
+      "sha256": "c708e7cd6e7aab797cd348fe6daab72034c9fafb42adfd443f211cf32f3e2652"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/sources/phase_d_d100e9d1ceece6d2b7913289/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "fed1eb46e6f17904c182b39b3202303b56befa4d8f6e00bb971f2dc52c7b48be"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S7/sources/phase_d_d100e9d1ceece6d2b7913289/source_hashes.json",
+      "bytes": 200,
+      "sha256": "1c5bcd5dbfd230bec19fedf17c13ec222995fb42f8c8772faeac1090de04bf24"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/sources/phase_d_df981148dea6879daf7bd25a/alignment_projection.json",
+      "bytes": 8011,
+      "sha256": "eed654d61020d4b6fe706ad72b2be3596b2413fd26c0ab927a2f3b33326c86c2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/sources/phase_d_df981148dea6879daf7bd25a/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "bea4d637f5815a0f066cf597939d55841e8a9fef1fe54e2be926e5854c1c0909"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S6/sources/phase_d_df981148dea6879daf7bd25a/source_hashes.json",
+      "bytes": 200,
+      "sha256": "cd5ae0e0c9e1930974336f53ffabe345e2f4d8a0268a65097ba19e63bc5101f8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/sources/phase_d_c0213f0b3f6b6c291881e219/alignment_projection.json",
+      "bytes": 8007,
+      "sha256": "870794636e47808b7e368092beb9c8bc4013f3aff693c1b17e3e09d57a5dfd27"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/sources/phase_d_c0213f0b3f6b6c291881e219/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "c70d18320eb00ef10ae59c36570a627679f714f4fac4d36e1f6840a51d02ba10"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S5/sources/phase_d_c0213f0b3f6b6c291881e219/source_hashes.json",
+      "bytes": 200,
+      "sha256": "d01c9bf3a41dd801b22b49649802c6d16732f374351d95c76856d0984df196ac"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/sources/phase_d_76a83bf029ee2daf829fd792/alignment_projection.json",
+      "bytes": 8050,
+      "sha256": "ffc393bf8535a909447568de32534e391e5fed3f25ad60d1cd3f5cadf5d3f18a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/sources/phase_d_76a83bf029ee2daf829fd792/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "a4eb3860c3c22806de201c68c41e4d52cedfdc43bfe95d82a06bebc0987a3bf4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S4/sources/phase_d_76a83bf029ee2daf829fd792/source_hashes.json",
+      "bytes": 200,
+      "sha256": "076cc980d7ee80db11a59edbec6a35c1bdde4a02dfb12674f9b0f20e866a7008"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/sources/phase_d_7b3d888ed6306b5517d3a172/alignment_projection.json",
+      "bytes": 7999,
+      "sha256": "034d588c64b22820381fa5f2f1248661ad66421f239dfe1ce3d57a2a13550831"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/sources/phase_d_7b3d888ed6306b5517d3a172/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "b7369ecb41bd7addba5d5aa5fea1c439531a329acafbab417f38d9c8e98ee1d6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S3/sources/phase_d_7b3d888ed6306b5517d3a172/source_hashes.json",
+      "bytes": 200,
+      "sha256": "4f082c3823c9ac1910f941176d20969dc87a6784dfc3bc99862b4315f51fbfc7"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/sources/phase_d_437034833a7e3d952e996529/alignment_projection.json",
+      "bytes": 7969,
+      "sha256": "db1166adf44c7efda077802b2644d1019c40eb1e1342d0bc42926d1b4801506d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/sources/phase_d_437034833a7e3d952e996529/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "d823d23ace47aebe3267f7115acc3054ef988f246c782619afb6e477e0e22e6a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S2/sources/phase_d_437034833a7e3d952e996529/source_hashes.json",
+      "bytes": 200,
+      "sha256": "ef20fd3d336a4aae34008809e37437488b3a5e82c5ffc87a27d8651679587525"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/sources/phase_d_cee4097cf2647742b121baca/alignment_projection.json",
+      "bytes": 8015,
+      "sha256": "866b1d7fcd9ba9f4d9bf08439318a2f2563f4bdff3c1ec77240570c2a6b89199"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/sources/phase_d_cee4097cf2647742b121baca/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "496ac2e500157d0f7f159abc0f1bab42d28bd40e04a1fe079f44e3afb5d46616"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v2/integrated-S1/sources/phase_d_cee4097cf2647742b121baca/source_hashes.json",
+      "bytes": 200,
+      "sha256": "613b967da34716cc53c61ea5572a84f80bac5bcd3a0aca643b10ce909f73c7c3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/actual_sqlite_evidence.json",
+      "bytes": 34362,
+      "sha256": "95a794a56666238d693192031f14028add1688ae6effccf7ba7be6403ffb75c8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/alignment_calls.jsonl",
+      "bytes": 7653,
+      "sha256": "5d8865b4e1a0442633294133fde1d1bc9de6a641eba0ef39ab4c4cf648d22e11"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/api.log",
+      "bytes": 8693,
+      "sha256": "f51f34cef4b09c26ccb60bc706419a218136cc0bf75bcddd25367d2fb5e1db38"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/browser.log",
+      "bytes": 57,
+      "sha256": "6b68057a265f69a345d3fb5022b869c1aadd1d195072be4cbb14abbe99578caf"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/browser_events.jsonl",
+      "bytes": 5262,
+      "sha256": "1e1d8b75f8996956e152a563b42a5040e542a1d41f8f5a6f32cdcd1c16bb41fa"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/execution.json",
+      "bytes": 1768,
+      "sha256": "926a9082e496928b1f280875fe13eaa2938c5183b91dcfea3d98dd646e31869a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/export.log",
+      "bytes": 286,
+      "sha256": "1ad2d70e37e453792f7ff21d10a02edc5ee30d01d099a1e0d4f9c8a5e6e679e6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/failure.png",
+      "bytes": 75639,
+      "sha256": "697eea25d9722104a40194d1e9532cfe6006d03b59143dbc6fb6b5716e7f83f2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/http_requests.jsonl",
+      "bytes": 699,
+      "sha256": "06b031834d164a7e9293bd9a73da8b043b1e6ce0913d4948ea33055e3dc50f49"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/provider_calls.jsonl",
+      "bytes": 13201,
+      "sha256": "eb61f43901a1bb4df64fe24e585210677fd4f417cf7605832c50eb7c992689f4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/result.json",
+      "bytes": 121,
+      "sha256": "cd34210783e915046bbb22f24bdc90012335bb1699f6d40d6f9b1cb58c8281c2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/run_config.json",
+      "bytes": 1225,
+      "sha256": "87f42a47be258145dcf66d5a14944d1106cea20f687d12dec4b1f181b1480d0e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/sqlite_evidence_hash.json",
+      "bytes": 333,
+      "sha256": "12c296286b8bda58f4b663241ca441138b1b856e49f19d515300480b085c562b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/startup.png",
+      "bytes": 40965,
+      "sha256": "b8b9be0e3f28acefd744be1b12e04c423f50876ebdee2b100a648f49d736cb5c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/turn-0-body.txt",
+      "bytes": 1138,
+      "sha256": "1b9577b379f6982f20c3be04d8db1f7469cd48cf513e4430888f231feb773628"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/turn-0.png",
+      "bytes": 75640,
+      "sha256": "e50157e652cea8fd365bb75bc5fde9c748600dbe08fac2ec36bc170f75666ff8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/actual_sqlite_evidence.json",
+      "bytes": 96341,
+      "sha256": "15ddeff603d1851ef991b0237c67d59c025d654fb366907cdaebb00575cf05a2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/after-refresh.png",
+      "bytes": 69027,
+      "sha256": "37945d6adfa165b24f3664a0a2aa2b74b01d37a535df39a96435359fbb6104de"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/after-refresh.txt",
+      "bytes": 2267,
+      "sha256": "7d5bdc034a9284cc170c4d9eeee16015ec324a597afeb665ca05fbf3aac72fb2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/alignment_calls.jsonl",
+      "bytes": 36166,
+      "sha256": "b8cacc3366f5c8e329cd7d6cf4f8f7cc5352733e8335012a5983e5f67b6c577e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/api.log",
+      "bytes": 17069,
+      "sha256": "acb78568d2cd8735106bd3b37098b891564e740a848cdd001212a3a17edfdce1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/before-refresh.txt",
+      "bytes": 2060,
+      "sha256": "2b9929551c9a724c2a147773078b32f44452da4ee63adb1c46ee5e13d2ccc6f1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/browser.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/browser_events.jsonl",
+      "bytes": 42339,
+      "sha256": "7a3c24f212070447ad24b802bf6fac55765f4df566b86643bcf600a1bd0426b1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/execution.json",
+      "bytes": 1768,
+      "sha256": "095c1197ef2a622d1b52e92e42b750de2f388dc680d8c53500ef7a5aaaeab078"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/export.log",
+      "bytes": 288,
+      "sha256": "763b5e6ff4587dab52a148bdd1edbb032a2a330a2f3e0ac38c01c82451135cf6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/http_requests.jsonl",
+      "bytes": 5141,
+      "sha256": "37284e13cee02fa1444daf925056f8535859ec155c95cef7ba21b6220b3670b2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/provider_calls.jsonl",
+      "bytes": 94088,
+      "sha256": "9cb3121a066fccf8deb8c0f48cda099ce2ae0c77ba453658a7447aff5a70d0c4"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/result.json",
+      "bytes": 121,
+      "sha256": "df452eff032fedd493eb3aaa9ce569723ba44ef72918ca8fa66711cddc10b7f9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/run_config.json",
+      "bytes": 1225,
+      "sha256": "310213a0678caf6be251b85ad333de9884896f241f39c102643dd34244318647"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "86a8479abf9b86fb9b0d655e0aa7a044dfbb2b2d74df7674080da2023c6e689d"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/startup.png",
+      "bytes": 37412,
+      "sha256": "9ec4f43b869d323cd91761f8a332394963aba343043f44925a18e2d3e04e976b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-0-body.txt",
+      "bytes": 1159,
+      "sha256": "acd71380c4aca64c163f6af26be3e5c7ca8b59fa45c30b1722884eb06ba82c9a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-0.png",
+      "bytes": 77635,
+      "sha256": "2e6f03353d9c18677c3535680731220262040b334180800f1d85e1316ef59d5e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-1-body.txt",
+      "bytes": 1480,
+      "sha256": "406849fb87c59a224f02b592c233631dc645fb302ca0fbcd31c81bcea5a10144"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-1-method.png",
+      "bytes": 75962,
+      "sha256": "3e086cffc9bc86322ed5856f7aca02bb6bcee098132b47a91a082017fe7a647a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-1.png",
+      "bytes": 78605,
+      "sha256": "1e447abafcdbdd568a32811afda1558fc0fbe86836c9b710eb2a84fbbab171d8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-2-body.txt",
+      "bytes": 1664,
+      "sha256": "1549b73070e28b2d093e397e590c6981ef3c90015bf5c517edf678fce781aa6b"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-2.png",
+      "bytes": 78105,
+      "sha256": "b40d83c95997bbd25b57de5dcf79823789a8a32ed42ccde1387b92648c853436"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-3-body.txt",
+      "bytes": 1839,
+      "sha256": "cbbe15c979e10fa33587548581d9a4c212aeceae13873373a9e772c1b1f343e5"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-3.png",
+      "bytes": 73900,
+      "sha256": "7b7eed6b5487449e15a166b16895f5cfb4853d9fd456810f4a43fc3de6e270c9"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-4-body.txt",
+      "bytes": 2060,
+      "sha256": "2b9929551c9a724c2a147773078b32f44452da4ee63adb1c46ee5e13d2ccc6f1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/turn-4.png",
+      "bytes": 74258,
+      "sha256": "2b5bb54d69b9134f1d1d56b15eb282dabf1728393aaf590b2ec61c8963bb2564"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/actual_sqlite_evidence.json",
+      "bytes": 540006,
+      "sha256": "1ddde672ce3beef5e34d10a6ead005bf5e975ed32f7366c265e188bd8fac3651"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/api.log",
+      "bytes": 9069,
+      "sha256": "be8bbc858f15241d9156fd19f4588fc9e7a6b011b45411b384365685f6dd0686"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/browser.log",
+      "bytes": 57,
+      "sha256": "6b68057a265f69a345d3fb5022b869c1aadd1d195072be4cbb14abbe99578caf"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/browser_events.jsonl",
+      "bytes": 432475,
+      "sha256": "628b6c8d7f3f25e8bd80a022bd6fd6b45232aa10f5718ad75017213ab45ed6de"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/execution.json",
+      "bytes": 1760,
+      "sha256": "b4fe463678ec5a8c54ab64dbc83c0e3d6f16a267b349d11c0947b39511abb760"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/export.log",
+      "bytes": 288,
+      "sha256": "360c48bcdf0d451139f02825cd56a4ac611a7a1e2ef0438fd049b508c47248a1"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/failure.png",
+      "bytes": 106584,
+      "sha256": "f0f9a5b6ade156215cb235a0b00f312e4add51d58b9470231c64026e8dfd697f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/http_requests.jsonl",
+      "bytes": 1637,
+      "sha256": "1bfcb38d05249b7df0f7f625ec5827e247e9ab8a08e49368c5f0169a40fa45a0"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/provider_calls.jsonl",
+      "bytes": 363080,
+      "sha256": "12b2f02267c606336cfc8a41ebea94afd2b08c3bfb0ed104036ad0ff5fdb904f"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/result.json",
+      "bytes": 121,
+      "sha256": "cd34210783e915046bbb22f24bdc90012335bb1699f6d40d6f9b1cb58c8281c2"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/run_config.json",
+      "bytes": 1219,
+      "sha256": "60cd64097987fe0ae168505ae72111d1cd53a717045981931e0ce8f5f18cdba0"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/sqlite_evidence_hash.json",
+      "bytes": 335,
+      "sha256": "2552ce194fbe0876753d26866ed8185db3b6dbed3703ee66ee9ce333ca5db534"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/startup.png",
+      "bytes": 42162,
+      "sha256": "1c4411e4489e4c2feb45cd76143252a7e60deb6a8c56e7097a5a3b29ef0e887a"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/turn-0-body.txt",
+      "bytes": 3763,
+      "sha256": "ff315c821e844ebfd8be2b749c9f2fa4bf80e2919a059876bc73fd7fba210e37"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/turn-0.png",
+      "bytes": 111575,
+      "sha256": "83998b66330dbd6960a4c7a2c205a684c54bab000bacf4ec8e6bbf80390691c6"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/turn-1-body.txt",
+      "bytes": 4018,
+      "sha256": "157e216eadc363f8bb592c0e00dddaaa14fafd80e4252813e109e24aa9a1f102"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/ordinary-S7/turn-1.png",
+      "bytes": 106576,
+      "sha256": "f9052340625af6729df4270dd678945ea893a268efb3d1da681c0a57c8b803c8"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/sources/phase_d_41b0efc86cce22318996a737/alignment_projection.json",
+      "bytes": 7687,
+      "sha256": "a323346403f52aa747112d0b9e81d09e8ab833d7c223893b77010bd4234dfe0e"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/sources/phase_d_41b0efc86cce22318996a737/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "2a8b4149bb021e08d628b8d78a0031134080ac590b6c9cc1124693a55c90a044"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S8/sources/phase_d_41b0efc86cce22318996a737/source_hashes.json",
+      "bytes": 200,
+      "sha256": "0036524c6ae2d65900b5f9be8d2f424a3470cc7f2c5f589fce4af782318a799c"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/sources/phase_d_ef3f72a07b1386e8df3db2aa/alignment_projection.json",
+      "bytes": 7964,
+      "sha256": "53e2f16a7ecca7bd02ed62912a68a6856cc6d68683ae8611932c2bff72c89528"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/sources/phase_d_ef3f72a07b1386e8df3db2aa/reviewed_source.json",
+      "bytes": 17956,
+      "sha256": "ac049fa1ecc8acb20615681ae6c3fe9565c8e799bd59b3ca8acb499fdf630da3"
+    },
+    {
+      "path": "data/phase-d-evidence/thinking-off-v3/integrated-S7/sources/phase_d_ef3f72a07b1386e8df3db2aa/source_hashes.json",
+      "bytes": 200,
+      "sha256": "14fadddb00a0abe595ecbf3a546103695ff2d832b9080793c10b803819c4a815"
+    },
+    {
+      "path": "data/phase-d-preparation/preparation-manifest.json",
+      "bytes": 5019,
+      "sha256": "eb9961589bdc1e61cdb59f69b3511b478beed7e417a03d55e236ba75c62dc671"
+    },
+    {
+      "path": "data/phase-d-preparation/reproduce-preparation.ps1",
+      "bytes": 2176,
+      "sha256": "0622d3cbf767578c11d2370cd79335063d03db9ddc224e22d91082fd656d3e85"
+    },
+    {
+      "path": "data/phase-d-preparation/math-draft-check.log",
+      "bytes": 522,
+      "sha256": "104959f659ff64ea6af48d5df498b63d2d6972f48acc6e79c5b5eb292c86a802"
+    },
+    {
+      "path": "data/phase-d-preparation/authenticated-check-integrated.log",
+      "bytes": 163,
+      "sha256": "ac7a81353814a8d4735e55f1e473c0a975ea37049fbfa03bdfb5736af2144a40"
+    },
+    {
+      "path": "data/phase-d-preparation/authenticated-check-ordinary.log",
+      "bytes": 161,
+      "sha256": "53c9c829df73934d4eddd0aeb593116935f862dc46b54aae6d5b7eef03911852"
+    },
+    {
+      "path": "data/phase-d-preparation/browser-probe.log",
+      "bytes": 1860,
+      "sha256": "b2fa9dba175491ac51fc49ddbfbf9babdab26959797797805b92411179c3b331"
+    },
+    {
+      "path": "data/phase-d-preparation/browser-probe-approved.log",
+      "bytes": 185,
+      "sha256": "0ccabcf135eda8b4a308b79e04c876b943179da9ccb9e5de8e55ec0550cf558a"
+    },
+    {
+      "path": "data/phase-d-preparation/matching-browser-install.log",
+      "bytes": 2861,
+      "sha256": "290686b197cbee41eb28f5d38bde8ae9024b098569450ca8b7ef33e1ada62330"
+    },
+    {
+      "path": "data/phase-d-preparation/matching-browser-install-retry.log",
+      "bytes": 3955,
+      "sha256": "b71623c559b93b1220acd43df0eefa855c08aa5b516977565a39ec733cb8b635"
+    },
+    {
+      "path": "data/phase-d-preparation/first-pair-status.json",
+      "bytes": 1963,
+      "sha256": "c57135581297b1f7f95fc329a7db1693ca48f6f49a5285181d6d9e0efe771ce0"
+    },
+    {
+      "path": "data/phase-d-preparation/wiring-startup-report.json",
+      "bytes": 6069,
+      "sha256": "279d6f6a2a047a4babfc154d4d514f0160f1b921952cce527c4cd35aea96c0a8"
+    },
+    {
+      "path": "evaluation/phase_d_minimal/results/first_round.md",
+      "bytes": 13311,
+      "sha256": "6ed40f605a12428994ca2fe1f8048244cdc86d447c67178778206b6b67dce192"
+    },
+    {
+      "path": "evaluation/phase_d_minimal/results/first_round.json",
+      "bytes": 47451,
+      "sha256": "08e03ac584328df7d4eecd2e2dd47afd6c54fc057cf965d393c4ff38ebeaff6a"
+    },
+    {
+      "path": "evaluation/phase_d_minimal/results/existing_support_probe.json",
+      "bytes": 1794,
+      "sha256": "1ced6e806bcb4086c67a6888f6671709e583b9b691c93e9af10d57353b21bba4"
+    },
+    {
+      "path": "data/phase-d-preparation/existing_support_probe.py",
+      "bytes": 2100,
+      "sha256": "c52e3a753b90ed4f21913ca6781c0a09ecf07d3030dcb3d7c707627b49c71029"
+    },
+    {
+      "path": "evaluation/phase_d_minimal/results/visual_review.md",
+      "bytes": 1270,
+      "sha256": "a4b35ec4a6bd6c1cafee7d0533f6976899f0ed64d3fbf9b069ff024071a698b7"
+    }
+  ],
+  "prior_delivery_retained": [
+    "data/phase-d-delivery/phase-d-first-round.zip",
+    "data/phase-d-delivery/phase-d-first-round-v2.zip"
+  ]
+}
