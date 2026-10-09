@@ -2,7 +2,7 @@
 
 These pin the *current* behaviour of the three layers that turn entry-point
 registrations into registered capabilities — the shared plumbing in
-``deeptutor.core.entry_points``, the neutral discovery in
+``deeptutor.plugins.entry_points``, the neutral discovery in
 ``deeptutor.plugins.loader``, and ``CapabilityRegistry.load_plugins`` — so the
 managed-plugin slices (upstream #961 / #1307) extend a documented contract
 instead of an accident.
@@ -26,7 +26,7 @@ import pytest
 
 from deeptutor.core.capability_protocol import CapabilityManifest, TurnCapability
 from deeptutor.core.context import UnifiedContext
-import deeptutor.core.entry_points as ep_module
+import deeptutor.plugins.entry_points as ep_module
 from deeptutor.plugins.loader import (
     PluginManifest,
     discover_plugins,
@@ -38,7 +38,7 @@ from deeptutor.runtime.stream_bus import StreamBus
 PLUGINS_GROUP = "deeptutor.plugins"
 EXTENSIONS_GROUP = "deeptutor.extensions"
 PLUGINS_LOGGER = "deeptutor.plugins.loader"
-PLUMBING_LOGGER = "deeptutor.core.entry_points"
+PLUMBING_LOGGER = "deeptutor.plugins.entry_points"
 REGISTRY_LOGGER = "deeptutor.runtime.registry.capability_registry"
 
 

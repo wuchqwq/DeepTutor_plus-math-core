@@ -1023,6 +1023,13 @@ async def run_initialization_task(
             indexed_count = len(
                 FileTypeRouter.collect_supported_files(initializer.raw_dir, recursive=True)
             )
+            from deeptutor.knowledge.indexing_run import load_run
+
+            receipt = load_run(initializer.raw_dir.parent)
+            if receipt and receipt.get("provider") == "llamaindex":
+                indexed_count = sum(
+                    doc.get("status") == "completed" for doc in receipt["documents"].values()
+                )
 
             initializer.progress_tracker.update(
                 ProgressStage.COMPLETED,
@@ -3221,10 +3228,69 @@ async def serve_kb_visual_asset(kb_name: str, asset_id: str):
     if loaded is None:
         raise HTTPException(status_code=404, detail="Visual asset not found")
     record, data = loaded
+    from deeptutor.services.rag.source_visuals import source_state
+
+    if source_state(raw_dir.parent, record) in {"changed", "missing"}:
+        raise HTTPException(
+            status_code=409,
+            detail="The referenced source changed or is missing. Select its current version explicitly.",
+        )
     return Response(
         content=data,
         media_type=record["mime_type"],
         headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
+    )
+
+
+@router.get("/knowledge-bases/{kb_name}/visual-coverage")
+async def kb_visual_coverage(
+    kb_name: str,
+    source_path: str = "",
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
+):
+    from deeptutor.services.rag.visual_coverage import coverage_overview
+
+    raw_dir = _resolve_kb_raw_dir(kb_name)
+    assert raw_dir is not None
+    try:
+        return await asyncio.to_thread(
+            coverage_overview, raw_dir.parent, source_path=source_path, offset=offset, limit=limit
+        )
+    except (OSError, ValueError) as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="Visual coverage is unreadable; original evidence files have been preserved.",
+        ) from exc
+
+
+@router.get("/knowledge-bases/{kb_name}/source-page")
+async def kb_source_page(
+    kb_name: str,
+    source_path: str,
+    page: int = Query(..., ge=1),
+    source_hash: str = "",
+    region: str = "",
+):
+    from deeptutor.services.rag.source_visuals import page_image
+
+    raw_dir = _resolve_kb_raw_dir(kb_name)
+    assert raw_dir is not None
+    try:
+        crop = [float(value) for value in region.split(",")] if region else None
+        record, image = await asyncio.to_thread(
+            page_image, raw_dir.parent, source_path, page, expected_hash=source_hash, region=crop
+        )
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return Response(
+        content=image,
+        media_type=record["mime_type"],
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+            "X-Source-Document-ID": record["source_document_id"],
+        },
     )
 
 
@@ -3935,6 +4001,7 @@ async def run_reindex_task(
                     manager._save_config()
 
             success = await rag_service.initialize(
+                task_id=task_id,
                 kb_name=kb_name,
                 file_paths=file_paths,
                 progress_callback=_on_progress,
@@ -4047,6 +4114,20 @@ async def reindex_knowledge_base(
         kb_entry = _load_kb_entry_or_404(manager, kb_name)
         _assert_not_connected_kb(kb_name, kb_entry)
         force_reindex = str(kb_entry.get("status") or "").lower() == "error"
+        from deeptutor.knowledge.indexing_run import visible_run
+
+        previous_run = visible_run(kb_base_dir / kb_name)
+        if previous_run:
+            if previous_run["state"] == "running":
+                raise HTTPException(
+                    status_code=409, detail="An indexing worker still owns this knowledge base."
+                )
+            force_reindex = force_reindex or previous_run["state"] in {
+                "partial",
+                "failed",
+                "cancelled",
+                "interrupted",
+            }
         kb_provider = _validate_registered_provider(
             kb_entry.get("rag_provider") or DEFAULT_PROVIDER
         )
@@ -4240,6 +4321,59 @@ async def retry_knowledge_base(
     except Exception as e:
         logger.error(f"Failed to retry KB '{kb_name}': {e}")
         raise HTTPException(status_code=500, detail=format_exception_message(e))
+
+
+@router.get("/knowledge-bases/{kb_name}/indexing-run")
+async def get_indexing_run(kb_name: str):
+    """Pure durable diagnostics; reading never recreates a task or retries work."""
+    from deeptutor.knowledge.indexing_run import visible_run
+
+    resource = resolve_kb(kb_name)
+    return {"run": visible_run(resource.base_dir / resource.name)}
+
+
+@router.post("/knowledge-bases/{kb_name}/indexing-run/{task_id}/cancel")
+async def cancel_indexing_run(kb_name: str, task_id: str):
+    from deeptutor.knowledge.indexing_run import request_cancel
+
+    _, name, base_dir = _writable_kb(kb_name)
+    if not request_cancel(base_dir / name, task_id):
+        raise HTTPException(status_code=409, detail="This indexing run is no longer active.")
+    return {
+        "cancel_requested": True,
+        "message": "Cancellation takes effect at the next safe boundary; completed parser outputs remain reusable.",
+    }
+
+
+@router.get("/knowledge-bases/{kb_name}/indexing-readiness")
+async def get_indexing_readiness(kb_name: str):
+    from deeptutor.services.embedding.config import get_embedding_config
+    from deeptutor.services.parsing import get_parse_service
+    from deeptutor.services.parsing.engines.factory import get_parser
+
+    resource = resolve_kb(kb_name)
+    engine = get_parse_service().active_engine()
+    parser = get_parser(engine)
+    config = parser.resolve_config()
+    report = parser.is_ready(config)
+    embedding = get_embedding_config()
+    return {
+        "parser": engine,
+        "ready": report.ready,
+        "reason": report.reason,
+        "message": report.message,
+        "formats": sorted(parser.supported_formats()),
+        "mode": getattr(config, "mode", None),
+        "device": getattr(config, "device", None),
+        "embedding_model": embedding.model,
+        "embedding_configured": bool(embedding.model),
+        "source_count": len(
+            FileTypeRouter.collect_supported_files(
+                resource.base_dir / resource.name / "raw", recursive=True
+            )
+        ),
+        "note": "Readiness checks configuration and local prerequisites; runtime downloads, resource limits and provider responses can still fail.",
+    }
 
 
 @router.get("/knowledge-bases/{kb_name}/progress")

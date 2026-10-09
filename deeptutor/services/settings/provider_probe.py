@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 import aiohttp
@@ -88,7 +89,7 @@ def discovery_request(binding: str, base_url: str, api_version: str = "") -> tup
     """Use vendor metadata on the configured host only; never infer another region."""
     parsed = urlsplit(base_url)
     path = parsed.path.rstrip("/")
-    params = (
+    params: dict[str, str | int] = (
         {"api-version": api_version} if api_version and binding in {"azure", "azure_openai"} else {}
     )
     if binding == "ollama":
@@ -330,7 +331,7 @@ async def probe_provider(
             for item in all_items:
                 names = collect_model_names([item])
                 for name in names:
-                    entry = {"id": name}
+                    entry: dict[str, Any] = {"id": name}
                     kinds = model_services(item) if isinstance(item, dict) else []
                     if kinds:
                         entry["services"] = kinds

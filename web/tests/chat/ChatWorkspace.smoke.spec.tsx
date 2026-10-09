@@ -234,7 +234,6 @@ function emptyChatState(): ChatState {
     enabledTools: [],
     activeCapability: '',
     workspaceMode: null,
-    timedMediaId: null,
     knowledgeBases: [],
     llmSelection: null,
     masteryPathId: null,

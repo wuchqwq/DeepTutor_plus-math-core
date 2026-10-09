@@ -902,6 +902,14 @@ def resolve_llm_runtime_config(
         provider_pool=provider_pool,
     )
 
+    # Profiles written before ``api_format`` existed carry only ``wire_api``.
+    # Settle the protocol before choosing its vendor-specific default address.
+    if configured_api_format is None:
+        api_format = api_format_from_legacy(spec, configured_wire_api)
+    else:
+        api_format = api_format_for_provider(configured_api_format, spec)
+    wire_api = wire_api_for_provider(wire_api_from_api_format(api_format), spec)
+
     mapped = (
         None
         if (profile or {}).get("provider_ref") or (model or {}).get("provider_ref")
@@ -910,18 +918,11 @@ def resolve_llm_runtime_config(
     api_key = active_api_key or (mapped.api_key if mapped else "")
     api_base = active_api_base or ((mapped.api_base or "") if mapped else "")
     api_version = active_api_version or ((mapped.api_version or "") if mapped else "")
-    if not api_base and spec.default_api_base:
-        api_base = spec.default_api_base
+    if not api_base:
+        api_base = spec.default_api_base_for(api_format)
     if not api_key and spec.is_local:
         api_key = "sk-no-key-required"
     extra_headers = active_extra_headers or ((mapped.extra_headers or {}) if mapped else {})
-    # Profiles written before ``api_format`` existed carry only ``wire_api``;
-    # derive the format from it so their requests are byte-for-byte unchanged.
-    if configured_api_format is None:
-        api_format = api_format_from_legacy(spec, configured_wire_api)
-    else:
-        api_format = api_format_for_provider(configured_api_format, spec)
-    wire_api = wire_api_for_provider(wire_api_from_api_format(api_format), spec)
     _register_catalog_capabilities(loaded)
 
     return ResolvedLLMConfig(

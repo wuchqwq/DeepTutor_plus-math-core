@@ -89,11 +89,22 @@ def _source_default_url(source: dict, service: str | None) -> str:
         TTS_PROVIDERS,
         VIDEOGEN_PROVIDERS,
     )
-    from deeptutor.services.provider_registry import find_by_name
+    from deeptutor.services.provider_registry import (
+        api_format_for_provider,
+        api_format_from_legacy,
+        find_by_name,
+    )
 
     binding = source.get("binding") or source.get("provider") or ""
     if service in {"llm", "task"}:
         spec = find_by_name(binding)
+        if spec:
+            api_format = (
+                api_format_for_provider(source["api_format"], spec)
+                if source.get("api_format") is not None
+                else api_format_from_legacy(spec, source.get("wire_api"))
+            )
+            return spec.default_api_base_for(api_format)
     else:
         tables: dict[str, Any] = {
             "embedding": EMBEDDING_PROVIDERS,
@@ -152,6 +163,13 @@ def resolve_profile_provider(
         if override.get("binding") and binding != ref.get("binding")
         else ref.get("default_base_url", "")
     )
+    if service in {"llm", "task"}:
+        # References may have been created before the connection changed
+        # protocol. Resolve the current vendor default instead of freezing the
+        # address captured on the model; explicit connection URLs still win.
+        target_default = (
+            _source_default_url({**source, "binding": binding}, service) or target_default
+        )
     result["base_url"] = (
         provider_endpoint(source_url, source_service, service, binding)
         if source_url

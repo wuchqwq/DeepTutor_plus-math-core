@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import builtins
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
 import logging
+import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 from threading import Thread
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -337,6 +341,196 @@ def test_resolve_port_conflicts_non_tty_exits_with_message(tmp_path: Path, monke
     assert "8000" in str(excinfo.value)
 
 
+@pytest.mark.parametrize("role", ["start.backend", "start.frontend", "backend_worker"])
+def test_reclaim_requires_same_deployment_and_dead_launcher(tmp_path, monkeypatch, role):
+    import psutil
+
+    home = tmp_path / "home"
+    frontend = home / "web"
+    env = {launcher.DEEPTUTOR_HOME_ENV: str(home), launcher.LAUNCHER_PID_ENV: "4242"}
+    backend = SimpleNamespace(
+        pid=100,
+        cmdline=lambda: [sys.executable, "-m", "uvicorn", "deeptutor.api.main:app"],
+        exe=lambda: sys.executable,
+        cwd=lambda: str(home),
+    )
+    process = SimpleNamespace(
+        pid=101,
+        environ=lambda: env,
+        create_time=lambda: 123.0,
+        parents=lambda: [backend],
+        cmdline=backend.cmdline,
+        exe=backend.exe,
+        cwd=backend.cwd,
+    )
+    if role == "start.frontend":
+        process.cmdline = lambda: ["next-server (v16.2.3)"]
+        process.exe = lambda: "/usr/local/bin/node"
+        process.cwd = lambda: str(frontend)
+    elif role == "backend_worker":
+        process.cmdline = lambda: [
+            sys.executable,
+            "-c",
+            "from multiprocessing.spawn import spawn_main",
+        ]
+    resolved_role = "start.frontend" if role == "start.frontend" else "start.backend"
+    monkeypatch.setattr(psutil, "Process", lambda _pid: process)
+    monkeypatch.setattr(launcher, "_is_pid_alive", lambda _pid: False)
+
+    def inspect():
+        return launcher._owned_orphan_started_at(
+            101, role=resolved_role, runtime_home=home, frontend_cwd=frontend
+        )
+
+    assert inspect() == 123.0
+    monkeypatch.setattr(launcher, "_is_pid_alive", lambda _pid: True)
+    assert inspect() is None
+    monkeypatch.setattr(launcher, "_is_pid_alive", lambda _pid: False)
+    env[launcher.DEEPTUTOR_HOME_ENV] = str(tmp_path / "another-install")
+    assert inspect() is None
+    env[launcher.DEEPTUTOR_HOME_ENV] = str(home)
+    env.pop(launcher.LAUNCHER_PID_ENV)
+    assert inspect() is None
+
+
+@pytest.mark.parametrize("fault", ["command", "interpreter", "cwd", "access_denied"])
+def test_reclaim_rejects_unverified_backend_identity(tmp_path, monkeypatch, fault):
+    import psutil
+
+    def environment():
+        if fault == "access_denied":
+            raise psutil.AccessDenied(101)
+        return {launcher.DEEPTUTOR_HOME_ENV: str(tmp_path), launcher.LAUNCHER_PID_ENV: "4242"}
+
+    process = SimpleNamespace(
+        pid=101,
+        environ=environment,
+        create_time=lambda: 123.0,
+        parents=lambda: [],
+        cmdline=lambda: [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "foreign.api:app" if fault == "command" else "deeptutor.api.main:app",
+        ],
+        exe=lambda: "/another/python" if fault == "interpreter" else sys.executable,
+        cwd=lambda: str(tmp_path / "other") if fault == "cwd" else str(tmp_path),
+    )
+    monkeypatch.setattr(psutil, "Process", lambda _pid: process)
+    monkeypatch.setattr(launcher, "_is_pid_alive", lambda _pid: False)
+    assert (
+        launcher._owned_orphan_started_at(
+            101, role="start.backend", runtime_home=tmp_path, frontend_cwd=None
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("case", ["owned", "unknown", "mixed", "pid_reused", "still_busy"])
+def test_noninteractive_restart_reclaims_only_verified_orphans_once(tmp_path, monkeypatch, case):
+    occupied = {8000}
+    attempts, signals, inspected = [], [], []
+    entries = [] if case == "unknown" else [(101, "backend")]
+    if case == "mixed":
+        entries.append((102, "foreign"))
+
+    def identity(pid, **_kwargs):
+        inspected.append(pid)
+        if pid == 102:
+            return None
+        return 456.0 if case == "pid_reused" and len(inspected) > 1 else 123.0
+
+    def reclaim(listeners, *, listener_guard):
+        attempts.append(listeners)
+        if listener_guard(8000, 101):
+            signals.append(101)
+            if case == "owned":
+                occupied.clear()
+
+    monkeypatch.setattr(launcher.sys, "stdin", None)
+    monkeypatch.setattr(launcher, "_port_accepts_connection", lambda port: port in occupied)
+    monkeypatch.setattr(launcher, "_port_listeners", lambda _port: entries)
+    monkeypatch.setattr(launcher, "_owned_orphan_started_at", identity)
+    monkeypatch.setattr(launcher, "_kill_port_listeners", reclaim)
+    kwargs = dict(
+        backend_port=8000,
+        frontend_port=3784,
+        check_frontend=False,
+        settings_dir=tmp_path,
+        runtime_home=tmp_path,
+    )
+    if case == "owned":
+        assert launcher._resolve_port_conflicts(**kwargs) == (8000, 3784)
+    else:
+        with pytest.raises(SystemExit):
+            launcher._resolve_port_conflicts(**kwargs)
+    assert len(attempts) == (0 if case in {"unknown", "mixed"} else 1)
+    assert signals == ([] if case in {"unknown", "mixed", "pid_reused"} else [101])
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX orphan lifecycle integration")
+def test_noninteractive_restart_recovers_an_actual_orphaned_backend_listener(tmp_path, monkeypatch):
+    """#1795: simulate launcher death with an isolated socket without starting the app."""
+    import psutil
+
+    (tmp_path / "uvicorn.py").write_text(
+        "import socket,time,json,os\ns=socket.socket()\ns.bind(('127.0.0.1',0))\n"
+        "s.listen()\nwith open('ready.json','w') as f: json.dump({'port':s.getsockname()[1]},f)\n"
+        "time.sleep(60)\n"
+    )
+    parent_code = (
+        "import os,subprocess,sys\n"
+        f"os.environ[{launcher.LAUNCHER_PID_ENV!r}]=str(os.getpid())\n"
+        "p=subprocess.Popen([sys.executable,'-m','uvicorn','deeptutor.api.main:app'],stdout=subprocess.DEVNULL)\n"
+        "print(p.pid,flush=True)\n"
+    )
+    env = os.environ.copy()
+    env[launcher.DEEPTUTOR_HOME_ENV] = str(tmp_path)
+    env.pop("PYTHONPATH", None)
+    child = psutil.Process(
+        int(
+            subprocess.check_output(
+                [sys.executable, "-c", parent_code],
+                cwd=tmp_path,
+                env=env,
+                text=True,
+                timeout=5,
+            )
+        )
+    )
+    try:
+        ready = tmp_path / "ready.json"
+        deadline = time.monotonic() + 5
+        while not ready.exists() and time.monotonic() < deadline:
+            time.sleep(0.05)
+        port = json.loads(ready.read_text())["port"]
+        assert launcher._port_accepts_connection(port)
+        assert (
+            launcher._owned_orphan_started_at(
+                child.pid, role="start.backend", runtime_home=tmp_path, frontend_cwd=None
+            )
+            == child.create_time()
+        )
+        monkeypatch.setattr(launcher.sys, "stdin", None)
+        # Enumerate only this test's listener, independent of lsof availability.
+        monkeypatch.setattr(
+            launcher, "_port_listeners", lambda _port: [(child.pid, "controlled uvicorn")]
+        )
+        assert launcher._resolve_port_conflicts(
+            backend_port=port,
+            frontend_port=3784,
+            check_frontend=False,
+            settings_dir=tmp_path,
+            runtime_home=tmp_path,
+        ) == (port, 3784)
+        assert not launcher._port_accepts_connection(port)
+    finally:
+        try:
+            child.kill()
+        except psutil.NoSuchProcess:
+            pass
+
+
 def test_resolve_port_conflicts_kill_option_frees_port(tmp_path: Path, monkeypatch) -> None:
     occupied = {8000}
     killed: list[int] = []
@@ -627,6 +821,7 @@ def test_start_uses_ipv4_loopback_for_frontend_proxy(
         system_json_path=settings_dir / "system.json",
     )
     captured_envs: dict[str, dict[str, str]] = {}
+    termination_order = []
 
     monkeypatch.setattr(launcher, "_relax_console_encoding", lambda: None)
     monkeypatch.setattr(launcher, "_reset_runtime_singletons", lambda: None)
@@ -659,8 +854,17 @@ def test_start_uses_ipv4_loopback_for_frontend_proxy(
     )
     monkeypatch.setattr(launcher, "_install_signal_handlers", lambda _callback, **_kwargs: None)
     monkeypatch.setattr(launcher.atexit, "register", lambda _callback: None)
-    monkeypatch.setattr(launcher, "_wait_for_http", lambda **_kwargs: None)
-    monkeypatch.setattr(launcher, "_terminate", lambda _process: None)
+
+    def wait_for_http(**kwargs):
+        if kwargs["process"].name == "frontend":
+            raise RuntimeError("captured launch environment")
+
+    monkeypatch.setattr(launcher, "_wait_for_http", wait_for_http)
+    monkeypatch.setattr(
+        launcher,
+        "_terminate",
+        lambda process: termination_order.append(process.name) if process else None,
+    )
 
     def _capture_spawn(_command, *, cwd, env, name):
         assert cwd == tmp_path
@@ -668,7 +872,7 @@ def test_start_uses_ipv4_loopback_for_frontend_proxy(
         if name == "backend":
             return launcher.ManagedProcess("backend", object(), None)
         assert name == "frontend"
-        raise RuntimeError("captured launch environment")
+        return launcher.ManagedProcess("frontend", object(), None)
 
     monkeypatch.setattr(launcher, "_spawn", _capture_spawn)
 
@@ -682,6 +886,7 @@ def test_start_uses_ipv4_loopback_for_frontend_proxy(
     assert "DEEPTUTOR_NEXT_DIST_DIR" not in captured_envs["frontend"]
     assert launcher.DETACHED_WORKER_ENV not in captured_envs["backend"]
     assert launcher.DETACHED_TOKEN_ENV not in captured_envs["backend"]
+    assert termination_order == ["backend", "frontend"]
 
 
 def test_foreground_signal_handlers_keep_windows_ctrl_c(monkeypatch) -> None:

@@ -11,10 +11,20 @@ from __future__ import annotations
 
 from pathlib import Path
 import sqlite3
+from types import SimpleNamespace
 
 import pytest
 
 from deeptutor.services.memory.snapshot import adapters
+
+
+@pytest.fixture(autouse=True)
+def default_workspace_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Probe equivalence uses one fixture DB; aggregation has its own test module."""
+    monkeypatch.setattr(
+        "deeptutor.services.workspace.get_content_workspace_service",
+        lambda: SimpleNamespace(registered_bindings=lambda: []),
+    )
 
 
 class _FakePathService:

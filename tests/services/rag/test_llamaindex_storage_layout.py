@@ -46,6 +46,7 @@ async def test_reindex_receipt_excludes_a_file_skipped_by_parsing(
     monkeypatch.setattr(LlamaIndexPipeline, "_verify_embedding_connectivity", verify_embedding)
     monkeypatch.setattr(pipeline_module, "set_progress_callback", lambda _callback: None)
     monkeypatch.setattr(storage_module, "create_index", create_index)
+    monkeypatch.setattr(storage_module, "verify_persisted_index", lambda path: None)
     pipeline = LlamaIndexPipeline(kb_base_dir=str(tmp_path), signature_provider=_signature)
     receipts: list[list[str]] = []
 
@@ -114,6 +115,7 @@ async def test_incremental_add_migrates_matching_legacy_index_to_flat_version(
         _verify_embedding_connectivity,
     )
     monkeypatch.setattr(storage_module.vector_store, "load_index", _fake_load_index)
+    monkeypatch.setattr(storage_module, "verify_persisted_index", lambda path: None)
 
     pipeline = LlamaIndexPipeline(
         kb_base_dir=str(tmp_path),

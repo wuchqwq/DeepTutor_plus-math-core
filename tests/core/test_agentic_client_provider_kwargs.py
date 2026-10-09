@@ -227,6 +227,42 @@ async def test_provider_stream_raises_an_error_response_instead_of_streaming_it(
 
 
 @pytest.mark.asyncio
+async def test_closing_native_stream_awaits_provider_cancellation() -> None:
+    import asyncio
+
+    started = asyncio.Event()
+    stopped = asyncio.Event()
+
+    class Provider:
+        async def chat_stream(self, **_kwargs):
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.set()
+
+    stream = _stream_for(Provider())
+    stream.__aiter__()
+    await started.wait()
+    await stream.close()
+    assert stopped.is_set()
+
+
+def test_agentic_sdk_does_not_multiply_the_loop_retry_budget():
+    # The real SDK constructor pins the absence of its hidden retry ladder.
+    client = agentic_client._build_openai_client(
+        LLMClientConfig(
+            binding="custom", model="test", api_key="k", base_url="https://provider.example/v1"
+        ),
+        disable_ssl_verify=False,
+    )
+    assert client.max_retries == 0
+    import asyncio
+
+    asyncio.run(client.close())
+
+
+@pytest.mark.asyncio
 async def test_provider_stream_marks_an_error_after_output_as_partial() -> None:
     """An error that interrupts a visible answer must not be replayed."""
 

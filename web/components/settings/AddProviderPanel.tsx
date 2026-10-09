@@ -3,6 +3,7 @@
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ProviderIcon from '@/components/common/ProviderIcon'
+import { formatProviderLabel } from '@/lib/provider-branding'
 import type { ApiFormat, ServiceName } from '@/lib/model-catalog-types'
 import { SERVICE_TITLES } from '@/lib/provider-registry'
 import { inputClass, selectClass, subPanelClass } from './shared'
@@ -30,22 +31,24 @@ export function ProviderProtocol({
   value,
   onChange,
   allowAuto = true,
+  formats,
 }: {
   value: ApiFormat
   onChange: (value: ApiFormat) => void
   allowAuto?: boolean
+  formats?: readonly string[]
 }) {
   const { t } = useTranslation()
   return (
-    <label className="block space-y-1.5 text-xs font-medium">
+    <label className="block space-y-1.5 text-[13px] font-medium">
       <span>{t('settings.providerServices.protocol')}</span>
       <select
         className={selectClass}
         value={value}
         onChange={e => onChange(e.target.value as ApiFormat)}
       >
-        {allowAuto && <option value="auto">{t('Auto')}</option>}
-        {Object.entries(PROTOCOLS).map(([key, label]) => (
+        {allowAuto && (!formats || formats.includes('auto')) && <option value="auto">{t('Auto')}</option>}
+        {Object.entries(PROTOCOLS).filter(([key]) => !formats || formats.includes(key)).map(([key, label]) => (
           <option key={key} value={key}>
             {t(label)}
           </option>
@@ -67,7 +70,8 @@ export function AddProviderPanel({
   onCreate: (custom?: CustomProviderInput) => void
   onCancel: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const uiLanguage = i18n?.resolvedLanguage ?? i18n?.language ?? 'en'
   const radioName = useId()
   const [filter, setFilter] = useState<string>('all')
   const [query, setQuery] = useState('')
@@ -75,7 +79,10 @@ export function AddProviderPanel({
   const [url, setUrl] = useState('')
   const [protocol, setProtocol] = useState<ApiFormat>('openai_chat')
   const custom = vendor === 'custom'
-  const visible = options.filter(option => {
+  const visible = options.map(option => ({
+    ...option,
+    label: formatProviderLabel(option.value, option.label, uiLanguage),
+  })).filter(option => {
     const category =
       filter === 'all' ||
       (filter === 'custom'
@@ -101,7 +108,7 @@ export function AddProviderPanel({
       Boolean(parsed.hostname)
   } catch {}
   return (
-    <section aria-label={t('Add provider')} className={`min-w-0 space-y-4 p-5 ${subPanelClass}`}>
+    <section aria-label={t('Add provider')} className={`min-w-0 space-y-5 p-4 sm:p-6 ${subPanelClass}`}>
       <h3 className="text-base font-semibold">{t('Add provider')}</h3>
       <input
         type="search"
@@ -125,7 +132,7 @@ export function AddProviderPanel({
               setFilter(item)
               onVendor('')
             }}
-            className={`rounded-full border px-3 py-1.5 text-xs ${filter === item ? 'border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]' : 'border-[var(--border)] hover:bg-[var(--accent)]'}`}
+            className={`rounded-full border px-3 py-1.5 text-[13px] ${filter === item ? 'border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]' : 'border-[var(--border)] hover:bg-[var(--accent)]'}`}
           >
             {t(`settings.providerServices.filter.${item}`)}
           </button>
@@ -134,28 +141,29 @@ export function AddProviderPanel({
       <div
         role="radiogroup"
         aria-label={t('Provider type')}
-        className="grid max-h-80 gap-2 overflow-y-auto p-0.5 sm:grid-cols-2"
+        className="grid max-h-[min(28rem,50dvh)] grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-3 overflow-y-auto overscroll-contain p-1"
       >
         {visible.map(option => (
           <label
             key={option.value}
-            className={`min-w-0 rounded-xl border p-3 text-left cursor-pointer outline-none focus-within:ring-2 focus-within:ring-[var(--ring)] ${vendor === option.value ? 'border-[var(--primary)] bg-[var(--accent)]' : 'border-[var(--border)] bg-[var(--background)] hover:bg-[var(--accent)]'}`}
+            className={`relative flex min-h-24 min-w-0 flex-col rounded-xl border p-4 text-left cursor-pointer outline-none has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ring)] ${vendor === option.value ? 'border-[var(--primary)] bg-[var(--accent)]' : 'border-[var(--border)] bg-[var(--background)] hover:bg-[var(--accent)]'}`}
           >
+            {/* Anchor the hidden radio to its card so focus cannot scroll the settings shell. */}
             <input type="radio" className="sr-only" name={radioName} value={option.value} aria-label={option.value === 'custom' ? t('Custom') : option.label} checked={vendor === option.value} onChange={() => onVendor(option.value)} />
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <ProviderIcon provider={option.value} size={16} />
-              {option.value === 'custom' ? t('Custom') : option.label}
+            <span className="flex items-start gap-2.5 text-[15px] font-medium leading-6">
+              <ProviderIcon provider={option.value} size={20} />
+              <span className="min-w-0 break-words">{option.value === 'custom' ? t('Custom') : option.label}</span>
             </span>
-            <span className="mt-2 flex flex-wrap gap-1">
+            <span className="mt-3 flex flex-wrap gap-1.5">
               {option.value === 'custom' ? (
-                <span className="text-xs text-[var(--muted-foreground)]">
+                <span className="text-[13px] text-[var(--muted-foreground)]">
                   {t('settings.providerServices.customHint')}
                 </span>
               ) : (
                 option.services.map(service => (
                   <span
                     key={service}
-                    className="rounded bg-[var(--muted)] px-1.5 py-0.5 text-[10px] text-[var(--muted-foreground)]"
+                    className="rounded bg-[var(--muted)] px-2 py-0.5 text-[12px] text-[var(--muted-foreground)]"
                   >
                     {t(SERVICE_TITLES[service])}
                   </span>
@@ -166,32 +174,32 @@ export function AddProviderPanel({
         ))}
       </div>
       {!visible.length && (
-        <p role="status" className="py-3 text-xs text-[var(--muted-foreground)]">
+        <p role="status" className="py-3 text-[13px] text-[var(--muted-foreground)]">
           {t('settings.providerServices.noMatch')}
         </p>
       )}
       {custom && (
         <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
-          <label className="block space-y-1.5 text-xs font-medium">
+          <label className="block space-y-1.5 text-[13px] font-medium">
             <span>{t('settings.providerServices.name')}</span>
             <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
           </label>
-          <label className="block space-y-1.5 text-xs font-medium">
+          <label className="block space-y-1.5 text-[13px] font-medium">
             <span>{t('Provider URL')}</span>
             <input className={inputClass} value={url} onChange={e => setUrl(e.target.value)} />
           </label>
           {url && !validUrl && (
-            <p role="status" className="text-xs text-red-600">
+            <p role="status" className="text-[13px] text-red-600">
               {t('Enter a valid HTTP or HTTPS provider address.')}
             </p>
           )}
           <ProviderProtocol value={protocol} onChange={setProtocol} allowAuto={false} />
-          <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+          <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
             {t('settings.providerServices.customDescription')}
           </p>
         </div>
       )}
-      <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+      <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
         {t('settings.providerServices.addHint')}
       </p>
       <div className="flex gap-2 border-t border-[var(--border)] pt-4">

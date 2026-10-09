@@ -28,6 +28,7 @@ import { listNotebooks, listNotebookEntries } from "@/lib/notebook-api";
 import { listPersonas } from "@/lib/personas-api";
 import { listKnowledgeBases } from "@/features/knowledge/api/catalog";
 import { listSkills } from "@/lib/skills-api";
+import { scopedUrl } from "@/lib/workspace-scope";
 
 /**
  * Learning Space dashboard — the hub of `/space`.
@@ -45,6 +46,7 @@ type DashKey =
   | "memory"
   | "chat_history"
   | "notebooks"
+  | "journal"
   | "question_bank"
   | "personas"
   | "skills"
@@ -116,6 +118,14 @@ const GROUPS: DashboardGroup[] = [
         unit: { zh: "个笔记本", en: "notebooks" },
         tile: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
         load: async () => (await listNotebooks()).length,
+      },
+      {
+        key: "journal",
+        href: "/space/journal",
+        icon: NotebookPen,
+        title: { zh: "学习日志", en: "Learning journal" },
+        blurb: { zh: "查看当前目标、上次会话交接和已确认的学习记录。", en: "Inspect your mission, session handoff and confirmed records." },
+        tile: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
       },
       {
         key: "question_bank",
@@ -354,7 +364,7 @@ function DashboardCard({
 
   return (
     <Link
-      href={item.href}
+      href={item.key === "journal" ? scopedUrl(item.href) : item.href}
       className="group relative flex flex-col rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--foreground)]/20 hover:shadow-[0_6px_20px_-12px_rgba(0,0,0,0.25)]"
     >
       <div className="flex items-start gap-3">

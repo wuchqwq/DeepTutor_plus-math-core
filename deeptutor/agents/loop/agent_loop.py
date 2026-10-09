@@ -46,7 +46,12 @@ from deeptutor.agents.loop.context_budget import LLMRequestSnapshot
 from deeptutor.agents.loop.dsml_tool_calls import DSMLStreamFilter, extract_dsml_tool_calls
 from deeptutor.core.context import UnifiedContext
 from deeptutor.core.trace import build_trace_metadata, merge_trace_metadata, new_call_id
-from deeptutor.runtime.agentic.messages import assistant_message_with_tool_calls
+from deeptutor.runtime.agentic.messages import (
+    assistant_message_with_tool_calls,
+    extend_transient_model_messages,
+    image_content_hashes,
+    with_transient_model_messages,
+)
 from deeptutor.runtime.agentic.think_stream import InlineThinkFilter
 from deeptutor.runtime.agentic.tool_call_stream import ToolCallAccumulator
 from deeptutor.runtime.agentic.tool_dispatch import DispatchOutcome
@@ -103,6 +108,19 @@ MAX_REASONING_ONLY_RECOVERIES = 2
 # user-visible output. Once output is visible, replay is unsafe because it can
 # duplicate prose or tool calls.
 _PROVIDER_RETRY_DELAYS = (0.5, 1.5)
+_STREAM_IDLE_TIMEOUT_SECONDS = 90.0
+
+
+async def _bounded_stream_chunks(stream: Any):
+    """#1421: a connected provider that never produces a chunk must settle."""
+    iterator = stream.__aiter__()
+    while True:
+        try:
+            yield await asyncio.wait_for(iterator.__anext__(), _STREAM_IDLE_TIMEOUT_SECONDS)
+        except StopAsyncIteration:
+            return
+        except TimeoutError:
+            raise LLMProviderTransportError("The model provider stream timed out.") from None
 
 
 def _reasoning_budget_exhausted(result: "LLMCallResult", max_tokens: int) -> bool:
@@ -278,6 +296,10 @@ class AgentLoop:
         self._tool_schema_catalog = tool_schemas
         self._last_request: LLMRequestSnapshot | None = None
         self._request_tools: list[dict[str, Any]] | None = tool_schemas
+        # #1611: retrieved pixels belong to this turn's requests, never to
+        # durable history. Both loop engines share the same ordering/budget.
+        self._transient_model_messages: list[dict[str, Any]] = []
+        context.extension("source_visual_evidence")["image_hashes"] = []
         self._request_fingerprint = (context.runtime.previous_model_turn or {}).get(
             "request_fingerprint"
         )
@@ -704,6 +726,7 @@ class AgentLoop:
             state.tool_steps += 1
             state.sources.extend(dispatch.sources)
             messages.extend(dispatch.tool_messages)
+            extend_transient_model_messages(self._transient_model_messages, dispatch.model_messages)
 
             if dispatch.pause:
                 resumed = await self.pipeline._await_user_reply_and_resolve(
@@ -1023,7 +1046,8 @@ class AgentLoop:
         defer_visible_output: bool = False,
         tool_choice: str | None = None,
     ) -> LLMCallResult:
-        await self.pipeline._guard_context_window(messages, self.stream)
+        request_messages = with_transient_model_messages(messages, self._transient_model_messages)
+        await self.pipeline._guard_context_window(request_messages, self.stream)
         stage = self.stage
         call_id = new_call_id(f"{self.source}-{stage}")
         trace_meta = build_trace_metadata(
@@ -1050,7 +1074,7 @@ class AgentLoop:
             "messages": deduplicate_user_images(
                 [
                     {key: value for key, value in message.items() if key != "_context_snapshot"}
-                    for message in messages
+                    for message in request_messages
                 ]
             ),
             "stream": True,
@@ -1238,7 +1262,17 @@ class AgentLoop:
             try:
                 sent_content = [message.get("content") for message in kwargs["messages"]]
                 sent_had_images = has_image_parts(kwargs["messages"])
-                response_stream = await self._create_response_stream(kwargs, trace_meta, stage)
+                # The loop owns retries. Bound both connection setup and idle
+                # reads so cold-start failures cannot park a durable turn.
+                response_stream = await asyncio.wait_for(
+                    self._create_response_stream(kwargs, trace_meta, stage),
+                    _STREAM_IDLE_TIMEOUT_SECONDS,
+                )
+                # A declared vision capability is not evidence of delivered
+                # pixels when the provider actually falls back to text.
+                self.context.extension("source_visual_evidence")["image_hashes"] = (
+                    image_content_hashes(kwargs["messages"])
+                )
                 # Retain an actual provider fallback for later rounds. The
                 # request-only image deduplication must never overwrite history.
                 if sent_had_images and not has_image_parts(kwargs["messages"]):
@@ -1246,11 +1280,14 @@ class AgentLoop:
                     # replaced only on the wire. Otherwise the next round would
                     # retry images the provider has already rejected.
                     strip_image_parts_inplace(messages)
+                    strip_image_parts_inplace(self._transient_model_messages)
                 else:
-                    for original, accepted, sent in zip(messages, kwargs["messages"], sent_content):
+                    for original, accepted, sent in zip(
+                        request_messages, kwargs["messages"], sent_content
+                    ):
                         if "content" in accepted and accepted["content"] is not sent:
                             original["content"] = accepted["content"]
-                async for chunk in response_stream:
+                async for chunk in _bounded_stream_chunks(response_stream):
                     usage = getattr(chunk, "usage", None)
                     if usage is not None:
                         usage_seen = usage

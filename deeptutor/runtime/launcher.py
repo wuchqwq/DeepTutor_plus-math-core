@@ -517,7 +517,11 @@ def _prompt_new_ports(
     return new_backend, new_frontend
 
 
-def _kill_port_listeners(listeners: dict[int, list[tuple[int, str]]]) -> None:
+def _kill_port_listeners(
+    listeners: dict[int, list[tuple[int, str]]],
+    *,
+    listener_guard: Callable[[int, int], bool] | None = None,
+) -> None:
     """Signal every port listener with the SIGTERM -> SIGKILL ladder.
 
     One unreachable listener does not stop the others from being signalled,
@@ -526,6 +530,8 @@ def _kill_port_listeners(listeners: dict[int, list[tuple[int, str]]]) -> None:
     """
     for port, entries in listeners.items():
         for pid, command in entries:
+            if listener_guard is not None and not listener_guard(port, pid):
+                continue
             _log(_t("start.port_killing", pid=pid, command=command))
             target = f"port {port} listener (pid={pid})"
             _signal_target(pid, None, signal.SIGTERM, target=target)
@@ -534,6 +540,8 @@ def _kill_port_listeners(listeners: dict[int, list[tuple[int, str]]]) -> None:
             time.sleep(0.2)
         if _port_accepts_connection(port):
             for pid, _command in entries:
+                if listener_guard is not None and not listener_guard(port, pid):
+                    continue
                 target = f"port {port} listener (pid={pid})"
                 _signal_target(pid, None, KILL_SIGNAL, target=target)
             deadline = time.monotonic() + 3
@@ -546,18 +554,72 @@ def _kill_port_listeners(listeners: dict[int, list[tuple[int, str]]]) -> None:
             _log(_t("start.port_freed", port=port))
 
 
+def _owned_orphan_started_at(
+    pid: int, *, role: str, runtime_home: Path, frontend_cwd: Path | None
+) -> float | None:
+    """Identify this deployment's abandoned listener without trusting its title.
+
+    #1795: an unattended restart may reclaim only a launcher-owned child whose
+    supervisor is gone. Unknown metadata, another home, or a live supervisor
+    must preserve the existing port-conflict failure.
+    """
+    import psutil
+
+    try:
+        process = psutil.Process(pid)
+        env = process.environ()
+        home = env.get(DEEPTUTOR_HOME_ENV)
+        if not home or Path(home).resolve() != runtime_home.resolve():
+            return None
+        supervisor = int(env.get(LAUNCHER_PID_ENV) or env.get(SUPERVISOR_PID_ENV) or "0")
+        if supervisor <= 0 or _is_pid_alive(supervisor):
+            return None
+        if role == "start.backend":
+            # Multiprocess uvicorn workers have spawn command lines; their
+            # parent carries the exact application command and interpreter.
+            for candidate in [process, *process.parents()]:
+                if candidate.pid <= 1:
+                    break
+                args = candidate.cmdline()
+                if any(
+                    args[i : i + 3] == ["-m", "uvicorn", "deeptutor.api.main:app"]
+                    for i in range(len(args) - 2)
+                ):
+                    if (
+                        Path(candidate.exe()).resolve() == Path(sys.executable).resolve()
+                        and Path(candidate.cwd()).resolve() == runtime_home.resolve()
+                    ):
+                        return process.create_time()
+        elif frontend_cwd is not None:
+            cwd = Path(process.cwd()).resolve()
+            args = process.cmdline()
+            if cwd != frontend_cwd.resolve() or Path(process.exe()).stem.lower() != "node":
+                return None
+            if any(arg.startswith("next-server (") for arg in args) or any(
+                Path(arg).name == "server.js" and (cwd / arg).resolve() == cwd / "server.js"
+                for arg in args
+            ):
+                return process.create_time()
+    except (psutil.Error, OSError, ValueError):
+        return None
+    return None
+
+
 def _resolve_port_conflicts(
     *,
     backend_port: int,
     frontend_port: int,
     check_frontend: bool,
     settings_dir: Path,
+    runtime_home: Path | None = None,
+    frontend_cwd: Path | None = None,
 ) -> tuple[int, int]:
     """Return free ``(backend_port, frontend_port)``, resolving conflicts interactively.
 
-    When stdin is not a TTY (Docker, CI), falls back to exiting with the
-    historical ``start.port_in_use`` message.
+    Without a TTY, reclaim verified orphaned children of this deployment once;
+    unknown or foreign listeners retain the historical port-conflict failure.
     """
+    reclaimed = False
     while True:
         roles = [("start.backend", backend_port)]
         if check_frontend:
@@ -577,6 +639,38 @@ def _resolve_port_conflicts(
                 _log(_t("start.port_conflict_proc", pid=pid, command=command))
 
         if sys.stdin is None or not sys.stdin.isatty():
+            if not reclaimed and runtime_home is not None:
+                roles_by_port = {port: key for key, port in occupied}
+                identities = {
+                    (port, pid): _owned_orphan_started_at(
+                        pid,
+                        role=roles_by_port[port],
+                        runtime_home=runtime_home,
+                        frontend_cwd=frontend_cwd,
+                    )
+                    for port, entries in listeners.items()
+                    for pid, _command in entries
+                }
+                if (
+                    all(listeners.values())
+                    and identities
+                    and all(started is not None for started in identities.values())
+                ):
+
+                    def still_owned(port: int, pid: int) -> bool:
+                        return (
+                            _owned_orphan_started_at(
+                                pid,
+                                role=roles_by_port[port],
+                                runtime_home=runtime_home,
+                                frontend_cwd=frontend_cwd,
+                            )
+                            == identities[(port, pid)]
+                        )
+
+                    _kill_port_listeners(listeners, listener_guard=still_owned)
+                    reclaimed = True
+                    continue
             joined = ", ".join(str(port) for _key, port in occupied)
             raise SystemExit(_t("start.port_in_use", ports=joined))
 
@@ -1386,6 +1480,8 @@ def start(
         frontend_port=frontend_port,
         check_frontend=existing_frontend is None,
         settings_dir=settings.settings_dir,
+        runtime_home=runtime_home,
+        frontend_cwd=frontend.cwd,
     )
     if (resolved_backend, resolved_frontend) != (backend_port, frontend_port):
         backend_port, frontend_port = resolved_backend, resolved_frontend
@@ -1530,8 +1626,10 @@ def start(
         if cleanup_started:
             return
         cleanup_started = True
-        _terminate(web)
-        _terminate(backend)
+        try:
+            _terminate(backend)
+        finally:
+            _terminate(web)
         if detached_paths is not None:
             _clear_detached_runtime(detached_paths, detached_token)
 

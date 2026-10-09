@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { formatConfiguredProviderName } from "@/lib/provider-branding";
 import ProviderIcon from "@/components/common/ProviderIcon";
 import {
   useSettings,
@@ -65,7 +66,8 @@ export function ModelsWorkspace({
   page: ModelPage;
   initialService?: ServiceName;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const uiLanguage = i18n?.resolvedLanguage ?? i18n?.language ?? "en";
   const {
     draft,
     providers,
@@ -273,7 +275,7 @@ export function ModelsWorkspace({
                 row.model?.model ||
                 row.profile.display_name ||
                 (row.model ? t("New model") : row.profile.name);
-              const providerName = provider?.name || t("Provider unavailable");
+              const providerName = provider ? formatConfiguredProviderName(provider.provider, provider.name, uiLanguage) : t("Provider unavailable");
               const editing = !adding && row.key === selected;
               return (
                 <button
@@ -292,19 +294,19 @@ export function ModelsWorkspace({
                       provider={provider?.provider || "custom"}
                       size={15}
                     />
-                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-medium">
                       {label}
                     </span>
                     {isDefault && (
                       <span
-                        className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-[var(--primary)]"
+                        className="inline-flex shrink-0 items-center gap-0.5 text-[11px] text-[var(--primary)]"
                       >
                         <Check size={13} />
                         {t(row.service === "search" ? "settings.serviceConfig.defaultSearch" : "Default model")}
                       </span>
                     )}
                   </span>
-                  <span className="mt-1 flex items-center gap-1.5 pl-[23px] text-[11px] text-[var(--muted-foreground)]">
+                  <span className="mt-1 flex items-center gap-1.5 pl-[23px] text-[12px] text-[var(--muted-foreground)]">
                     <span className="max-w-[45%] truncate">{providerName}</span>
                     {row.model?.model && (
                       <>
@@ -314,7 +316,7 @@ export function ModelsWorkspace({
                     )}
                   </span>
                   {(page === "voice" || page === "multimodal" || row.service === "task") && (
-                    <span className="mt-1.5 ml-[23px] inline-flex rounded-md bg-[color-mix(in_srgb,var(--muted)_70%,transparent)] px-1.5 py-0.5 text-[10px] text-[var(--muted-foreground)]">
+                    <span className="mt-1.5 ml-[23px] inline-flex rounded-md bg-[color-mix(in_srgb,var(--muted)_70%,transparent)] px-1.5 py-0.5 text-[11px] text-[var(--muted-foreground)]">
                       {t(SERVICE_TITLES[row.service])}
                     </span>
                   )}
@@ -376,10 +378,11 @@ function ProviderOptions({
   sources: ProviderSource[];
   declared: (source: ProviderSource) => boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const uiLanguage = i18n?.resolvedLanguage ?? i18n?.language ?? "en";
   const option = (p: ProviderSource) => (
     <option key={p.id} value={p.id}>
-      {p.name}
+      {formatConfiguredProviderName(p.provider, p.name, uiLanguage)}
     </option>
   );
   const unverified = sources.filter((source) => !declared(source));
@@ -437,14 +440,14 @@ function AddModelPanel({
         <h3 className="text-base font-semibold">{title}</h3>
         <Link
           href="/settings/connections"
-          className="shrink-0 text-xs text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)]"
+          className="shrink-0 text-[13px] text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)]"
         >
           {t("Manage providers")}
         </Link>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {(page === "voice" || page === "multimodal") && (
-          <label className="space-y-1.5 text-xs font-medium">
+          <label className="space-y-1.5 text-[13px] font-medium">
             <span className="block">{t("Model type")}</span>
             <select
               className={selectClass}
@@ -459,7 +462,7 @@ function AddModelPanel({
             </select>
           </label>
         )}
-        <label className="space-y-1.5 text-xs font-medium">
+        <label className="space-y-1.5 text-[13px] font-medium">
           <span className="block">{t("Configured provider")}</span>
           <select
             aria-label={t("Configured provider")}
@@ -472,11 +475,11 @@ function AddModelPanel({
           </select>
         </label>
       </div>
-      {service !== "search" && sources.some(source => !declared(source)) && <label className="mt-3 flex items-center gap-2 text-xs">
+      {service !== "search" && sources.some(source => !declared(source)) && <label className="mt-3 flex items-center gap-2 text-[13px]">
         <input type="checkbox" checked={custom} onChange={e => { setCustom(e.target.checked); onProvider(""); }} />
         {t("settings.serviceConfig.custom")}
       </label>}
-      <p className="mt-3 text-xs leading-relaxed text-[var(--muted-foreground)]">
+      <p className="mt-3 text-[13px] leading-relaxed text-[var(--muted-foreground)]">
         {t(service === "search" ? "settings.serviceConfig.search" : service === "videogen" ? "settings.serviceConfig.video" : "settings.serviceConfig.providers")}
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)] pt-4">
@@ -508,7 +511,8 @@ function ModelEditor({
   declared: (source: ProviderSource) => boolean;
   onRemoved: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const uiLanguage = i18n?.resolvedLanguage ?? i18n?.language ?? "en";
   const [custom, setCustom] = useState(false);
   const {
     draft,
@@ -612,8 +616,8 @@ function ModelEditor({
       className="min-w-0 overflow-clip rounded-2xl border border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]"
     >
       {/* Opaque on purpose: it stays put over the scrolling body. */}
-      <header className="sticky top-14 z-10 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_4%,var(--background))] px-5 py-4 lg:top-0">
-        <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px]">
+      <header className="sticky top-14 z-10 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_4%,var(--background))] px-4 py-5 sm:px-6 lg:top-0">
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px]">
           <span className="font-medium text-[var(--primary)]">
             {t("Currently configuring")}
           </span>
@@ -633,23 +637,23 @@ function ModelEditor({
             model ? update("name", value) : updateSearch("display_name", value)
           }
         />
-        <div className="mt-2 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+        <div className="mt-2 flex items-center gap-2 text-[13px] text-[var(--muted-foreground)]">
           <ProviderIcon provider={provider?.provider || "custom"} size={16} />
           <span className="break-all">
-            {provider?.name || t("Provider unavailable")}
+            {provider ? formatConfiguredProviderName(provider.provider, provider.name, uiLanguage) : t("Provider unavailable")}
           </span>
         </div>
         {model?.model && (
-          <p className="mt-2 break-all font-mono text-[11px] text-[var(--muted-foreground)]">
+          <p className="mt-2 break-all font-mono text-[12px] text-[var(--muted-foreground)]">
             {model.model}
           </p>
         )}
       </header>
-      <div className="space-y-5 p-5">
+      <div className="space-y-6 p-4 sm:p-6">
         {service === "embedding" && model && <EmbeddingModelUsage key={JSON.stringify([profile.id, model.id])} profileId={profile.id} modelId={model.id} />}
         <div className="grid gap-x-5 gap-y-4 lg:grid-cols-2">
           <div className="space-y-2">
-            <label className="block space-y-1.5 text-xs font-medium">
+            <label className="block space-y-1.5 text-[13px] font-medium">
               <span className="block">{t("Configured provider")}</span>
               <select
                 aria-label={t("Configured provider")}
@@ -662,19 +666,19 @@ function ModelEditor({
                   {t("Choose a provider")}
                 </option>
                 {provider && !sources.some((p) => p.id === provider.id) && (
-                  <option value={provider.id}>{provider.name}</option>
+                  <option value={provider.id}>{formatConfiguredProviderName(provider.provider, provider.name, uiLanguage)}</option>
                 )}
                 <ProviderOptions sources={visible} declared={declared} />
               </select>
             </label>
-            {service !== "search" && sources.some(source => !declared(source) && source.id !== provider?.id) && <label className="flex items-center gap-2 text-xs">
+            {service !== "search" && sources.some(source => !declared(source) && source.id !== provider?.id) && <label className="flex items-center gap-2 text-[13px]">
               <input type="checkbox" checked={custom} disabled={managed} onChange={e => setCustom(e.target.checked)} />
               {t("settings.serviceConfig.custom")}
             </label>}
             {/* Why the test below matters more here: nothing vouches for this
                 pairing yet, so say what request it will actually make. */}
             {provider && !declared(provider) && (
-              <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+              <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
                 {t(
                   service === "search"
                     ? "settings.serviceConfig.unsupportedSearch"
@@ -684,7 +688,7 @@ function ModelEditor({
             )}
             <Link
               href={`/settings/connections${provider ? `?provider=${encodeURIComponent(provider.id)}` : ""}`}
-              className="inline-block text-xs text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)]"
+              className="inline-block text-[13px] text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)]"
             >
               {t("Manage provider connection")}
             </Link>
@@ -699,7 +703,7 @@ function ModelEditor({
                 onChange={(value) => update("model", value)}
                 placeholder={t("Choose a listed model or enter a model ID")}
               />
-              <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+              <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
                 {t(
                   "The display name is used in chat. Double-click the name above or use the edit button to rename it.",
                 )}
@@ -719,7 +723,7 @@ function ModelEditor({
                   )
                 }
               />
-              <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+              <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
                 {t(
                   "Search APIs use an engine configuration rather than a model ID or context window.",
                 )}
@@ -729,7 +733,7 @@ function ModelEditor({
         </div>
         {model && provider && !managed && service !== "search" && (
           <details open={service === "llm" || service === "task" || service === "embedding"}>
-          <summary className="mb-3 cursor-pointer text-xs text-[var(--muted-foreground)]">{t("settings.serviceConfig.discovery")}</summary>
+          <summary className="mb-3 cursor-pointer text-[13px] text-[var(--muted-foreground)]">{t("settings.serviceConfig.discovery")}</summary>
           <RegistryProbe
             input={providerProbeInput(
               provider,
@@ -753,7 +757,7 @@ function ModelEditor({
             options={speechOptions} preset={speechPreset} update={update} disabled={managed} />
         ) : model && <ModelParameters service={service} model={model} update={update} managed={managed} />}
         {service === "tts" && model ? <VoicePreviewPanel profileId={profile.id} modelId={model.id} maxChars={Math.min(500, speechPreset?.max_input_chars ?? 500)} /> : (service === "search" || service === "stt" || service === "imagegen" || service === "videogen") ? <ServicePreviewPanel service={service} profile={profile} model={model} /> : <ModelTestPanel service={service} profile={profile} model={model} />}
-        {(service === "search" || service === "imagegen" || service === "videogen") && <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+        {(service === "search" || service === "imagegen" || service === "videogen") && <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
           {t("settings.serviceConfig.tools")} {" "}
           <Link href="/settings/tools" className="underline underline-offset-4">{t("settings.serviceConfig.openTools")}</Link>
         </p>}
@@ -847,7 +851,7 @@ function ModelParameters({
                   below the select beside it, so the pair never lined up. */}
               <div className="space-y-1.5">
                 <div className="flex min-h-5 flex-wrap items-center justify-between gap-2">
-                  <label htmlFor={contextId} className="text-xs font-medium">
+                  <label htmlFor={contextId} className="text-[13px] font-medium">
                     {t("Context length (tokens)")}
                   </label>
                   <button
@@ -857,7 +861,7 @@ function ModelParameters({
                       managed ||
                       !(model.context_window || model.context_window_tokens)
                     }
-                    className="rounded text-xs text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)] disabled:opacity-40 disabled:hover:text-[var(--muted-foreground)]"
+                    className="rounded text-[13px] text-[var(--muted-foreground)] underline underline-offset-4 transition-colors hover:text-[var(--foreground)] disabled:opacity-40 disabled:hover:text-[var(--muted-foreground)]"
                   >
                     {t("Use default")}
                   </button>
@@ -875,14 +879,14 @@ function ModelParameters({
                   placeholder={t("Default")}
                 />
               </div>
-              <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+              <p className="text-[13px] leading-relaxed text-[var(--muted-foreground)]">
                 {t(
                   "Keep the default, enter a custom value, or use the detected value after testing. Testing does not overwrite your choice.",
                 )}
               </p>
             </div>
             <div className="space-y-1.5">
-              <p className="flex min-h-5 items-center text-xs font-medium">
+              <p className="flex min-h-5 items-center text-[13px] font-medium">
                 {t("Reasoning effort")}
               </p>
               <select
@@ -914,13 +918,13 @@ function ModelParameters({
             </div>
           </div>
           <details className={`p-3.5 ${subPanelClass}`}>
-            <summary className="cursor-pointer select-none rounded text-xs font-medium marker:text-[var(--muted-foreground)]">
+            <summary className="cursor-pointer select-none rounded text-[13px] font-medium marker:text-[var(--muted-foreground)]">
               {t("Model capabilities")}
             </summary>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {(["tools", "vision", "json_output", "reasoning"] as const).map(
                 (key) => (
-                  <label key={key} className="space-y-1.5 text-xs">
+                  <label key={key} className="space-y-1.5 text-[13px]">
                     <span className="block">
                       {t(
                         {
@@ -971,7 +975,7 @@ function ModelParameters({
         </div>
       )}
       {service === "embedding" && (
-        <label className="block space-y-1.5 text-xs font-medium">
+        <label className="block space-y-1.5 text-[13px] font-medium">
           <span className="block">{t("Send dimensions in embedding requests")}</span>
           <select
             className={selectClass}
@@ -994,7 +998,7 @@ function ModelParameters({
         </label>
       )}
       {managed && (
-        <p className="text-xs text-[var(--muted-foreground)]">
+        <p className="text-[13px] text-[var(--muted-foreground)]">
           {t(
             "This signed-in provider manages model IDs, context, and capabilities. You can rename the model and choose its reasoning effort.",
           )}

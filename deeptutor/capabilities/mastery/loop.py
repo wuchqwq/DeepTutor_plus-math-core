@@ -266,6 +266,10 @@ class MasteryLoopCapability:
                 state["quiz_awaiting_grade"] = False
                 state["quiz_graded"] = True
             updated["_mastery_path_id"] = path_id
+            updated["_attached_kb_names"] = list(context.knowledge_bases)
+            updated["_inspected_image_hashes"] = list(
+                context.extension("source_visual_evidence").get("image_hashes", [])
+            )
             # Raw, not normalised: "this conversation never recorded a mode"
             # has to survive down to the tools, or every pre-modes conversation
             # (and every CLI / SDK turn, which pass none) would be enforced as

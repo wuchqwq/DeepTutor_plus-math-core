@@ -123,6 +123,82 @@ def test_new_model_reuses_connection_and_later_key_changes_without_copying_secre
     assert options[-1]["profile_name"] == "New account"
 
 
+@pytest.mark.parametrize("service", ["llm", "task"])
+def test_minimax_model_references_follow_protocol_changes_without_rewriting_models(
+    tmp_path, service
+):
+    store, current = fixture(tmp_path)
+    catalog = merge_registry_edit(
+        current, provider_edit(provider="minimax", base_url="", api_format="auto")
+    )
+    catalog = add_model(
+        catalog,
+        service=service,
+        ref={
+            "connection_id": "account",
+            "binding": "minimax",
+            "default_base_url": "https://api.minimax.io/v1",
+        },
+    )
+    catalog = merge_registry_edit(
+        catalog,
+        {
+            "kind": "default",
+            "service": service,
+            "profile_id": "new-profile",
+            "model_id": "new-model",
+        },
+    )
+    catalog = store.save(catalog)
+    original_models = deepcopy(catalog["services"])
+    assert (
+        resolve_llm_runtime_config(catalog, service=store, service_name=service).effective_url
+        == "https://api.minimax.io/v1"
+    )
+    catalog = store.save(
+        merge_registry_edit(
+            catalog,
+            provider_edit(
+                provider="minimax",
+                base_url="",
+                api_format="anthropic",
+            ),
+        )
+    )
+    resolved = resolve_llm_runtime_config(catalog, service=store, service_name=service)
+    assert resolved.api_format == "anthropic"
+    assert resolved.effective_url == "https://api.minimax.io/anthropic"
+    assert catalog["services"] == original_models
+    catalog = store.save(
+        merge_registry_edit(
+            catalog,
+            provider_edit(
+                provider="minimax",
+                base_url="https://gateway.test/minimax",
+                api_format="anthropic",
+            ),
+        )
+    )
+    assert (
+        resolve_llm_runtime_config(catalog, service=store, service_name=service).effective_url
+        == "https://gateway.test/minimax"
+    )
+    catalog = store.save(
+        merge_registry_edit(
+            catalog,
+            provider_edit(
+                provider="minimax",
+                base_url="",
+                api_format="openai_chat",
+            ),
+        )
+    )
+    resolved = resolve_llm_runtime_config(catalog, service=store, service_name=service)
+    assert resolved.api_format == "openai_chat"
+    assert resolved.effective_url == "https://api.minimax.io/v1"
+    assert catalog["services"] == original_models
+
+
 def test_switch_one_legacy_model_provider_without_touching_sibling_or_unknown_fields(tmp_path):
     store, current = fixture(tmp_path)
     catalog = merge_registry_edit(current, provider_edit())

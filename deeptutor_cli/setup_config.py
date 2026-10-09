@@ -117,20 +117,21 @@ def prepare_profiles(config: SetupConfig) -> dict[str, dict]:
         if choice is None:
             continue
         provider = choice.provider.lower()
-        spec = find_by_name(provider) if section == "llm" else EMBEDDING_PROVIDERS.get(provider)
+        llm_spec = find_by_name(provider) if section == "llm" else None
+        spec = llm_spec if section == "llm" else EMBEDDING_PROVIDERS.get(provider)
         if spec is None:
             raise ValueError(f"Unsupported {section} provider. See 'deeptutor config providers'.")
         if section == "llm" and choice.dimension is not None:
             raise ValueError("dimension is only supported in the embedding section.")
         if section == "embedding" and choice.api_format is not None:
             raise ValueError("api_format is only supported in the llm section.")
-        if section == "llm" and choice.api_format is not None:
-            allowed = spec.api_formats or (spec.default_api_format,)
+        if llm_spec is not None and choice.api_format is not None:
+            allowed = llm_spec.api_formats or (llm_spec.default_api_format,)
             if choice.api_format not in allowed:
                 raise ValueError("llm.api_format is not supported by this provider.")
         default_endpoint = spec.default_api_base
-        if section == "llm" and choice.api_format is not None:
-            default_endpoint = dict(spec.api_base_by_format).get(
+        if llm_spec is not None and choice.api_format is not None:
+            default_endpoint = dict(llm_spec.api_base_by_format).get(
                 choice.api_format, default_endpoint
             )
         endpoint = choice.base_url or default_endpoint
@@ -138,7 +139,7 @@ def prepare_profiles(config: SetupConfig) -> dict[str, dict]:
             endpoint = normalize_embedding_endpoint_for_display(
                 provider, endpoint, model=choice.model
             )
-        if not endpoint and not (section == "llm" and spec.is_oauth):
+        if not endpoint and not (llm_spec is not None and llm_spec.is_oauth):
             raise ValueError(f"{section}.base_url is required for this provider.")
         if endpoint:
             _validate_endpoint(endpoint, section)
@@ -166,11 +167,11 @@ def prepare_profiles(config: SetupConfig) -> dict[str, dict]:
     if config.search is not None:
         choice = config.search
         provider = choice.provider.lower()
-        spec = SEARCH_PROVIDERS.get(provider)
-        if spec is None:
+        search_spec = SEARCH_PROVIDERS.get(provider)
+        if search_spec is None:
             raise ValueError("Unsupported search provider. See 'deeptutor config providers'.")
         endpoint = choice.base_url or ""
-        if spec.requires_base_url and not endpoint:
+        if search_spec.requires_base_url and not endpoint:
             raise ValueError("search.base_url is required for this provider.")
         if endpoint:
             _validate_endpoint(endpoint, "search")
@@ -180,7 +181,7 @@ def prepare_profiles(config: SetupConfig) -> dict[str, dict]:
             "provider": provider,
             "base_url": endpoint,
             "api_key": _api_key(
-                choice.api_key_env, required=spec.requires_api_key, section="search"
+                choice.api_key_env, required=search_spec.requires_api_key, section="search"
             ),
         }
     return profiles

@@ -44,9 +44,9 @@ def reset_runtime_singletons() -> None:
         )
     # CLI setup can select --home after multi-user paths were imported.
     # Keep the shared reset seam responsible for every cached home boundary.
-    paths = sys.modules.get("deeptutor.multi_user.paths")
-    if paths is not None:
+    if sys.modules.get("deeptutor.multi_user.paths") is not None:
         try:
+            from deeptutor.multi_user import paths
             from deeptutor.runtime.home import get_runtime_home
 
             paths.PROJECT_ROOT = get_runtime_home()

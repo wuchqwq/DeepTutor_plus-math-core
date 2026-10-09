@@ -97,6 +97,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _COOKIE_NAME = "dt_token"
+AUTH_COOKIE_NAME = _COOKIE_NAME
 _COOKIE_MAX_AGE = TOKEN_EXPIRE_HOURS * 3600
 _USER_IMPORT_MAX_BYTES = 2 * 1024 * 1024
 _USER_IMPORT_MAX_ROWS = 500
@@ -608,6 +609,8 @@ _LEARNER_KB_READ_ROUTES = frozenset(
         "/api/knowledge-bases/{kb_name}/files/{filename:path}",
         "/api/knowledge-bases/{kb_name}/file-preview-text/{filename:path}",
         "/api/knowledge-bases/{kb_name}/visual-assets/{asset_id}",
+        "/api/knowledge-bases/{kb_name}/indexing-run",
+        "/api/knowledge-bases/{kb_name}/indexing-readiness",
         "/api/knowledge-bases/{kb_name}/progress",
     }
 )
