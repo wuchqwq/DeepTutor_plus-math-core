@@ -13,7 +13,7 @@ from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
 QUESTION_ID = "phase_d_quadratic_01"
 QUESTION_REVISION = 1
-SCOPE = "human-reviewed algebra supplied by dot; no independent machine verification"
+SCOPE = "AI-reviewed algebra supplied by dot; no independent machine verification"
 
 
 def make_source(episode_id: str, learner_id: str) -> ReviewedSource:
@@ -27,7 +27,7 @@ def make_source(episode_id: str, learner_id: str) -> ReviewedSource:
         provenance=(question,), revision=QUESTION_REVISION,
     )
     # These declarations are explicit experiment resources, not extracted student
-    # evidence. Qualified does not become verified because a human checked them.
+    # evidence. AI review does not upgrade qualified to verified.
     statements = [
         ("given", "x^2+x*y+y^2=3", "given", "qualified"),
         ("s", "s=x+y", "definition", "qualified"),
@@ -41,7 +41,7 @@ def make_source(episode_id: str, learner_id: str) -> ReviewedSource:
         ("upper_substitution", "9-Q=2*(x+y)^2", "intermediate", "qualified"),
         ("d", "d=x-y", "definition", "qualified"),
         ("sd_constraint", "3*s^2+d^2=12", "intermediate", "qualified"),
-        ("q_s", "Q=12-2*s^2", "intermediate", "qualified"),
+        ("q_s", "Q=9-2*s^2", "intermediate", "qualified"),
         ("s_range", "0<=s^2<=4", "intermediate", "qualified"),
         ("attainability", "For every s^2 in [0,4], choose real d with d^2=12-3*s^2, x=(s+d)/2, y=(s-d)/2; then the constraint holds and all Q in [1,9] are attained.", "intermediate", "not_checkable"),
         ("answer", "Q in [1,9]", "answer", "qualified"),

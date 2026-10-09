@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--arm", choices=("ordinary", "integrated"), required=True)
     parser.add_argument("--case", choices=tuple(f"S{i}" for i in range(1, 9)), required=True)
     parser.add_argument("--home", type=Path, required=True)
+    parser.add_argument("--catalog-home", type=Path, help="Existing user-configured standard Catalog home in this task; process-only service reuse, no credential copies")
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--model", required=True, help="Exact configured DeepSeek model, including a rolling alias if applicable")
     parser.add_argument("--port", type=int, default=49301)
@@ -48,6 +49,22 @@ def main():
     from deeptutor.multi_user.context import get_current_user
     from deeptutor.runtime.turn_engine import TurnEngine
     from deeptutor.services.llm.config import get_llm_config, set_scoped_llm_config
+
+    # Reuse the existing standard Catalog service while all student persistence
+    # remains in this case's own home. This is only an in-process DI entry;
+    # there is no new credential store, file link, migration, or value export.
+    catalog_path = None
+    if args.catalog_home is not None:
+        from deeptutor.services.config.model_catalog import ModelCatalogService
+        from deeptutor.services.path_service import get_path_service
+        catalog_home = args.catalog_home.resolve()
+        if not catalog_home.is_relative_to(ROOT / "data"):
+            parser.error("catalog-home must be an existing standard home inside this task's data directory")
+        catalog_path = catalog_home / "data/user/settings/model_catalog.json"
+        if not catalog_path.is_file():
+            parser.error("The user-configured standard Catalog does not exist")
+        local_catalog = get_path_service().get_settings_file("model_catalog").resolve()
+        ModelCatalogService._instances[str(local_catalog)] = ModelCatalogService.get_instance(catalog_path)
 
     observe_sdk_calls(evidence, allow_paid=args.allow_paid, expected_model=args.model, request_limit=args.request_limit)
     authentication = "NOT_CONFIGURED"
@@ -101,6 +118,9 @@ def main():
         container.runtime_registry.turn_engine = engine
     set_application_container(container)
     manifest = {"arm": args.arm, "case": args.case, "model": args.model, "provider": "deepseek", "snapshot_available": "not assumed; retain actual response model and UTC metadata", "temperature": 0, "top_p": "provider default; actual wire recorded", "ordinary_output_cap": 4096, "alignment_output_cap": 2048, "selector_output_cap": 1024, "request_limit": args.request_limit, "allow_paid": args.allow_paid, "authentication": authentication, "runtime_home": str(home), "evidence": str(evidence), "base_sha": "143e41784bdd2c34d765a50c754869ef3a2d9830", "teaching_and_publication": "unchanged", "provider_execution": "NOT_RUN_AT_STARTUP"}
+    manifest["standard_catalog_path"] = str(catalog_path) if catalog_path else "this runtime's own Catalog"
+    manifest["credential_copy_or_file_link"] = False
+    manifest["top_p"] = 1
     (evidence / "run_config.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     if args.check:
         if args.allow_paid:

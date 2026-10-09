@@ -21,7 +21,7 @@
         "statement": "x^2+x*y+y^2=3",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -45,7 +45,7 @@
         "statement": "s=x+y",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -69,7 +69,7 @@
         "statement": "p=x*y",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -93,7 +93,7 @@
         "statement": "s^2-p=3",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -117,7 +117,7 @@
         "statement": "Q=3-2*x*y",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -141,7 +141,7 @@
         "statement": "-3<=p<=1",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -165,7 +165,7 @@
         "statement": "3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -189,7 +189,7 @@
         "statement": "Q-1=(2/3)*(x-y)^2",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -213,7 +213,7 @@
         "statement": "3*(x^2+x*y+y^2)-(x^2-x*y+y^2)=2*(x+y)^2",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -237,7 +237,7 @@
         "statement": "9-Q=2*(x+y)^2",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -261,7 +261,7 @@
         "statement": "d=x-y",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -285,16 +285,16 @@
         "statement": "3*s^2+d^2=12",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
       {
-        "artifact_id": "artifact_1f103c620cb22f3b713a485f",
+        "artifact_id": "artifact_b10b01b5c7c51fb0f008d57f",
         "assumptions": [],
         "claim_kind": "derived_equation",
         "dependencies": [],
-        "normalized_form": "Q=12-2*s**2",
+        "normalized_form": "Q=9-2*s**2",
         "provenance": [
           {
             "identifier": "phase_d_quadratic_01",
@@ -306,10 +306,10 @@
           }
         ],
         "role": "intermediate",
-        "statement": "Q=12-2*s^2",
+        "statement": "Q=9-2*s^2",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -333,7 +333,7 @@
         "statement": "0<=s^2<=4",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       },
@@ -357,7 +357,7 @@
         "statement": "For every s^2 in [0,4], choose real d with d^2=12-3*s^2, x=(s+d)/2, y=(s-d)/2; then the constraint holds and all Q in [1,9] are attained.",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "not_checkable",
         "workspace_revision": 1
       },
@@ -381,7 +381,7 @@
         "statement": "Q in [1,9]",
         "tool_evidence_refs": [],
         "uncertainty": 0.0,
-        "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+        "verification_scope": "AI-reviewed algebra supplied by dot; no independent machine verification",
         "verification_status": "qualified",
         "workspace_revision": 1
       }
@@ -397,14 +397,14 @@
           "artifact_e7d61a7631e7d6001bafb981",
           "artifact_148bc3775eaf0957475f9c6b",
           "artifact_b77e9a835895bc0b1a61a043",
-          "artifact_1f103c620cb22f3b713a485f",
+          "artifact_b10b01b5c7c51fb0f008d57f",
           "artifact_f72230476f7171e6a59b01f6",
           "artifact_87a22947aa863b6651f0cb66",
           "artifact_da7650ca37df406bcaa9fe2e"
         ],
         "completeness": "unknown",
         "method": "symmetric substitution",
-        "path_id": "path_2018d2a6ac93aad76c4f372e",
+        "path_id": "path_2901626b7b1484706b1dedec",
         "provenance": [
           {
             "identifier": "phase_d_dot_math_review_2026_10_09",
@@ -517,7 +517,7 @@
         "artifact_39ed31415a999be010ae332f",
         "artifact_148bc3775eaf0957475f9c6b",
         "artifact_b77e9a835895bc0b1a61a043",
-        "artifact_1f103c620cb22f3b713a485f",
+        "artifact_b10b01b5c7c51fb0f008d57f",
         "artifact_f72230476f7171e6a59b01f6",
         "artifact_87a22947aa863b6651f0cb66",
         "artifact_da7650ca37df406bcaa9fe2e"
@@ -529,7 +529,7 @@
       },
       "revision": 1,
       "solution_path_refs": [
-        "path_2018d2a6ac93aad76c4f372e",
+        "path_2901626b7b1484706b1dedec",
         "path_16285ff9bedf95598b2871d5"
       ],
       "status": "open",

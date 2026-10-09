@@ -61,6 +61,10 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
                 raise RuntimeError("Phase D startup-only mode: paid provider calls are disabled")
             if wire.get("model") != expected_model or self._binding_name() != "deepseek":
                 raise RuntimeError("Phase D requires the same configured DeepSeek model on every call")
+            # The frozen experiment fixes these provider parameters on all
+            # stages, including native chat/title calls with their own defaults.
+            wire["temperature"] = 0
+            wire["top_p"] = 1
             with lock:
                 count += 1
                 call_id = count
