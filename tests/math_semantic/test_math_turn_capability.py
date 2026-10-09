@@ -409,11 +409,8 @@ async def test_real_method_confirmation_token_transport_and_scope(host, choice, 
     assert card["options"][-1]["option_id"] == token
     label = card["options"][-1]["label"]
     assert token != label and path != label
-    assert label == next(
-        p.method.replace("_", " ").capitalize()
-        for p in host.binding.source.authored.paths
-        if p.path_id == path
-    )
+    assert label == f"Method {len(issued['option_paths'])}"
+    assert path in {p.path_id for p in host.binding.source.authored.paths}
     answers = [
         {
             "questionId": "stale" if choice == "stale" else card["id"],

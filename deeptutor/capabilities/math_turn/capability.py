@@ -101,20 +101,23 @@ class MathTurnCapability(TurnCapability):
             waiter = context.runtime.wait_for_user_reply
             if waiter is None:
                 raise ValueError("method confirmation requires the host reply port")
-            labels = {
-                path.path_id: path.method.replace("_", " ").capitalize()
-                for path in source.authored.paths
-            }
-            if any(path not in labels for _, path in issued.option_paths):
+            authored_paths = {path.path_id for path in source.authored.paths}
+            if any(path not in authored_paths for _, path in issued.option_paths):
                 raise ValueError("confirmation path is not in the reviewed authored source")
+            # Authored method text is private semantic data, not disclosure
+            # authority. Ordinals are display-only; Core-issued tokens own identity.
+            labels = {
+                token: f"Method {index}"
+                for index, (token, _) in enumerate(issued.option_paths, start=1)
+            }
             payload = AskUserPayload(
                 questions=(
                     AskUserQuestion(
                         id=issued.confirmation_id,
                         prompt="Choose the method to continue.",
                         options=tuple(
-                            AskUserOption(label=labels[path], option_id=token)
-                            for token, path in issued.option_paths
+                            AskUserOption(label=labels[token], option_id=token)
+                            for token, _ in issued.option_paths
                         ),
                         allow_free_text=False,
                     ),
@@ -156,7 +159,7 @@ class MathTurnCapability(TurnCapability):
                             {
                                 "questionId": issued.confirmation_id,
                                 "selected_option_id": token,
-                                "text": labels[dict(issued.option_paths)[token]],
+                                "text": labels[token],
                             }
                         ],
                     },
