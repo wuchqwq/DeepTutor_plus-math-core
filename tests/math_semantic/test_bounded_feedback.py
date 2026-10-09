@@ -178,6 +178,50 @@ def test_authored_answer_cannot_be_disclosed_as_local_identity():
     assert all(o["grant"]["act_kind"] != "result" for o in inputs["offers"])
 
 
+@pytest.mark.parametrize("role", ["answer", "answer_candidate", "final_answer"])
+@pytest.mark.parametrize("text", ["a*(b+1)=a*b+a", "a*(b+1) = a*b+a"])
+def test_known_answer_exclusion_does_not_trust_model_candidate_subset(role, text, monkeypatch):
+    reviewed = source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a")
+    snapshot = reviewed.authored
+    intermediate = snapshot.artifacts[0]
+    answer = MathArtifact("a*(b+1)=a*b+a", role, provenance=snapshot.problem_model.provenance)
+    reviewed = replace(
+        reviewed,
+        authored=replace(
+            snapshot,
+            artifacts=(*snapshot.artifacts, answer),
+            workspace=replace(
+                snapshot.workspace,
+                artifact_refs=(*snapshot.workspace.artifact_refs, answer.artifact_id),
+            ),
+        ),
+    )
+    state, calc, inputs = prepare(
+        text,
+        reviewed,
+        proposal_fields={
+            "claim_type": "equation",
+            "parse_status": "parsed",
+            "candidate_artifact_refs": [intermediate.artifact_id],
+        },
+    )
+    current = json.loads(state.serialize())["alignments"]
+    alignment = json.loads(next(iter(current.values())))
+    assert all(r["artifact_ref"] != answer.artifact_id for r in alignment["relations"])
+    checked = [
+        json.loads(e["output_summary"])
+        for e in alignment["math_evidence"]
+        if e["tool_version"] == STEP_VERSION
+    ]
+    assert checked[0]["local_relation"] == "IDENTITY", "Do not hide the leak with UNKNOWN"
+    monkeypatch.setattr(MathToolRegistry, "call", lambda *a, **k: pytest.fail("publication tool"))
+    fresh = publication_input(state, calc)
+    assert not offers(fresh, "local_confirmation")
+    assert all(o["grant"]["act_kind"] != "result" for o in fresh["offers"])
+    assert offers(fresh, "neutral_clarification")
+    assert inputs == fresh
+
+
 @pytest.mark.parametrize(
     "change",
     ["revision", "foreign_episode", "foreign_source", "old_grant", "forged_grant", "mixed_grants"],
@@ -297,6 +341,69 @@ def select_feedback(generation, monkeypatch, kind, *, invalid=False):
         return raw
 
     monkeypatch.setattr("deeptutor.services.llm.factory._complete_with_resolved_config", complete)
+
+
+@pytest.mark.asyncio
+async def test_narrowed_known_answer_remains_clarification_in_native_host_receipt(
+    publication_host_factory, initialized_host_imports, monkeypatch
+):
+    host, generation, _ = publication_host_factory()
+    text = "a*(b+1)=a*b+a"
+    reviewed = source(domain="a,b are real", givens=(), definitions=(), operation=text)
+    snapshot = reviewed.authored
+    intermediate = snapshot.artifacts[0]
+    answer = MathArtifact(text, "final_answer", provenance=snapshot.problem_model.provenance)
+    host.source = replace(
+        reviewed,
+        authored=replace(
+            snapshot,
+            artifacts=(*snapshot.artifacts, answer),
+            workspace=replace(
+                snapshot.workspace,
+                artifact_refs=(*snapshot.workspace.artifact_refs, answer.artifact_id),
+            ),
+        ),
+    )
+    host.scope = host.math_scope()
+    registered = host.engine.capability_registry.catalog.get("turn", "math_turn")
+    provider_type = type(registered.factory()._provider)
+
+    def narrowed_proposal(_provider, projection):
+        assert projection.response_text == text
+        return {
+            "claims": [
+                {
+                    "evidence": {"quote": text},
+                    "claim_type": "equation",
+                    "parse_status": "parsed",
+                    "candidate_artifact_refs": [intermediate.artifact_id],
+                }
+            ]
+        }
+
+    monkeypatch.setattr(provider_type, "propose", narrowed_proposal)
+
+    async def actual_identity_but_no_result_permission(inputs):
+        checked = [
+            json.loads(e["output_summary"])
+            for e in inputs["private_teaching_context"]["step_evidence"]
+            if e["tool_version"] == STEP_VERSION
+        ]
+        assert checked[0]["local_relation"] == "IDENTITY"
+        assert not offers(inputs, "local_confirmation") and not offers(inputs, "result")
+
+    generation.hook = actual_identity_but_no_result_permission
+    select_feedback(generation, monkeypatch, "neutral_clarification")
+    _, turn = await host.submit(text)
+    _, body, metadata, _ = assistant_row(host, turn["id"])
+    assert CLARIFICATION in body and "Submitted equality" not in body and text not in body
+    assert (
+        metadata["accepted_output"]["math_publication"]["selected_feedback"][0]["act_kind"]
+        == "neutral_clarification"
+    )
+    first, second = await replay(host, turn), await replay(host, turn)
+    assert first == second
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
 
 
 @pytest.mark.asyncio

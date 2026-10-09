@@ -30,7 +30,11 @@ current accepted message, with an explicit domain variable visible in the equali
 It does not repeat formulas. The fixed templates name
 the explicit real scalar domain, the dependency on explicit definitions for
 CONDITIONAL, and the local scope. Answer-type claims, scalar answers, and claims
-corresponding to authored answer artifacts receive no confirmation. Raw claims,
+corresponding to authored answer artifacts receive no confirmation. Known answer
+display forms are excluded from the complete pinned snapshot, independently of
+the model's candidate artifact subset; existing accepted answer relations are
+also excluded. This is finite display normalization, not a new semantic answer
+equivalence prover. Raw claims,
 premise text, witnesses, and private evidence are absent from public feedback
 metadata. This contract grants no complete-result disclosure.
 

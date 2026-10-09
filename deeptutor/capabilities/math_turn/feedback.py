@@ -91,6 +91,14 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
         for a in snapshot.artifacts
         if a.role in {"answer", "answer_candidate", "final_answer"}
     }
+    # Provider candidate refs may intentionally omit an authored answer.
+    # Exclude known answer content from the complete pinned snapshot, using
+    # only the existing display normalization (no mathematical tool here).
+    answer_forms = {
+        normalize_display(a.normalized_form).replace(" ", "")
+        for a in snapshot.artifacts
+        if a.artifact_id in answer_refs
+    }
     proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
     for ordinal, claim in enumerate(current.claims[:4], 1):
         if (
@@ -101,6 +109,7 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
             or state.submission.raw_content[claim.evidence.start : claim.evidence.end]
             != claim.evidence.quote
             or normalize_display(claim.evidence.quote) != claim.normalized_form
+            or claim.normalized_form.replace(" ", "") in answer_forms
             or any(
                 r.student_claim_ref == claim.claim_id and r.artifact_ref in answer_refs
                 for r in current.relations
