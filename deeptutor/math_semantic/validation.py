@@ -200,6 +200,14 @@ def _step_scope(
     model = snapshot.problem_model
     if model.parse_status != "parsed" or model.quantifiers:
         raise ValueError("unsupported_problem_scope")
+    # The canonical model irreversibly aggregates fact uncertainty (including
+    # objectives). This finite checker cannot recover its provenance: require
+    # a wholly zero-uncertainty model rather than discard uncertain constraints.
+    if model.uncertainty != 0 or any(
+        f.uncertainty != 0
+        for f in (*model.domain, *model.givens, *model.constraints, *model.assumptions)
+    ):
+        raise ValueError("uncertain_problem_scope")
     symbols = set()
     for fact in model.domain:
         if fact.status != "explicit":
@@ -230,6 +238,8 @@ def _step_scope(
             facts.append((target[1], model.model_ref.identifier))
     for a in snapshot.artifacts:
         if a.role in {"given", "definition"}:
+            if a.uncertainty != 0:
+                raise ValueError("uncertain_premise_artifact")
             if (
                 a.verification_status not in {"qualified", "verified"}
                 or a.assumptions

@@ -204,6 +204,123 @@ def test_uncertain_relations_never_become_refutations(reviewed, text, reason):
     assert verdict["witness"] is None
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        "model",
+        "domain",
+        "givens",
+        "constraints",
+        "assumptions",
+        "target",
+        "objective",
+        "artifact_given",
+        "artifact_definition",
+    ],
+)
+def test_uncertain_scope_or_actual_premise_is_unknown_before_tools(field, monkeypatch):
+    reviewed = source(
+        domain="a,b are real", givens=("a=1",), definitions=(), operation="(a-b)^2=a^2-2*a*b+b^2"
+    )
+    model = reviewed.authored.problem_model
+    artifacts = reviewed.authored.artifacts
+    if field == "model":
+        model = replace(model, uncertainty=0.7)
+    elif field == "domain":
+        model = replace(model, domain=(replace(model.domain[0], uncertainty=0.7),))
+    elif field in {"givens", "constraints", "assumptions"}:
+        model = replace(
+            model, **{field: (ProblemFact("a=1", provenance=model.provenance, uncertainty=0.7),)}
+        )
+    elif field in {"target", "objective"}:
+        fact = ProblemFact(
+            "range of Z=a-b" if field == "target" else "Unrelated teaching objective",
+            provenance=model.provenance,
+            uncertainty=0.7,
+        )
+        model = replace(model, **{field: fact if field == "target" else (fact,)})
+    else:
+        artifacts += (
+            MathArtifact(
+                "b=1" if field == "artifact_given" else "Z=a-b",
+                "given" if field == "artifact_given" else "definition",
+                provenance=model.provenance,
+                verification_status="qualified",
+                verification_scope="explicit premise",
+                uncertainty=0.7,
+            ),
+        )
+    snapshot = replace(
+        reviewed.authored,
+        problem_model=model,
+        artifacts=artifacts,
+        workspace=replace(
+            reviewed.authored.workspace,
+            problem_model_ref=model.model_ref,
+            artifact_refs=tuple(a.artifact_id for a in artifacts),
+        ),
+    )
+    reviewed = replace(reviewed, authored=snapshot)
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Uncertain scope must not be used for a positive check or witness")
+
+    monkeypatch.setattr(MathToolRegistry, "call", unexpected)
+    text = "(a-b)^2=a^2-2*a*b+b^2" if field in {"domain", "model", "objective"} else "a=0"
+    checked, verdict, envelope = check(text, reviewed)
+    assert verdict["local_relation"] == "UNKNOWN" and verdict["witness"] is None
+    assert verdict["reason"] == (
+        "uncertain_premise_artifact" if field.startswith("artifact_") else "uncertain_problem_scope"
+    )
+    assert envelope.status == "not_checkable" and len(checked.evidence) == 1
+    assert checked.alignment.validated_artifact_refs == checked.artifacts == checked.paths == ()
+    # The shared scope gate also rejects an old affirmative relation as evidence
+    # of completing an operation under a currently uncertain premise scope.
+    assert (
+        _operation_correspondence(
+            checked.alignment.claims[0],
+            "IDENTITY",
+            {"kind": "expand", "kwargs": {"expression": "(a-b)^2"}},
+            snapshot,
+        )
+        == "UNKNOWN"
+    )
+
+
+def test_unrelated_intermediate_uncertainty_does_not_reject_step_scope():
+    reviewed = source(domain="a,b are real", givens=(), definitions=())
+    snapshot = reviewed.authored
+    artifacts = tuple(replace(a, uncertainty=0.7) for a in snapshot.artifacts)
+    reviewed = replace(
+        reviewed,
+        authored=replace(
+            snapshot,
+            artifacts=artifacts,
+            workspace=replace(
+                snapshot.workspace, artifact_refs=tuple(a.artifact_id for a in artifacts)
+            ),
+        ),
+    )
+    checked, verdict, _ = check("(a-b)^2=a^2-2*a*b+b^2", reviewed)
+    assert verdict["local_relation"] == "IDENTITY"
+    assert (
+        _operation_correspondence(
+            checked.alignment.claims[0],
+            "IDENTITY",
+            {"kind": "expand", "kwargs": {"expression": "(a-b)^2"}},
+            reviewed.authored,
+        )
+        == "WHOLE_OPERATION"
+    )
+
+
+def test_zero_uncertainty_given_still_supports_exact_witness():
+    reviewed = source(domain="a,b are real", givens=("a=1",), definitions=())
+    _, verdict, envelope = check("a=0", reviewed)
+    assert envelope.status == "succeeded" and verdict["local_relation"] == "COUNTEREXAMPLE"
+    assert verdict["witness"]["a"] == 1
+
+
 @pytest.mark.parametrize("letters", [("a", "b"), ("u", "v"), ("r", "t")])
 def test_other_symbols_and_exact_constraint_witness(letters):
     a, b = letters

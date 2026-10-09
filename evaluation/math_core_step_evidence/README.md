@@ -81,6 +81,47 @@ can cause the existing operation support to rebind content/support IDs; they do
 not enlarge target/act/support permissions. There is no correctness/justification
 feedback offer and no E2E teaching-success claim.
 
+## Transaction and uncertainty review corrections
+
+The host prepares the entire existing `materialize_alignment` result outside
+the SQLite write transaction, including pre-existing compare/novel-path tools
+and new student-step checks. Existing `AlignmentMutation` carries the exact
+input snapshot and accepted submission/proposal/provider/config basis. Adoption
+uses the existing protected host commit port: accepted row, episode and turn
+ownership are rechecked there; Core rejects revision/snapshot/request drift and
+altered receipts before appending. Preparation creates no authority token and
+is never read from user metadata. The native direct/in-memory `align` API keeps
+its computational fallback; the live host never calls that fallback inside its
+transaction. Exact saved request replay performs no mathematical computation.
+
+Any nonzero ProblemModel uncertainty or uncertainty on an applicable source
+fact / actual given or definition artifact yields UNKNOWN with an explicit
+reason. ProblemModel irreversibly aggregates fact uncertainty, including an
+unrelated objective; this checker conservatively returns UNKNOWN for that case
+too. It does not infer the origin of the aggregate or discard uncertain premises
+to construct a counterexample. Unrelated intermediate artifact uncertainty does
+not reject the finite premise scope. The shared operation correspondence scope
+has the same gate. Zero-uncertainty identity, definition and witness controls
+remain supported.
+
+The PR remains unmerged Draft. This work runs only offline regression and
+reviewer experiments; their SQLite databases are retained as experiment evidence
+and are not resumed as teaching sessions. Immutable replay intentionally retains
+old recorded verdicts: this correction is not retroactive. No migration, deletion
+or checker-version framework is added for these disposable databases. A deployment
+that reuses pre-correction active math episodes would need an explicit invalidation
+decision before continuing to consume their affirmative private step evidence.
+
+New tests pause an actual native tool call and verify a second-session SQLite
+write with a 0.3-second busy timeout succeeds before tools resume. They also
+assert atomic rejection of revision, same-revision snapshot, turn ownership and
+accepted binding drift; exact replay does not call tools; and all uncertainty
+cases above respect local truth, operation correspondence and publication
+boundaries. This is not a demonstration of expiry of the default 30-second lease.
+The correction's exact commands, environment, logs, JUnit and SHA manifests are
+stored separately in `F:\demo2\StepEvidence01_revision2_evidence`; earlier evidence
+under `F:\demo2\StepEvidence01_evidence` is preserved.
+
 ## Verification and evidence
 
 The new regression exercises true/false squares, explicit Q and missing Q,
