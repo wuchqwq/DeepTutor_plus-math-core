@@ -115,6 +115,31 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
             return [without_tool_timing(v) for v in value]
         return value
 
+    def comparable_offers(host, calls):
+        canonical = []
+        for call, context in zip(calls, host.math_contexts, strict=True):
+            offered = deepcopy(call["inputs"]["offers"])
+            for offer in offered:
+                grant = offer["grant"]
+                if "contract" not in grant:
+                    continue
+                assert grant["contract"] == "bounded_math_feedback_v1"
+                assert grant["session_id"] == context.session_id
+                assert grant["turn_id"] == context.runtime.turn_id
+                assert grant["accepted_user_message_id"] == context.runtime.accepted_user_message_id
+                assert grant["student_response_ref"]["identifier"] == str(
+                    context.runtime.accepted_user_message_id
+                )
+                assert grant["episode_id"] == host.source.identity.episode_id
+                # Verify actual host bindings before comparing permission and
+                # evidence across two intentionally different host sessions.
+                # Their bound grant IDs must differ; every other field stays.
+                offer.pop("grant_id")
+                grant.pop("session_id")
+                grant.pop("turn_id")
+            canonical.append(offered)
+        return canonical
+
     # Match source, accepted history and provider configuration in independent
     # real host databases; only the persisted upstream journal differs.
     baseline, generation, _ = publication_host_factory()
@@ -123,7 +148,7 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
     assert all(context.learning_journal_context == "" for context in baseline.math_contexts)
     baseline_calculation = baseline.result()
     baseline_core = core_state(baseline)
-    baseline_offers = [call["inputs"]["offers"] for call in generation.calls]
+    baseline_offers = comparable_offers(baseline, generation.calls)
 
     assert persisted_journal.set_mission(topic=HOSTILE_JOURNAL[0]).accepted
     assert persisted_journal.note_session(summary=HOSTILE_JOURNAL[1]).accepted
@@ -157,7 +182,7 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
 
     assert without_tool_timing(baseline_core) == without_tool_timing(core_state(hostile))
     assert_no_journal(hostile.state())
-    assert baseline_offers == [call["inputs"]["offers"] for call in generation.calls[2:]]
+    assert baseline_offers == comparable_offers(hostile, generation.calls[2:])
     assert_no_journal([call["inputs"] for call in generation.calls])
 
     for host, turns in ((baseline, (baseline_seed, baseline_turn)), (hostile, (seed, turn))):
