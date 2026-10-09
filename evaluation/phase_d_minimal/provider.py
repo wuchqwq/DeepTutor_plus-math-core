@@ -66,6 +66,9 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
             wire["temperature"] = 0
             wire["top_p"] = 1
             wire["max_tokens"] = min(wire.get("max_tokens", 4096), 4096)
+            body = dict(wire.get("extra_body") or {})
+            body["thinking"] = {"type": "disabled"}
+            wire["extra_body"] = body
             with lock:
                 count += 1
                 call_id = count

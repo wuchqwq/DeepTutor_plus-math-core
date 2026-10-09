@@ -121,6 +121,7 @@ def main():
     manifest["standard_catalog_path"] = str(catalog_path) if catalog_path else "this runtime's own Catalog"
     manifest["credential_copy_or_file_link"] = False
     manifest["top_p"] = 1
+    manifest["thinking"] = "disabled on every actual SDK call; original S1 attempts retained separately"
     (evidence / "run_config.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     if args.check:
         if args.allow_paid:
