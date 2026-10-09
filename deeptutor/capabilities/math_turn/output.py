@@ -13,6 +13,7 @@ from typing import Any
 
 from deeptutor.core.context import AcceptedTurnOutput, UnifiedContext
 from deeptutor.math_semantic.authority import MathSemanticGrant, math_content_digest
+from deeptutor.math_semantic.correction import CORRECTION_MECHANISM, correction_bindings
 from deeptutor.math_semantic.state import MathMutation
 from deeptutor.math_semantic.support import OPERATION_MECHANISM
 
@@ -50,10 +51,59 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
         "authority_digest": _digest(calculation["authority"]),
     }
     offers = []
+    correction_grants = (
+        tuple(
+            binding.as_grant()
+            for binding in correction_bindings(
+                snapshot,
+                state.trajectory().applicable_artifact_refs,
+                submission=state.submission,
+                alignment=state.current_alignment(),
+                episode_id=state.source.identity.episode_id,
+            )
+        )
+        if any(grant.act_kind == "justification" for grant in grants)
+        else ()
+    )
     for grant in grants:
-        if grant.act_kind not in {"orientation", "result", "chosen_operation", "operation_options"}:
+        if grant.act_kind not in {
+            "orientation",
+            "result",
+            "chosen_operation",
+            "operation_options",
+            "justification",
+        }:
             raise ValueError("publication has no renderer for this mathematical act")
         text = ACKNOWLEDGEMENT
+        if grant.act_kind == "justification":
+            # A mathematical act name is not permission to disclose a complete
+            # target. Recheck the bounded scope before exposing any offer text.
+            if grant not in correction_grants:
+                continue
+            artifact = artifacts.get(grant.content_ref.identifier)
+            if (
+                grant.support_mechanism != CORRECTION_MECHANISM
+                or artifact is None
+                or math_content_digest(artifact) != grant.content_digest
+            ):
+                raise ValueError("publication correction lacks exact pinned content")
+            request = json.loads(artifact.statement)
+            premise = artifacts[request["context"]["premise_ref"]]
+            definition = artifacts[request["definition_ref"]]
+            symbol = definition.statement.split("=")[0]
+            rhs, difference = request["outputs"][1], request["outputs"][4]
+            claim = request["context"]["claim"]["normalized_form"]
+            domain = "; ".join(
+                fact["value"] for fact in request["context"]["scalar_domain"]["facts"]
+            )
+            text = (
+                f"Under the explicit scalar domain {domain}, relative to the explicit premises "
+                f"{definition.statement} and {premise.statement}, "
+                f"the algebra gives {symbol}={rhs}. In your claim {claim}, the right-hand side "
+                f"minus this derived right-hand side is {difference}. The two agree only when "
+                f"{difference}=0; they are not identical expressions. "
+                "This conditional check does not confirm premise truth or the complete answer."
+            )
         if grant.act_kind == "result":
             if grant.content_ref is None or grant.content_ref.identifier not in artifacts:
                 raise ValueError("publication content is absent from the pinned snapshot")
@@ -110,10 +160,12 @@ async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> 
             "You may select no offers. Do not supply text, claims, proofs, confidence, "
             "new acts or new grants. This proposal does not authorize publication. "
             "Act as the existing teaching/presentation owner: select one useful executable "
-            "chosen_operation or operation_options offer when available, respecting the "
+            "justification, chosen_operation or operation_options offer when available, respecting the "
             "student's method and request for a small hint. Use results only when appropriate. "
             "Operation offers check algebra relative to premises and never confirm premise "
             "truth, a student's correctness, attainability, or the complete answer."
+            " A justification offer supplies only its exact conditional algebra relation; "
+            "select it when it addresses the current claim."
         ),
         max_tokens=1024,
     )
@@ -165,7 +217,8 @@ def accept_response(
     results = [
         by_id[key]["text"]
         for key in selected
-        if by_id[key]["grant"]["act_kind"] in {"result", "chosen_operation", "operation_options"}
+        if by_id[key]["grant"]["act_kind"]
+        in {"result", "chosen_operation", "operation_options", "justification"}
     ]
     response = "\n\n".join([ACKNOWLEDGEMENT, *results])
     trace = {

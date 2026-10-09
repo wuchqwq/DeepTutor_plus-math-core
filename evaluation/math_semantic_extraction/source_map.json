@@ -30,6 +30,11 @@
   },
   "native_boundary_additions": [
     {
+      "path": "deeptutor/math_semantic/correction.py",
+      "basis": "Approved bounded explicit-premise algebra support for the current accepted claim; existing typed tools and exact grants only",
+      "kind": "native mathematical relation; no teaching policy, runtime, premise truth or final-answer authority"
+    },
+    {
       "path": "deeptutor/math_semantic/__init__.py",
       "basis": "Native package composition; no legacy eager namespace copied",
       "kind": "empty mathematical namespace"

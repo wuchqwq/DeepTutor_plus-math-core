@@ -68,6 +68,13 @@ class Generation:
         if self.mode == "result":
             assert result, "positive control requires actual Core result authority"
             candidate["grant_ids"] = result
+        elif self.mode == "correction":
+            candidate["grant_ids"] = [
+                offer["grant_id"]
+                for offer in inputs["offers"]
+                if offer["grant"]["act_kind"] == "justification"
+            ][:1]
+            assert candidate["grant_ids"], "requires actual conditional correction evidence"
         elif self.mode == "operation":
             candidate["grant_ids"] = [
                 offer["grant_id"]
@@ -282,6 +289,152 @@ async def test_qualified_premise_publishes_executable_operation_and_replays_exac
     before = host.state()
     first, second = await replay(host, turn), await replay(host, turn)
     assert first == second and host.state() == before
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_conditional_correction_body_receipt_events_and_replay_agree(
+    publication_host_factory,
+):
+    from .test_bounded_correction import make_state
+
+    host, generation, _ = publication_host_factory()
+    host.source = make_state().source
+    host.scope = host.math_scope()
+    generation.mode = "correction"
+    _, turn = await host.submit("Q=3+2*x*y")
+    body = assistant_row(host, turn["id"])[1]
+    assert "Q=-2*x*y + 3" in body and "4*x*y=0" in body
+    assert "not identical expressions" in body
+    assert not host.result()["verified_grounded_refs"]
+    offers = generation.calls[-1]["inputs"]["offers"]
+    assert not any(o["grant"]["act_kind"] == "result" for o in offers)
+    first = await replay(host, turn)
+    second = await replay(host, turn)
+    assert first == second
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    receipt = assistant_row(host, turn["id"])[2]["accepted_output"]["math_publication"]
+    assert receipt["content_digest"] == hashlib.sha256(body.encode()).hexdigest()
+    assert receipt["selected_grants"][0]["act_kind"] == "justification"
+    assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_correction_generation_revision_change_cannot_publish(publication_host_factory):
+    from .test_bounded_correction import make_state
+
+    host, generation, completions = publication_host_factory()
+    host.source = make_state().source
+    host.scope = host.math_scope()
+    generation.mode = "correction"
+
+    async def advance(_inputs):
+        context = host.math_contexts[-1]
+        authority = sqlite_episode_mutation(
+            context.runtime,
+            session_id=context.session_id,
+            binding=host.source,
+        )
+        await authority(
+            lambda state: state.append(
+                expected_revision=state.snapshot().workspace.revision,
+                status="partial",
+            )
+        )
+
+    generation.hook = advance
+    _, turn = await host.start("Q=3+2*x*y")
+    await host.finish(turn, status="failed")
+    assert turn["id"] not in host.state().get("host_math_publications", {})
+    assert_no_answer_leak(await replay(host, turn), completions[-1:])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "case",
+    ["matrix", "matrix_range", "missing_domain", "target_value", "constant_range", "scalar_range"],
+)
+async def test_domain_and_target_disclosure_scope_reaches_host_publication(
+    publication_host_factory, case
+):
+    from .test_bounded_correction import make_state
+
+    host, generation, _ = publication_host_factory()
+    claim = "Z=0"
+    if case.startswith("matrix"):
+        claim = "Z=x"
+        domain = "x,y,Z are 2x2 real matrices; * is ordered multiplication; 0 is the zero matrix"
+        state = make_state(
+            "x*y=0",
+            "Z=y*x",
+            claim,
+            domain=domain,
+            target="range of Z=y*x" if case == "matrix_range" else "Z=y*x",
+            raw_content=f"Domain: {domain}\nGiven: x*y=0\nTarget: Z=y*x\n{claim}",
+        )
+    elif case == "missing_domain":
+        state = make_state("x+y=2", "Z=x-y", claim, domain=())
+    elif case == "scalar_range":
+        state = make_state(
+            "x+y=2",
+            "Z=x-y",
+            claim,
+            objective=("Give a small hint; do not reveal the final range.",),
+        )
+    else:
+        target = "Z=x+y" if case == "target_value" else "range of Z=x+y"
+        request = "Determine Z; give a small hint and do not reveal the final answer."
+        state = make_state(
+            "x+y=2",
+            "Z=x+y",
+            claim,
+            target=target,
+            domain="x,y,Z are real scalar variables.",
+            objective=(request,),
+            raw_content=f"Domain: x,y,Z are real scalar variables.\nRequest: {request}\n{claim}",
+        )
+    host.source = state.source
+    host.scope = host.math_scope()
+    catalog = host.engine.capability_registry.catalog
+    entry = catalog.get("turn", "math_turn")
+    capability = entry.factory()
+    capability._provider.propose = lambda projection: {
+        "claims": [
+            {
+                "evidence": {
+                    "quote": claim,
+                    "occurrence": projection.response_text.count(claim) - 1,
+                },
+                "claim_type": "equation",
+            }
+        ]
+    }
+    catalog.register(
+        name="math_turn",
+        kind="turn",
+        manifest=entry.manifest,
+        factory=lambda: capability,
+        replace=True,
+    )
+    generation.mode = "correction" if case == "scalar_range" else "operation"
+    _, turn = await host.submit(state.submission.raw_content)
+    _, body, metadata, _ = assistant_row(host, turn["id"])
+    offers = generation.calls[-1]["inputs"]["offers"]
+    assert host.result()["alignment"]["claims"][0]["parse_status"] == "parsed"
+    if case == "scalar_range":
+        assert "Z=2 - 2*y" in body and "Under the explicit scalar domain" in body
+        assert any(o["grant"]["act_kind"] == "justification" for o in offers)
+    else:
+        assert not any(o["grant"]["act_kind"] == "justification" for o in offers)
+        assert "Try this next step:" in body and "Expand " in body
+        assert "the algebra gives" not in body and "derived right-hand side" not in body
+        assert "Z=0" not in body and "Z=2" not in body
+    receipt = metadata["accepted_output"]["math_publication"]
+    assert not any(g["act_kind"] == "result" for g in receipt["selected_grants"])
+    assert receipt["content_digest"] == hashlib.sha256(body.encode()).hexdigest()
+    first, second = await replay(host, turn), await replay(host, turn)
+    assert first == second
     assert "".join(e["content"] for e in first if e["type"] == "content") == body
     assert len(generation.calls) == 1
 

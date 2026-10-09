@@ -30,6 +30,7 @@ _ALLOWED_FUNCTIONS = frozenset({"sin", "cos", "tan", "asin", "acos", "atan", "sq
 _MAX_EXPRESSION_LENGTH = 512
 _MAX_INTEGER_EXPONENT = 10000
 DEFAULT_TOOL_TIMEOUT_MS = 5000
+FINITE_POLYNOMIAL_DOMAIN = "finite_rational_polynomial_v1"
 
 
 def _safe_expression(text: str) -> str:
@@ -67,6 +68,87 @@ def _safe_expression(text: str) -> str:
 
 
 def _run_operation(operation: str, kwargs: dict[str, Any]) -> Any:
+    kwargs = dict(kwargs)
+    domain = kwargs.pop("expression_domain", None)
+    domain_inputs = kwargs.pop("domain_inputs", ())
+    polynomial_symbols = kwargs.pop("polynomial_symbols", None)
+    require_free_symbols = kwargs.pop("require_free_symbols", False)
+    if domain is not None:
+        if domain != FINITE_POLYNOMIAL_DOMAIN:
+            raise ValueError("unsupported expression domain")
+        if not isinstance(domain_inputs, (tuple, list)) or len(domain_inputs) > 8:
+            raise ValueError("polynomial domain inputs must be a bounded sequence")
+        if polynomial_symbols is not None and (
+            not isinstance(polynomial_symbols, (tuple, list))
+            or not 1 <= len(polynomial_symbols) <= 32
+            or any(
+                not isinstance(s, str) or not _SAFE_IDENTIFIER_RE.fullmatch(s)
+                for s in polynomial_symbols
+            )
+        ):
+            raise ValueError("polynomial symbols must be a bounded declared symbol sequence")
+        if type(require_free_symbols) is not bool:
+            raise ValueError("free-symbol requirement must be boolean")
+        inputs = [*domain_inputs]
+        inputs.extend(kwargs[key] for key in ("expression", "left", "right") if key in kwargs)
+        if "substitutions" in kwargs:
+            substitutions = kwargs["substitutions"]
+            if not isinstance(substitutions, dict):
+                raise ValueError("substitutions must be a mapping")
+            inputs.extend(str(value) for value in substitutions.values())
+        for text in inputs:
+            # Keep the unevaluated tree: e.g. an out-of-domain constant raised
+            # to zero must not disappear before its domain is checked.
+            parsed = _parse_expression(text, evaluate=False)
+            _require_finite_polynomial(parsed)
+            if polynomial_symbols is not None and not {str(s) for s in parsed.free_symbols} <= set(
+                polynomial_symbols
+            ):
+                raise ValueError("polynomial input uses symbols outside the explicit scalar domain")
+    elif domain_inputs or polynomial_symbols is not None or require_free_symbols:
+        raise ValueError("polynomial constraints require an expression domain")
+    value = _operation_value(operation, kwargs)
+    if domain is not None:
+        if operation == "check_equivalence":
+            if type(value) is not bool:
+                raise ValueError("equivalence must return a boolean")
+        else:
+            _require_finite_polynomial(value)
+            if polynomial_symbols is not None and not {str(s) for s in value.free_symbols} <= set(
+                polynomial_symbols
+            ):
+                raise ValueError(
+                    "polynomial result uses symbols outside the explicit scalar domain"
+                )
+            if require_free_symbols and not value.free_symbols:
+                raise ValueError(
+                    "local range correction must not disclose the complete target value"
+                )
+    return value
+
+
+def _require_finite_polynomial(value: Any) -> None:
+    """Worker-only membership check in QQ[symbols], including constant inputs."""
+    import sympy
+
+    if not isinstance(value, sympy.Basic):
+        raise ValueError("expression is outside the finite rational polynomial domain")
+    for node in sympy.preorder_traversal(value):
+        if isinstance(node, sympy.Rational):
+            if node.is_finite is not True:
+                raise ValueError("expression is outside the finite rational polynomial domain")
+        elif not isinstance(node, (sympy.Symbol, sympy.Add, sympy.Mul, sympy.Pow)):
+            raise ValueError("expression is outside the finite rational polynomial domain")
+    symbols = sorted(value.free_symbols, key=str) or [sympy.Dummy()]
+    try:
+        polynomial = sympy.Poly(value, *symbols, domain=sympy.QQ)
+    except (sympy.PolynomialError, sympy.polys.polyerrors.CoercionFailed) as exc:
+        raise ValueError("expression is outside the finite rational polynomial domain") from exc
+    if any(coefficient.is_finite is not True for coefficient in polynomial.coeffs()):
+        raise ValueError("expression is outside the finite rational polynomial domain")
+
+
+def _operation_value(operation: str, kwargs: dict[str, Any]) -> Any:
     if operation == "simplify":
         return _simplify_value(**kwargs)
     if operation == "expand":
@@ -97,7 +179,9 @@ def _operation_worker(operation: str, kwargs: dict[str, Any], result_queue: Any)
         result_queue.put(("execution_error", None, type(exc).__name__))
 
 
-def _parse_expression(text: str, *, local_dict: dict[str, Any] | None = None) -> Any:
+def _parse_expression(
+    text: str, *, local_dict: dict[str, Any] | None = None, evaluate: bool = True
+) -> Any:
     normalized = _safe_expression(text)
     import sympy
 
@@ -115,7 +199,7 @@ def _parse_expression(text: str, *, local_dict: dict[str, Any] | None = None) ->
     }
     if local_dict:
         functions.update(local_dict)
-    return _parse_symbolic(normalized, local_dict=functions)
+    return _parse_symbolic(normalized, local_dict=functions, evaluate=evaluate)
 
 
 def _simplify_value(expression: str) -> Any:

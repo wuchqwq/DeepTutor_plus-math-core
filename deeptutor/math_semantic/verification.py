@@ -202,7 +202,7 @@ def identity_intent_corroborated(claim: MathExpression, support_text: str = "") 
     return any((marker in gloss or marker in support for marker in STRONG_IDENTITY_MARKERS))
 
 
-def _parse_symbolic(text: str, *, local_dict: dict | None = None):
+def _parse_symbolic(text: str, *, local_dict: dict | None = None, evaluate: bool = True):
     """Guard global-name collisions without changing implicit symbol splitting."""
     import sympy
     from sympy.parsing.sympy_parser import (
@@ -228,6 +228,7 @@ def _parse_symbolic(text: str, *, local_dict: dict | None = None):
     return parse_expr(
         text,
         local_dict=local,
+        evaluate=evaluate,
         transformations=standard_transformations
         + (convert_xor, implicit_multiplication_application),
     )
