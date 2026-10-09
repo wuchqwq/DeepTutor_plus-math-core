@@ -1,6 +1,6 @@
 # Phase D 最小真实教学实验：准备交接
 
-状态：**DRAFT / NOT FROZEN / REAL RUN NOT STARTED**。本轮只完成无需凭据的准备，尚无逐场景教学输出。
+状态：**SCENARIOS FROZEN / DEEPSEEK / REAL RUN NOT STARTED**。本轮只完成无需凭据的准备，尚无逐场景教学输出。
 目标是网页学生提交→宿主持久化→原生 Core 轨迹/数学依据→宿主教学表达→真实模型→授权发布→学生继续。
 首轮保留现有行为；不先优化 teaching/presentation，不新增 Guard、Manager、Gate、StudentState、RAG 或几何。
 
@@ -15,7 +15,7 @@
 - 特别核对：本地 roadmap 工作区 HEAD `9c572e71f4d48a70c2ced49f382a4ea27e3c764b` 的 V2 与 pinned 文本不同，不能当作同一冻结文件。已另经 `git show a2a1905...:docs/design/DEEPTUTOR_MATH_MIGRATION_ROADMAP_V2.md` 阅读 frozen 版本（Phase D 在 8.2），SHA-256 `6b52026f17752de559f6e3352d13e42825d49a12b25293b58ce2c87e2055beaf`；当前扩展 V2 的 3.1/4/7.4/7.9/8 仅作补充参考。
 - 所查目标仓库和相关 roadmap/tutor_demo 工作区没有 `.agents/skills`；未广泛扫描个人文件。tutor_demo 只读参考，不导入其 runtime。
 - 工具：Git、Python 3.13.2、Node v24.16.0、npm 11.13.0；rg/gh 未在 PATH，常见 GitHub CLI 安装路径亦无 gh。
-- 全局 Python 有 SymPy/pytest/FastAPI/Pydantic/httpx/openai；无 tiktoken/mcp/litellm。已有 integration venv 存在但缺 SymPy，未把它计为完整运行环境。
+- 全局 Python 有 SymPy/pytest/FastAPI/Pydantic/httpx/openai；无 tiktoken/mcp/litellm。已有 integration venv 配合任务目录 SymPy 1.14.0 已通过实际 import；不能将 import 当作真实 Provider 或 E2E。
 - CUA 工具说明明确禁用 native desktop；未调用或操控其他 Agent 应用。
 
 ## 8 场景与两版可见信息
@@ -37,17 +37,10 @@ S8 作为正式首轮浏览器样本，两版独立上下文，避免为截图�
 
 ## 模型设置和小规模预算建议
 
-优先使用你自行安全配置的标准 provider 路径中的可钉住模型快照；不得读取聊天 key，也不由执行任务复制/注入持续凭据。
-若该路径支持 OpenAI，候选 `gpt-4.1-2025-04-14`（非滚动别名），两版与提案/选择/标题均同快照；当前只是建议，未验证账号可访问。
-建议 temperature=0、top_p=1、文本输入、无额外 reasoning 设置；同 provider/API 格式/服务档位、单 worker。记录实际 wire 参数，不能只记预期设置。
-使用既有 scoped LLM config，generation 当前 selector 固定 max_tokens=1024；alignment 建议 2048，ordinary 每轮输出总预算不超过 4096。
-对不同管线记录阶段上限差异，并为每版每学生 turn 给相同聚合资源预算；不通过改 prompt 或放宽 grants 造公平性。
-13 个数学提交：ordinary 至少 13 次教学调用，可能再有最多 8 次标题调用；integrated 预计 13 次 alignment + 13 次 selector。
-因此预计约 39–47 次 API 调用；方法卡回复/刷新回放不应调用新模型。额外 tool loop、重试与失败都计入。
-建议整轮最多 60 次请求、单请求输入 16k/output 4096 上限、单次网络故障至多 1 次重试；模型格式或数学失败不修复后替换首轮结果。
-按平均 5k input/1k output、47 次计算约 US$0.85；保守 60×16k input/4096 output 约 US$3.93。建议操作预算 US$5，非你新设的费用硬限制。
-上述是 OpenAI 标准价估算（input US$2/M、output US$8/M，2026-10-09 查阅），网关价格不同需替换估算；不假定缓存折扣。
-来源：[官方模型快照与价格](https://developers.openai.com/api/docs/models/gpt-4.1)。费用授权已收到，范围为本次对照与必要 E2E，不无限重试或扩展调用。
+两版使用同一实际可用 DeepSeek 型号及标准 Catalog 配置；不替换为 OpenAI。若只有滚动别名，记录实际请求型号、UTC、响应 model/id/created/system_fingerprint 和 usage，不因没有快照阻塞。
+建议 temperature=0、top_p=1；宿主未显式发送 top_p 时如实记录 provider 默认与实际 wire 参数。单 worker，ordinary 输出上限 4096、alignment 2048、原 selector 1024。
+预计至少 39–47 次模型调用，包含 alignment/selector 和可能的标题调用；实际宿主工具调用与重试另计。没有适用的已核验 DeepSeek 价格，不给 OpenAI 费用估算。
+建议本轮合计 60 次请求；每个隔离进程 --request-limit 应传本轮剩余量，不能将每进程上限当作总预算。费用许可已经收到，但安全替换认证就绪仍未确认。
 
 ## 已观察到的接线缺口与最小方案
 
@@ -79,5 +72,41 @@ S8 正式步骤：实际 UI 提交→核 accepted row→A→B 后实际卡片→
 - GitHub Actions：`NOT_RUN_QUOTA`（委托/已合并报告披露），本轮未 dispatch，也未重新查配额。
 - 本地 raw 证据/命令/environment allowlist 放在 ignored `data/phase-d-preparation/`；不保存密钥、全量环境或认证 headers。
 - dot 源 thread `01a11ef3-4aad-7724-960a-af4723478027` 的状态发送工具返回 `thread not found`；未声称送达，交接以本材料和任务 final 为准。
-- 剩余运行前事项：你自行更换/安全配置认证路径并确认；dot 核对冻结这份草稿及 reviewed source/最小 DI；固定可运行依赖和浏览器组合。
+- 剩余运行前事项：你自行更换/安全配置认证路径并确认；8 情境已由 dot 冻结；具体 source 字段供 dot 核对；固定可运行依赖和浏览器组合。
 - 先保存未优化首轮真实证据并 STOP；dot 独立审阅后才安排局部表达修复与同样本复评。无真实完整教学链，不宣称最终 PASS。
+
+## 冻结修订与可执行脚本
+
+S7 不强求追问：根据同页题面合理推断并保留不确定性也可接受，不因没有追问自动判失败。
+`source.py` 直接用现有 ReviewedSource/MathWorkspaceSnapshot 原结构构造本轮 source；不导入 fixture，也不读取 grader_notes。16 个声明，15 个 qualified、1 个 not_checkable；没有 verified 或虚构工具证据。路径 A 为对称变量，B 为平方恒等式；运行时绑定真实宿主 learner/session/episode。
+`provider.py` 将原 projection 交给既有 factory，并观察真实 SDK 请求/响应（排除认证 headers、密钥和私有 reasoning）；不返回测试桩输出。通过该 provider 的 httpx request hook 另计实际 HTTP 请求（含 SDK 内部重试），不保存 headers、URL query 或认证值。
+`launch.py` 只复用原 container/catalog/TurnEngine/MathTurnCapability DI；默认禁用付费调用，--check 实际 start/close coordinator，--allow-paid 仅在安全认证就绪后使用。每 arm/case 使用不同 --home/--evidence，证据不写入 runtime。
+`browser.cjs` 使用现有页面真实 composer、ask-user 按钮和 WebSocket；--startup-only 不提交学生输入。真实样本须显式 --allow-paid；缺失方法卡、terminal、教学或刷新回放均记录，不能据此宣称 PASS。
+标准认证从本轮 runtime 的 Settings > Catalog 读取。registry 中 DEEPSEEK_API_KEY 的 env_key 是 provider 初始化导出路径，不能假定仅设置它便已让 Catalog 就绪。用户应自行在对应页面配置新 key，或者自行填写该 runtime 的 data/user/settings/model_catalog.json；执行任务不从别的项目搬运密钥。
+
+## 本地执行与认证操作
+
+无付费容器检查（在当前仓库根目录）：
+
+```powershell
+$env:PYTHONPATH = Join-Path (Get-Location) 'data\phase-d-deps'
+& 'F:\demo2\DeepTutor_upstream_v1_6_14\data\integration-venv\Scripts\python.exe' -B evaluation\phase_d_minimal\launch.py --arm integrated --case S8 --home data\phase-d-runtime\startup-integrated-S8 --evidence data\phase-d-evidence\startup-integrated-S8 --model deepseek-config-pending --check
+```
+
+去掉 `--check` 并添加 `--port 49301` 可启动原 API；默认禁止付费调用。`deepseek-config-pending` 仅是未配置时的启动标签，不声称是真实可用模型。
+原前端在 web 目录运行 `node scripts/dev.mjs --webpack --hostname 127.0.0.1 --port 49300`，进程环境 `NEXT_PUBLIC_API_BASE=http://127.0.0.1:49301`，仅访问 localhost。
+页面可用后，你自行打开 `http://127.0.0.1:49300/settings` 的 Catalog，添加/选择 DeepSeek 连接，输入替换后的新 key，选择实际可用模型，task 模型继承同一 LLM。不要把 key 发到聊天。
+当前 runtime 的标准配置文件为 `data/phase-d-runtime/startup-integrated-S8/data/user/settings/model_catalog.json`；由你本地配置，执行任务不读取展示、搬运或提交其凭据。
+确认旧 key 已撤销、新配置就绪后，重新启动时将 `--model` 改为实际 Catalog 型号，两版相同；真实运行才添加 `--allow-paid`。其他 arm/case 使用独立 home，由你自行准备相同认证配置，不能由脚本复制 key。
+无付费页面检查：`node evaluation/phase_d_minimal/browser.cjs --url http://127.0.0.1:49300 --case S8 --evidence data/phase-d-evidence/startup-browser --startup-only`。本机可用缓存浏览器须另加已记录的 `--executable`；完整首轮才换成 `--allow-paid`。
+运行后用 `export_evidence.py --home <本轮home> --evidence <本轮证据目录>` 只读导出 sessions/messages/turns/turn_submissions/turn_events/math_semantic_episodes，不导出认证配置或账户表。
+
+## 本次实际无付费启动结果
+
+- ordinary / integrated：原容器 start/close PASS；原 FastAPI 在 49302 / 49301 的 `/health/ready` 均实际返回 ready。
+- 原页面 `/chat` 实际 HTTP 200，composer 可见，已用独立 Chromium 153.0.8010.12 / Playwright 1.57.0 保存启动截图并关闭 context/browser。没有提交学生输入。
+- Windows 跨盘共享 Next junction 初次造成页面 HTTP500；仅将同版本 Next 物理复制到任务盘，其余库保持只读 junction，原 web 源码未修改。旧失败日志和截图保留。
+- 第一个浏览器脚本未拒绝 HTTP500，退出0不能计 PASS；已增加 HTTP成功和 composer 判据。localhost DNS规则漏了127.0.0.1的一次失败也保留，修正后页面检查通过。
+- 匹配 Chromium 安装停在 extracting archive；不继续安装调查。正式实验暂固定已实际启动过的上述组合，两版相同；是否能完成真实 Math E2E仍须实际执行。
+- 认证 NOT_CONFIGURED；付费调用0、学生提交0，实际 SQLite 导出六张实验表全部0行。真实 DeepSeek、三维教学评分、方法确认和刷新 publication replay 均 NOT_RUN。
+- `source_review/` 是明确数学 source 的字段及空学生文本 projection 导出，示例 episode=phase_d_review_S8、learner=local-admin；不伪称实际 accepted episode。运行时另保存真实 learner/session/episode 对应字段与每次实际 projection。

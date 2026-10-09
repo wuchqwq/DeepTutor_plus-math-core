@@ -1,0 +1,191 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "artifact_9cb033b3e7a9dc91010f0e9a",
+      "normalized_form": "x**2+x*y+y**2=3",
+      "role": "given",
+      "statement": "x^2+x*y+y^2=3",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_1d837bd32ddc526b43262d26",
+      "normalized_form": "s=x+y",
+      "role": "definition",
+      "statement": "s=x+y",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_787854c11e8e430c28bcf13a",
+      "normalized_form": "p=x*y",
+      "role": "definition",
+      "statement": "p=x*y",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_3a76421dede4fe9be7bde0c2",
+      "normalized_form": "s**2-p=3",
+      "role": "intermediate",
+      "statement": "s^2-p=3",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_fb25443eaa34f31dc6d60c08",
+      "normalized_form": "Q=3-2*x*y",
+      "role": "intermediate",
+      "statement": "Q=3-2*x*y",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_e7d61a7631e7d6001bafb981",
+      "normalized_form": "-3<=p<=1",
+      "role": "intermediate",
+      "statement": "-3<=p<=1",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_9a49636c63aee4fba96c5985",
+      "normalized_form": "3*(x**2-x*y+y**2)-(x**2+x*y+y**2)=2*(x-y)**2",
+      "role": "intermediate",
+      "statement": "3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_bbcec6e40fe9e649d294830e",
+      "normalized_form": "Q-1=(2/3)*(x-y)**2",
+      "role": "intermediate",
+      "statement": "Q-1=(2/3)*(x-y)^2",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_f4a49337467bb6a50f6fecd3",
+      "normalized_form": "3*(x**2+x*y+y**2)-(x**2-x*y+y**2)=2*(x+y)**2",
+      "role": "intermediate",
+      "statement": "3*(x^2+x*y+y^2)-(x^2-x*y+y^2)=2*(x+y)^2",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_39ed31415a999be010ae332f",
+      "normalized_form": "9-Q=2*(x+y)**2",
+      "role": "intermediate",
+      "statement": "9-Q=2*(x+y)^2",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_148bc3775eaf0957475f9c6b",
+      "normalized_form": "d=x-y",
+      "role": "definition",
+      "statement": "d=x-y",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_b77e9a835895bc0b1a61a043",
+      "normalized_form": "3*s**2+d**2=12",
+      "role": "intermediate",
+      "statement": "3*s^2+d^2=12",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_1f103c620cb22f3b713a485f",
+      "normalized_form": "Q=12-2*s**2",
+      "role": "intermediate",
+      "statement": "Q=12-2*s^2",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_f72230476f7171e6a59b01f6",
+      "normalized_form": "0<=s**2<=4",
+      "role": "intermediate",
+      "statement": "0<=s^2<=4",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    },
+    {
+      "artifact_id": "artifact_87a22947aa863b6651f0cb66",
+      "normalized_form": "For every s**2 in [0,4], choose real d with d**2=12-3*s**2, x=(s+d)/2, y=(s-d)/2; then the constraint holds and all Q in [1,9] are attained.",
+      "role": "intermediate",
+      "statement": "For every s^2 in [0,4], choose real d with d^2=12-3*s^2, x=(s+d)/2, y=(s-d)/2; then the constraint holds and all Q in [1,9] are attained.",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "not_checkable"
+    },
+    {
+      "artifact_id": "artifact_da7650ca37df406bcaa9fe2e",
+      "normalized_form": "Q in [1,9]",
+      "role": "answer",
+      "statement": "Q in [1,9]",
+      "verification_scope": "human-reviewed algebra supplied by dot; no independent machine verification",
+      "verification_status": "qualified"
+    }
+  ],
+  "dependency_edges": [],
+  "paths": [
+    {
+      "artifact_refs": [
+        "artifact_9cb033b3e7a9dc91010f0e9a",
+        "artifact_1d837bd32ddc526b43262d26",
+        "artifact_787854c11e8e430c28bcf13a",
+        "artifact_3a76421dede4fe9be7bde0c2",
+        "artifact_fb25443eaa34f31dc6d60c08",
+        "artifact_e7d61a7631e7d6001bafb981",
+        "artifact_148bc3775eaf0957475f9c6b",
+        "artifact_b77e9a835895bc0b1a61a043",
+        "artifact_1f103c620cb22f3b713a485f",
+        "artifact_f72230476f7171e6a59b01f6",
+        "artifact_87a22947aa863b6651f0cb66",
+        "artifact_da7650ca37df406bcaa9fe2e"
+      ],
+      "method": "symmetric substitution",
+      "path_id": "path_2018d2a6ac93aad76c4f372e"
+    },
+    {
+      "artifact_refs": [
+        "artifact_9cb033b3e7a9dc91010f0e9a",
+        "artifact_9a49636c63aee4fba96c5985",
+        "artifact_bbcec6e40fe9e649d294830e",
+        "artifact_f4a49337467bb6a50f6fecd3",
+        "artifact_39ed31415a999be010ae332f",
+        "artifact_87a22947aa863b6651f0cb66",
+        "artifact_da7650ca37df406bcaa9fe2e"
+      ],
+      "method": "square identities",
+      "path_id": "path_16285ff9bedf95598b2871d5"
+    }
+  ],
+  "projected_refs": [
+    "model_1160cd23ca0d8e5b4d803121",
+    "artifact_9cb033b3e7a9dc91010f0e9a",
+    "artifact_1d837bd32ddc526b43262d26",
+    "artifact_787854c11e8e430c28bcf13a",
+    "artifact_3a76421dede4fe9be7bde0c2",
+    "artifact_fb25443eaa34f31dc6d60c08",
+    "artifact_e7d61a7631e7d6001bafb981",
+    "artifact_9a49636c63aee4fba96c5985",
+    "artifact_bbcec6e40fe9e649d294830e",
+    "artifact_f4a49337467bb6a50f6fecd3",
+    "artifact_39ed31415a999be010ae332f",
+    "artifact_148bc3775eaf0957475f9c6b",
+    "artifact_b77e9a835895bc0b1a61a043",
+    "artifact_1f103c620cb22f3b713a485f",
+    "artifact_f72230476f7171e6a59b01f6",
+    "artifact_87a22947aa863b6651f0cb66",
+    "artifact_da7650ca37df406bcaa9fe2e",
+    "path_2018d2a6ac93aad76c4f372e",
+    "path_16285ff9bedf95598b2871d5"
+  ],
+  "response_text": "",
+  "target": "range of Q=x^2-x*y+y^2",
+  "workspace_id": "phase_d_review_S8",
+  "workspace_revision": 1
+}
