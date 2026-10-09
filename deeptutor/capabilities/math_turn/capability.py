@@ -94,6 +94,7 @@ class MathTurnCapability(TurnCapability):
                 expected_revision=revision,
                 provider_id=self._provider.provider_id,
                 config_digest=self._provider.model_config_digest,
+                check_steps=True,
             )
             trajectory = state.trajectory()
             return alignment, trajectory, state.snapshot().workspace.revision
