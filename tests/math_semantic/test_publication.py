@@ -56,6 +56,13 @@ class Generation:
         if self.mode == "result":
             assert result, "positive control requires actual Core result authority"
             candidate["grant_ids"] = result
+        elif self.mode == "operation":
+            candidate["grant_ids"] = [
+                offer["grant_id"]
+                for offer in inputs["offers"]
+                if offer["grant"]["act_kind"] == "chosen_operation"
+            ][:1]
+            assert candidate["grant_ids"], "positive control requires real operation evidence"
         elif self.mode == "free_prose":
             return FORBIDDEN_ANSWER
         elif self.mode == "orientation_with_text":
@@ -230,6 +237,38 @@ async def test_orientation_only_publishes_no_task_mathematics(publication_host_f
     assert assistant_row(host, turn["id"])[1] == ACKNOWLEDGEMENT
     assert all(A not in event["content"] for event in events)
     assert all("claims" not in event.get("metadata", {}) for event in events)
+
+
+@pytest.mark.asyncio
+async def test_qualified_premise_publishes_executable_operation_and_replays_exact_bytes(
+    publication_host_factory,
+):
+    host, generation, _ = publication_host_factory()
+    host.source = replace(
+        host.source,
+        authored=replace(
+            host.source.authored,
+            artifacts=tuple(
+                replace(a, verification_status="qualified", verification_scope="AI-reviewed")
+                if a.statement == A
+                else a
+                for a in host.source.authored.artifacts
+            ),
+        ),
+    )
+    generation.mode = "operation"
+    _, turn = await host.submit(A)
+    body = assistant_row(host, turn["id"])[1]
+    assert "Try this next step:" in body and "Expand " in body
+    assert not host.result()["verified_grounded_refs"]
+    assert not any(
+        o["grant"]["act_kind"] == "result" for o in generation.calls[-1]["inputs"]["offers"]
+    )
+    before = host.state()
+    first, second = await replay(host, turn), await replay(host, turn)
+    assert first == second and host.state() == before
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    assert len(generation.calls) == 1
 
 
 @pytest.mark.asyncio

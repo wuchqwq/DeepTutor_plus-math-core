@@ -26,7 +26,10 @@ from deeptutor.math_semantic.proposals import (
     ResponseAlignmentProvider,
 )
 from deeptutor.math_semantic.state import MathMutation, ReviewedSource, confirm_method
-from deeptutor.math_semantic.support import resolve_math_content_support
+from deeptutor.math_semantic.support import (
+    materialize_operation_support,
+    resolve_math_content_support,
+)
 from deeptutor.math_semantic.trajectory_types import TrajectoryProjection
 from deeptutor.services.session.math_semantic_persistence import (
     MathEpisodeBinding,
@@ -183,8 +186,9 @@ class MathTurnCapability(TurnCapability):
             grants = tuple(MathSemanticGrant.orientation(ref) for ref in selected)
             grants += tuple(
                 binding.as_grant()
-                for binding in resolve_math_content_support(snapshot, verified)
-                if binding.act_kind == "result"
+                for binding in resolve_math_content_support(snapshot, selected)
+                if binding.act_kind in {"chosen_operation", "operation_options"}
+                or (binding.act_kind == "result" and binding.target_artifact_ref in verified)
             )
             state.authorize(selected, grants)
             return {
@@ -197,7 +201,27 @@ class MathTurnCapability(TurnCapability):
                 "authority": tuple(grant.to_dict() for grant in grants),
             }
 
+        snapshot, applicable = await authority(
+            lambda state: (state.snapshot(), state.trajectory().applicable_artifact_refs)
+        )
+        # Existing tools execute outside the commit transaction. The native
+        # revision fence rechecks the exact input before adopting their evidence.
+        operations, evidence = await asyncio.to_thread(
+            materialize_operation_support,
+            snapshot,
+            applicable,
+            preferred_refs=alignment.matched_artifact_refs,
+        )
+
         def prepare_publication(state: MathMutation) -> tuple[dict[str, Any], dict[str, Any]]:
+            if state.snapshot() != snapshot:
+                raise ValueError("operation input revision became stale")
+            if operations or evidence:
+                state.append(
+                    expected_revision=snapshot.workspace.revision,
+                    artifacts=operations,
+                    evidence=evidence,
+                )
             calculation = calculate(state)
             return calculation, publication_input(state, calculation)
 

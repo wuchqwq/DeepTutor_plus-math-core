@@ -101,10 +101,23 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
     assert hostile.result() == baseline_calculation
     assert hostile.result()["verification_status"] == "UNKNOWN"
     assert hostile.result()["verified_grounded_refs"] == ()
-    assert all(grant["act_kind"] == "orientation" for grant in hostile.result()["authority"])
-    assert baseline_core == {
-        key: value for key, value in hostile.state().items() if not key.startswith("host_")
-    }
+    assert all(
+        grant["act_kind"] in {"orientation", "chosen_operation", "operation_options"}
+        for grant in hostile.result()["authority"]
+    )
+
+    def without_tool_timing(value):
+        # These two independent hosts execute real tools. Wall-clock duration
+        # differs without changing any mathematical content or support relation.
+        if isinstance(value, dict):
+            return {k: without_tool_timing(v) for k, v in value.items() if k != "duration_ms"}
+        if isinstance(value, list):
+            return [without_tool_timing(v) for v in value]
+        return value
+
+    assert without_tool_timing(baseline_core) == without_tool_timing(
+        {key: value for key, value in hostile.state().items() if not key.startswith("host_")}
+    )
     assert_no_journal(hostile.state())
     assert baseline_offers == [call["inputs"]["offers"] for call in generation.calls[2:]]
     assert_no_journal([call["inputs"] for call in generation.calls])

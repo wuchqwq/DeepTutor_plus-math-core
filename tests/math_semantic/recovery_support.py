@@ -18,6 +18,7 @@ from deeptutor.math_semantic.accepted import EpisodeIdentity
 from deeptutor.math_semantic.authority import MathSemanticGrant
 from deeptutor.math_semantic.refs import LearnerRef, QuestionRef
 from deeptutor.math_semantic.state import MathMutation, ReviewedSource
+from deeptutor.math_semantic.support import resolve_math_content_support
 from deeptutor.math_semantic.workspace import _snapshot_from
 from deeptutor.runtime.coordination import MemoryCoordinator
 from deeptutor.runtime.registry.capability_registry import CapabilityRegistry
@@ -170,6 +171,13 @@ class RecoveryHost:
                         grants = tuple(
                             MathSemanticGrant.orientation(ref)
                             for ref in trajectory.applicable_artifact_refs
+                        )
+                        grants += tuple(
+                            binding.as_grant()
+                            for binding in resolve_math_content_support(
+                                history.snapshot(), trajectory.applicable_artifact_refs
+                            )
+                            if binding.act_kind in {"chosen_operation", "operation_options"}
                         )
                         history.authorize(trajectory.applicable_artifact_refs, grants)
                         assert history.serialize() == before, (

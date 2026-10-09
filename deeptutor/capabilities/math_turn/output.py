@@ -14,6 +14,7 @@ from typing import Any
 from deeptutor.core.context import AcceptedTurnOutput, UnifiedContext
 from deeptutor.math_semantic.authority import MathSemanticGrant, math_content_digest
 from deeptutor.math_semantic.state import MathMutation
+from deeptutor.math_semantic.support import OPERATION_MECHANISM
 
 ACKNOWLEDGEMENT = "Mathematical evidence recorded."
 
@@ -45,7 +46,7 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
     }
     offers = []
     for grant in grants:
-        if grant.act_kind not in {"orientation", "result"}:
+        if grant.act_kind not in {"orientation", "result", "chosen_operation", "operation_options"}:
             raise ValueError("publication has no renderer for this mathematical act")
         text = ACKNOWLEDGEMENT
         if grant.act_kind == "result":
@@ -59,6 +60,28 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
             ):
                 raise ValueError("publication result lacks exact verified grounding")
             text = artifact.statement
+        if grant.act_kind in {"chosen_operation", "operation_options"}:
+            operation = artifacts.get(grant.content_ref.identifier)
+            if operation is None or math_content_digest(operation) != grant.content_digest:
+                raise ValueError("publication operation lacks exact pinned content")
+            if grant.support_mechanism == OPERATION_MECHANISM:
+                request = json.loads(operation.statement)
+                args = request["kwargs"]
+                if request["kind"] == "expand":
+                    action = "Expand " + args["expression"] + ". Then compare the coefficients."
+                else:
+                    replacements = ", ".join(f"{k}={v}" for k, v in args["substitutions"].items())
+                    action = "Substitute " + replacements + " into " + args["expression"] + "."
+                # Teaching/presentation wording belongs to the host, while the
+                # Core supplies only the exact executable operation content.
+                text = (
+                    "Try this next step: "
+                    + action
+                    + " This checks the algebra relative to the named premises; "
+                    "their truth and the complete answer are not yet confirmed."
+                )
+            else:
+                text = "Try this next step: " + operation.statement + "."
         offers.append(
             {"grant_id": _digest(grant.to_dict()), "grant": grant.to_dict(), "text": text}
         )
@@ -80,7 +103,12 @@ async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> 
             "Return exactly one JSON object with authority_basis and grant_ids. "
             "Echo authority_basis exactly; grant_ids is a list of at most 8 unique offer IDs. "
             "You may select no offers. Do not supply text, claims, proofs, confidence, "
-            "new acts or new grants. This proposal does not authorize publication."
+            "new acts or new grants. This proposal does not authorize publication. "
+            "Act as the existing teaching/presentation owner: select one useful executable "
+            "chosen_operation or operation_options offer when available, respecting the "
+            "student's method and request for a small hint. Use results only when appropriate. "
+            "Operation offers check algebra relative to premises and never confirm premise "
+            "truth, a student's correctness, attainability, or the complete answer."
         ),
         max_tokens=1024,
     )
@@ -126,11 +154,13 @@ def accept_response(
     if any(identifier not in by_id for identifier in selected):
         raise ValueError("publication selection exceeds current mathematical authority")
     chosen = tuple(MathSemanticGrant.from_value(by_id[key]["grant"]) for key in selected)
-    state.authorize(tuple(grant.target_artifact_ref for grant in chosen), chosen)
+    state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
     # Orientation supplies no task mathematics. The existing acknowledgement
     # is also the no-selection operational status; it asserts no math truth.
     results = [
-        by_id[key]["text"] for key in selected if by_id[key]["grant"]["act_kind"] == "result"
+        by_id[key]["text"]
+        for key in selected
+        if by_id[key]["grant"]["act_kind"] in {"result", "chosen_operation", "operation_options"}
     ]
     response = "\n\n".join([ACKNOWLEDGEMENT, *results])
     trace = {
