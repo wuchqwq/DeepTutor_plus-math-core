@@ -26,7 +26,12 @@ def _digest(value: object) -> str:
 
 
 def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[str, Any]:
-    """Pin the real accepted basis and exact grants, not a model's claims."""
+    """Pin exact grants and render only the action later selected for publication.
+
+    Core supplies operations and their mathematical support scope. The existing
+    teaching component decides whether to recommend them; this renderer cannot
+    append mathematical reasoning or teaching steps beyond the selected action.
+    """
     records = json.loads(state.serialize())
     # Host transport receipts do not alter the mathematical basis they cite.
     records = {key: value for key, value in records.items() if not key.startswith("host_")}
@@ -68,7 +73,7 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
                 request = json.loads(operation.statement)
                 args = request["kwargs"]
                 if request["kind"] == "expand":
-                    action = "Expand " + args["expression"] + ". Then compare the coefficients."
+                    action = "Expand " + args["expression"] + "."
                 else:
                     replacements = ", ".join(f"{k}={v}" for k, v in args["substitutions"].items())
                     action = "Substitute " + replacements + " into " + args["expression"] + "."
