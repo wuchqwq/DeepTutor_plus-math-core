@@ -23,7 +23,7 @@ class RealAlignmentProvider:
     def __init__(self, model: str, evidence: Path):
         self.model, self.evidence = model, evidence
         self.loop = None
-        self.model_config_digest = hashlib.sha256(json.dumps({"model": model, "binding": "deepseek", "temperature": 0, "top_p": 1, "max_tokens": 2048}, sort_keys=True).encode()).hexdigest()
+        self.model_config_digest = hashlib.sha256(json.dumps({"model": model, "binding": "deepseek", "temperature": 0, "top_p": 1, "max_tokens": 2048, "thinking": "disabled", "reasoning_effort": "none", "response_format": "json_object"}, sort_keys=True).encode()).hexdigest()
 
     def propose(self, projection):
         from deeptutor.services.llm import factory
@@ -35,6 +35,10 @@ class RealAlignmentProvider:
             prompt=prompt, model=self.model, binding="deepseek",
             temperature=0, top_p=1, max_tokens=2048, max_retries=0,
             response_format={"type": "json_object"},
+            # The host's static capability flag conflates JSON mode with
+            # strict JSON schema and drops response_format for DeepSeek.
+            # The documented JSON-object mode is carried by the SDK body.
+            extra_body={"response_format": {"type": "json_object"}},
             system_prompt="Extract only actual student assertions from response_text. On the first submission, the question and student-background sections are context, not new student derivation; only the 我的提交 section asserts student work. Return one JSON object with claims, novel_paths, interaction_type, using the native AlignmentProposal schema. Claims have evidence {quote, occurrence}, claim_type (equation/expression/answer/identity), parse_status (parsed/ambiguous/unparsed), candidate_artifact_refs, uncertainty. References may only come from the supplied projection. Quotes must be exact student substrings. Questions with no asserted math have interaction_type question or clarification and empty claims. Use answer for asserted math even when followed by a request to check it. Novel paths are optional and bounded, with claim_indices, method, dependency_artifact_refs. Do not grade, teach, invent evidence, confer verification, or solve the question.",
         ), self.loop)
         try:
@@ -65,6 +69,7 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
             # stages, including native chat/title calls with their own defaults.
             wire["temperature"] = 0
             wire["top_p"] = 1
+            wire["reasoning_effort"] = "none"
             wire["max_tokens"] = min(wire.get("max_tokens", 4096), 4096)
             body = dict(wire.get("extra_body") or {})
             body["thinking"] = {"type": "disabled"}
@@ -85,10 +90,14 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
                         number = http_count
                     if number > request_limit:
                         raise RuntimeError("Phase D HTTP request budget exhausted")
-                    append_record(evidence / "http_requests.jsonl", {"event": "actual_http_request", "request_number": number, "method": request.method, "host": request.url.host, "path": request.url.path})
+                    payload = json.loads(request.content)
+                    public_parameters = {key: payload[key] for key in ("model", "thinking", "reasoning_effort", "temperature", "top_p", "max_tokens", "response_format") if key in payload}
+                    if public_parameters.get("thinking") != {"type": "disabled"} or public_parameters.get("reasoning_effort") != "none":
+                        raise RuntimeError("Actual HTTP request must have thinking OFF")
+                    append_record(evidence / "http_requests.jsonl", {"event": "actual_http_request", "request_number": number, "method": request.method, "host": request.url.host, "path": request.url.path, "parameters": public_parameters})
                 client.event_hooks.setdefault("request", []).append(http_request)
                 client._phase_d_observed = True
-            allowed = ("model", "messages", "temperature", "top_p", "max_tokens", "stream", "stream_options", "response_format", "tools", "tool_choice", "extra_body")
+            allowed = ("model", "messages", "temperature", "top_p", "max_tokens", "stream", "stream_options", "response_format", "tools", "tool_choice", "extra_body", "reasoning_effort")
             append_record(evidence / "provider_calls.jsonl", {"event": "request", "call_id": call_id, "wire": {k: wire[k] for k in allowed if k in wire}})
             started = time.monotonic()
             try:
