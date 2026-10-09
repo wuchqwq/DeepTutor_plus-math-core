@@ -48,23 +48,24 @@ class RealAlignmentProvider:
 
 def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, request_limit: int = 60):
     """Observe real SDK calls; no fabricated responses or changes to math output."""
-    from deeptutor.services.llm.provider_core.openai_compat_provider import OpenAICompatProvider
-    original = OpenAICompatProvider._create_with_key_rotation
+    from openai.resources.chat.completions import AsyncCompletions
+    original = AsyncCompletions.create
     lock = threading.Lock()
     count = 0
     http_count = 0
 
-    async def observed(self, create, kwargs):
+    async def observed(self, **kwargs):
         async def real_create(**wire):
             nonlocal count
             if not allow_paid:
                 raise RuntimeError("Phase D startup-only mode: paid provider calls are disabled")
-            if wire.get("model") != expected_model or self._binding_name() != "deepseek":
+            if wire.get("model") != expected_model or self._client.base_url.host != "api.deepseek.com":
                 raise RuntimeError("Phase D requires the same configured DeepSeek model on every call")
             # The frozen experiment fixes these provider parameters on all
             # stages, including native chat/title calls with their own defaults.
             wire["temperature"] = 0
             wire["top_p"] = 1
+            wire["max_tokens"] = min(wire.get("max_tokens", 4096), 4096)
             with lock:
                 count += 1
                 call_id = count
@@ -88,7 +89,7 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
             append_record(evidence / "provider_calls.jsonl", {"event": "request", "call_id": call_id, "wire": {k: wire[k] for k in allowed if k in wire}})
             started = time.monotonic()
             try:
-                response = await create(**wire)
+                response = await original(self, **wire)
                 def record_response(item):
                     value = {k: getattr(item, k, None) for k in ("id", "model", "created", "system_fingerprint")}
                     usage = getattr(item, "usage", None)
@@ -101,19 +102,31 @@ def observe_sdk_calls(evidence: Path, *, allow_paid: bool, expected_model: str, 
                     value["choices"] = choices
                     append_record(evidence / "provider_calls.jsonl", {"event": "response", "call_id": call_id, "elapsed_ms": round((time.monotonic()-started)*1000), "response": value})
                 if wire.get("stream"):
-                    async def chunks():
-                        try:
-                            async for item in response:
-                                record_response(item)
-                                yield item
-                        finally:
+                    class ObservedStream:
+                        def __init__(self):
+                            self.iterator = response.__aiter__()
+                        def __aiter__(self):
+                            return self
+                        async def __anext__(self):
+                            item = await self.iterator.__anext__()
+                            record_response(item)
+                            return item
+                        async def close(self):
                             await response.close()
-                    return chunks()
+                        async def aclose(self):
+                            await response.close()
+                        async def __aenter__(self):
+                            return self
+                        async def __aexit__(self, *args):
+                            await response.close()
+                        def __getattr__(self, name):
+                            return getattr(response, name)
+                    return ObservedStream()
                 record_response(response)
                 return response
             except Exception as exc:
                 append_record(evidence / "provider_calls.jsonl", {"event": "failure", "call_id": call_id, "error_type": type(exc).__name__, "status_code": getattr(exc, "status_code", None)})
                 raise
-        return await original(self, real_create, kwargs)
+        return await real_create(**kwargs)
 
-    OpenAICompatProvider._create_with_key_rotation = observed
+    AsyncCompletions.create = observed
