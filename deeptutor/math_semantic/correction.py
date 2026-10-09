@@ -12,7 +12,7 @@ import re
 from .authority import MathContentSupportBinding, math_content_digest
 from .contracts import MathArtifact
 from .refs import SourceRef
-from .tools import MathToolRegistry
+from .tools import FINITE_POLYNOMIAL_DOMAIN, MathToolRegistry
 
 CORRECTION_MECHANISM = "bounded_premise_residual_v1"
 CORRECTION_SCOPE = "conditional_algebra_relative_to_explicit_premises_not_truth_or_answer"
@@ -161,6 +161,11 @@ def _requests(basis, outputs):
         )
     if len(outputs) >= 4:
         requests.append(("expand", {"expression": f"({student_rhs})-({outputs[1]})"}))
+    for _, kwargs in requests:
+        kwargs["expression_domain"] = FINITE_POLYNOMIAL_DOMAIN
+    # Check each original input before subtraction can cancel anything. The
+    # exact domain request is part of the existing bound ToolEvidence input.
+    requests[0][1]["domain_inputs"] = (symbol, expression, given, constant, student_rhs)
     return requests
 
 

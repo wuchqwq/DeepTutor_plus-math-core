@@ -155,6 +155,111 @@ def test_non_question_specific_variables_constants_and_matching_claim():
     assert artifacts == () and evidence[-1].output_summary == "0"
 
 
+@pytest.mark.parametrize("constant", ["nan", "oo", "zoo"])
+@pytest.mark.parametrize("position", ["claim", "definition", "premise"])
+def test_nonfinite_input_is_admitted_but_cannot_supply_correction(constant, position):
+    given, definition, claim = "x+y=2", "Z=x-y", "Z=2+2*y"
+    if position == "claim":
+        claim = f"Z={constant}"
+    elif position == "definition":
+        definition = f"Z=x-y+{constant}"
+        given = f"x+y+0*{constant}=2"
+    else:
+        given = f"x+y+{constant}=2"
+        definition = f"Z=x-y+{constant}^0"
+    state = make_state(given, definition, claim)
+    assert state.current_alignment().claims[0].parse_status == "parsed"
+    before = state.snapshot()
+    refs = state.trajectory().applicable_artifact_refs
+    artifacts, evidence = materialize_correction_support(before, refs, **context(state))
+    assert artifacts == ()
+    assert len(evidence) == 1 and evidence[0].status == "invalid_input"
+    state.append(expected_revision=before.workspace.revision, evidence=evidence)
+    assert bindings(state) == []
+    assert not any(a.claim_kind == "conditional_correction" for a in state.snapshot().artifacts)
+    state.authorize(refs, ())
+    offers = publication_input(
+        state,
+        {"authority": [], "trajectory": state.trajectory().to_dict(), "verified_grounded_refs": []},
+    )["offers"]
+    assert not any(o["grant"]["act_kind"] == "justification" for o in offers)
+
+
+def test_literal_rational_premise_requires_a_finite_coefficient():
+    state = make_state("x+y=1/0", "Z=x-y", "Z=2+2*y")
+    artifacts, evidence = materialize_correction_support(
+        state.snapshot(), state.trajectory().applicable_artifact_refs, **context(state)
+    )
+    assert artifacts == () and len(evidence) == 1
+    assert evidence[0].status == "invalid_input"
+
+
+@pytest.mark.parametrize("rhs", ["oo^0", "zoo^0", "pi-pi+2*y", "I-I+2*y"])
+def test_cancellation_cannot_hide_input_outside_supported_domain(rhs):
+    state = make_state("x+y=2", "Z=x-y", f"Z={rhs}")
+    artifacts, evidence = materialize_correction_support(
+        state.snapshot(), state.trajectory().applicable_artifact_refs, **context(state)
+    )
+    assert artifacts == ()
+    assert evidence[-1].status == "invalid_input"
+
+
+@pytest.mark.parametrize(
+    "given,definition,claim,derived,difference",
+    [
+        ("x+y=2", "Z=x-y", "Z=2+2*y", "2 - 2*y", "4*y"),
+        ("a+b=5/2", "W=a-b", "W=5+2*b", "5/2 - 2*b", "4*b + 5/2"),
+        ("r+s=-7", "T=r-s", "T=-7+s^3", "-2*s - 7", "s**3 + 2*s"),
+        ("u+v=0", "N=u-v", "N=1", "-2*v", "2*v + 1"),
+        ("oo_1+nan_1=2", "Z=oo_1-nan_1", "Z=2+2*nan_1", "2 - 2*nan_1", "4*nan_1"),
+    ],
+)
+def test_finite_polynomial_controls_retain_exact_correction(
+    given, definition, claim, derived, difference
+):
+    state = make_state(given, definition, claim)
+    artifacts, evidence = materialize_correction_support(
+        state.snapshot(), state.trajectory().applicable_artifact_refs, **context(state)
+    )
+    assert len(artifacts) == 2 and len(evidence) == 5
+    assert all(e.status == "succeeded" for e in evidence)
+    assert json.loads(artifacts[-1].statement)["outputs"][1::3] == [derived, difference]
+    state.append(expected_revision=1, artifacts=artifacts, evidence=evidence)
+    grant = bindings(state)[0].as_grant()
+    state.authorize(state.trajectory().applicable_artifact_refs, (grant,))
+    assert state.snapshot().artifacts[0].verification_status == "qualified"
+
+
+@pytest.mark.parametrize("value", ["nan", "oo", "zoo"])
+def test_worker_rejects_out_of_domain_results(monkeypatch, value):
+    import sympy
+
+    from deeptutor.math_semantic import tools
+
+    monkeypatch.setattr(tools, "_expand_value", lambda **kwargs: getattr(sympy, value))
+    with pytest.raises(ValueError, match="finite rational polynomial domain"):
+        tools._run_operation(
+            "expand", {"expression": "x+y", "expression_domain": tools.FINITE_POLYNOMIAL_DOMAIN}
+        )
+
+
+def test_evidence_without_the_exact_polynomial_domain_request_cannot_bind(supported):
+    snapshot = supported.snapshot()
+    snapshot = replace(
+        snapshot,
+        tool_evidence=tuple(
+            replace(
+                e,
+                input_summary=e.input_summary.replace(
+                    "; expression_domain=finite_rational_polynomial_v1", ""
+                ),
+            )
+            for e in snapshot.tool_evidence
+        ),
+    )
+    assert bindings(supported, snapshot) == []
+
+
 @pytest.mark.parametrize(
     "change",
     [
