@@ -233,6 +233,64 @@ def test_known_answer_exclusion_does_not_trust_model_candidate_subset(role, text
 
 
 @pytest.mark.parametrize(
+    "role,statement,normalized,text",
+    [
+        ("answer", "a*(b+1)=a*b+a", "a*(b+1)-(a*b+a)=0", "a*(b+1)=a*b+a"),
+        (
+            "answer_candidate",
+            "a*(b+1)-(a*b+a)=0",
+            "a*(b+1)=a*b+a",
+            "a*(b+1)-(a*b+a)=0",
+        ),
+        ("final_answer", "a*(b+1)=a*b+a", "Complete answer", "a*(b+1)=a*b+a"),
+        ("final_answer", "Complete answer", "a*(b+1)=a*b+a", "a*(b+1)=a*b+a"),
+    ],
+)
+def test_known_answer_consumes_statement_and_normalized_form_independently(
+    role, statement, normalized, text
+):
+    reviewed = source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a")
+    snapshot = reviewed.authored
+    answer = MathArtifact(
+        statement, role, normalized_form=normalized, provenance=snapshot.problem_model.provenance
+    )
+    assert answer.statement == statement and answer.normalized_form == normalized
+    reviewed = replace(
+        reviewed,
+        authored=replace(
+            snapshot,
+            artifacts=(*snapshot.artifacts, answer),
+            workspace=replace(
+                snapshot.workspace,
+                artifact_refs=(*snapshot.workspace.artifact_refs, answer.artifact_id),
+            ),
+        ),
+    )
+    state, calc, inputs = prepare(
+        text,
+        reviewed,
+        proposal_fields={
+            "claim_type": "equation",
+            "parse_status": "parsed",
+            "candidate_artifact_refs": [snapshot.artifacts[0].artifact_id],
+        },
+    )
+    alignment = json.loads(next(iter(json.loads(state.serialize())["alignments"].values())))
+    assert all(r["artifact_ref"] != answer.artifact_id for r in alignment["relations"])
+    checked = [
+        json.loads(e["output_summary"])
+        for e in alignment["math_evidence"]
+        if e["tool_version"] == STEP_VERSION
+    ]
+    assert checked[0]["local_relation"] == "IDENTITY"
+    assert not offers(inputs, "local_confirmation") and not offers(inputs, "result")
+    accepted = accept_response(
+        state, calc, inputs, candidate(inputs, offers(inputs, "neutral_clarification"))
+    )
+    assert accepted.content.endswith(CLARIFICATION) and text not in accepted.content
+
+
+@pytest.mark.parametrize(
     "text",
     ["((x-y)^2)=(x^2-2*x*y+y^2)", "(x^2-2*x*y+y^2)=((x-y)^2)"],
 )
@@ -404,35 +462,66 @@ def select_feedback(generation, monkeypatch, kind, *, invalid=False):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "authored_text,text,reviewed",
+    "authored_text,text,reviewed,normalized",
     [
         (
             "a*(b+1)=a*b+a",
             "a*(b+1)=a*b+a",
             source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a"),
+            None,
         ),
         (
             "a*(b+1)=a*b+a",
             "((a*(b+1)))=((a*b+a))",
             source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a"),
+            None,
         ),
         (
             "a*(b+1)=a*b+a",
             "a*b+a=a*(b+1)",
             source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a"),
+            None,
         ),
-        (TRUE, "((x-y)^2)=(x^2-2*x*y+y^2)", source()),
+        (TRUE, "((x-y)^2)=(x^2-2*x*y+y^2)", source(), None),
+        (
+            "a*(b+1)=a*b+a",
+            "a*(b+1)=a*b+a",
+            source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a"),
+            "a*(b+1)-(a*b+a)=0",
+        ),
+        (
+            "a*(b+1)=a*b+a",
+            "a*(b+1)=a*b+a",
+            source(domain="a,b are real", givens=(), definitions=(), operation="a*(b+1)=a*b+a"),
+            "Complete answer",
+        ),
     ],
-    ids=["exact", "parentheses", "side_exchange", "reviewer_exact_case"],
+    ids=[
+        "exact",
+        "parentheses",
+        "side_exchange",
+        "reviewer_exact_case",
+        "two_structures",
+        "unsupported_normalized",
+    ],
 )
 async def test_narrowed_known_answer_remains_clarification_in_native_host_receipt(
-    publication_host_factory, initialized_host_imports, monkeypatch, authored_text, text, reviewed
+    publication_host_factory,
+    initialized_host_imports,
+    monkeypatch,
+    authored_text,
+    text,
+    reviewed,
+    normalized,
 ):
     host, generation, _ = publication_host_factory()
     snapshot = reviewed.authored
     intermediate = snapshot.artifacts[0]
     answer = MathArtifact(
-        authored_text, "final_answer", provenance=snapshot.problem_model.provenance
+        authored_text,
+        "final_answer",
+        normalized_form=normalized,
+        provenance=snapshot.problem_model.provenance,
     )
     host.source = replace(
         reviewed,
