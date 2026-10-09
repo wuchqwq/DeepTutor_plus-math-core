@@ -28,6 +28,22 @@ _LIMIT = (
 )
 
 
+def _equality_structure(text: str) -> tuple[str, str]:
+    """Unordered equality sides in the existing bounded polynomial AST grammar.
+
+    This identifies representations of the same syntax, not algebraic or
+    conditional equivalence. No expansion, substitution or solver is used.
+    """
+    parts = normalize_display(text).split("=")
+    if len(parts) != 2:
+        raise ValueError("unsupported_equality_structure")
+    sides = []
+    for part in parts:
+        expression, _, _ = _polynomial(part)
+        sides.append(ast.dump(ast.parse(expression.strip(), mode="eval").body))
+    return tuple(sorted(sides))
+
+
 def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
     """Canonical contracts and short templates; no tools, history carry or prose generation.
 
@@ -92,13 +108,17 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
         if a.role in {"answer", "answer_candidate", "final_answer"}
     }
     # Provider candidate refs may intentionally omit an authored answer.
-    # Exclude known answer content from the complete pinned snapshot, using
-    # only the existing display normalization (no mathematical tool here).
-    answer_forms = {
-        normalize_display(a.normalized_form).replace(" ", "")
-        for a in snapshot.artifacts
-        if a.artifact_id in answer_refs
-    }
+    # Scan the complete snapshot using the same closed syntax as the checker.
+    # Redundant parentheses/spacing and equality-side order cannot hide a
+    # known answer. This does not establish arbitrary semantic equivalence.
+    answer_structures = set()
+    for artifact in snapshot.artifacts:
+        if artifact.artifact_id not in answer_refs:
+            continue
+        try:
+            answer_structures.add(_equality_structure(artifact.normalized_form))
+        except (ValueError, SyntaxError, TypeError):
+            continue
     proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
     for ordinal, claim in enumerate(current.claims[:4], 1):
         if (
@@ -109,7 +129,6 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
             or state.submission.raw_content[claim.evidence.start : claim.evidence.end]
             != claim.evidence.quote
             or normalize_display(claim.evidence.quote) != claim.normalized_form
-            or claim.normalized_form.replace(" ", "") in answer_forms
             or any(
                 r.student_claim_ref == claim.claim_id and r.artifact_ref in answer_refs
                 for r in current.relations
@@ -117,6 +136,8 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
         ):
             continue
         try:
+            if _equality_structure(claim.normalized_form) in answer_structures:
+                continue
             parts = claim.normalized_form.split("=")
             if len(parts) != 2:
                 continue
