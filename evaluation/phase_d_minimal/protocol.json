@@ -1,0 +1,22 @@
+{
+  "status": "DRAFT_FOR_DOT_REVIEW_NOT_FROZEN_NOT_RUN",
+  "product_base_sha": "143e41784bdd2c34d765a50c754869ef3a2d9830",
+  "question": "设 x,y 为实数，且 x^2+x*y+y^2=3。求 Q=x^2-x*y+y^2 的取值范围。",
+  "question_type": "real quadratic algebra; CA02-covered type, not fixture-name authority",
+  "initial_student_state": "高中生，知道平方展开与实数平方非负；无历史成绩、memory、journal、mastery、RAG。除 S6 外希望自己完成，先检查当前步骤或给一个可执行提示。",
+  "first_submission_rule": "两版每个新 session 的首次实际学生提交均为 题面： + question + 两个换行 + 学生背景与偏好： + initial_student_state + 两个换行 + 我的提交： + first_input；后续使用 followups 原文。提案不可将题面冒充学生新推导。",
+  "sessions": "one fresh session and independent home/SQLite/episode per arm and case; no cross-arm history",
+  "response_rules": "学生由实验操作者按固定意图接话，不调用额外学生模型。允许在 followup 前加不含新数学的短承接语并逐字记录；不随老师答案更换数学步骤，不挑掉失败。方法卡点击实际 opaque option 对应的按钮，文本不充当 token。",
+  "cases": [
+    {"id":"S1","kind":"正确中间步骤","first_input":"我由已知式得到 Q=3-2*x*y。请检查这一步，再告诉我下一步该考虑什么，先别给完整答案。","followups":[],"review_focus":"局部正确不等于已完成；给下一步行动，避免提前给范围"},
+    {"id":"S2","kind":"运算错误","first_input":"我把中间的 x*y 换一下符号，得到 Q=3+2*x*y。这样对吗？","followups":[],"review_focus":"发现符号错误，定位两式相减，不把错误标正确"},
+    {"id":"S3","kind":"概念错误","first_input":"x 和 y 都是实数，所以 x*y 一定非负。我想用这个推出 Q<=3。这个理由成立吗？","followups":[],"review_focus":"实数乘积可以为负；区分概念错误和计算错误，不假设正数"},
+    {"id":"S4","kind":"合法不同解法","first_input":"我不用对称变量，改用平方恒等式：3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2。请检查这个思路能否继续，不要强迫我换方法。","followups":[],"review_focus":"接纳合法平方方法；未被当前路径覆盖也不能武断称错"},
+    {"id":"S5","kind":"提示请求","first_input":"我卡住了。请只给一个关于怎样约束 x*y 的小提示，不要直接告诉我 Q 的取值范围。","followups":[],"review_focus":"一个可执行提示；不能只确认收到，也不能直接泄露范围"},
+    {"id":"S6","kind":"明确索要答案","first_input":"这次我明确想看答案：直接告诉我 Q 的完整取值范围，并说明为什么每个值都能取到。","followups":[],"review_focus":"回答意图明确，但不能扩大已有数学权限；范围须含可达性，未知要明说"},
+    {"id":"S7","kind":"含糊表述澄清","first_input":"它等于3，那另一个是不是也一样？我这样算行吗？","followups":["我说的是 x^2+x*y+y^2=3，所以我猜 Q=x^2-x*y+y^2 也等于3。请帮我检查这个猜测。"],"review_focus":"先问清它和另一个指什么；后续纠正两个二次式不能直接相等"},
+    {"id":"S8","kind":"多轮连续出错后修正与 Browser Math E2E","first_input":"我先设 s=x+y，想用对称变量做。请检查这一步。","followups":["我现在想改用平方方法：3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2。请按这个方法继续。","我代入条件后算成 Q-1=2*(x-y)^2。先帮我检查系数，不要给最终范围。","我再改一次：Q-1=(1/3)*(x-y)^2。我还是不确定系数。","我自己重新展开后修正为 Q-1=(2/3)*(x-y)^2>=0。现在这一步对吗？接下来我该检查什么？"],"method_reply":"若集成版实际发出确认卡，点击 Method 2 的实际按钮；必须保留 token、question ID 与确认后轨迹。若卡未出现，照实记 NOT_OBSERVED，不人工插卡。普通版有选择卡则选择平方方法；若追问，以同一意图说我继续用平方方法。","review_focus":"真实 A→B 方法确认，错误不累积成正确，最后修正被识别；给下一步行动；刷新保持真实原回复与 publication"}
+  ],
+  "reviewer_only_file": "grader_notes.md; NEVER include in model prompts or episode resolver",
+  "freeze_rule": "先交 dot 核对具体输入、可见信息、参数与评分依据；冻结后不因结果失败更换样本。该核对是本次委托要求，不建立新审核框架。"
+}
