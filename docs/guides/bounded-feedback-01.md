@@ -1,7 +1,10 @@
 # Bounded current-turn feedback v1
 
-The sealed real-provider experiment at dev `d4bf3cbbdd1f1699313768ddd919b4e10efce738`
-found no publishable clarification or local confirmation candidate. This change
+The sealed real-provider experiment executed clean HEAD
+`8af1947648e4fe6b9d0bea75aa5fae99ec360810` and found no publishable clarification
+or local confirmation candidate. Its tracked tree matches dev
+`d4bf3cbbdd1f1699313768ddd919b4e10efce738`; tree equality is not execution at that
+commit. This change
 adds those two candidates to the existing math-turn publication owner. It does
 not change selector policy, mathematical tools, episode ownership, or acceptance.
 Phase D stays PAUSED and PR20 stays HOLD.
