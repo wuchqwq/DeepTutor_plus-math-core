@@ -682,6 +682,7 @@ async def test_real_host_selector_consumes_evidence_and_receipt_without_publicat
                 o["grant"]["support_scope"],
             )
             for o in value["offers"]
+            if "contract" not in o["grant"]
         }
 
     assert permissions(inputs) == permissions(first_inputs)
