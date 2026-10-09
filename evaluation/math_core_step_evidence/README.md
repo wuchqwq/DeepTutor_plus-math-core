@@ -94,6 +94,28 @@ Ruff and repository hygiene checks are reported separately, without calling the
 missing full hook suite a pass. CI is queried separately after pushing and is
 not inferred from local tests or an absent check list.
 
+The first clean committed full run (`9dbff1f7562f8cbe56fdc462b1f60fd3b9fc9cc8`)
+collected 948 cases: 936 passed and 12 failed (exit 1). Nine recovery and two
+routing cases stopped at baseline assumptions of no revision/snapshot append;
+the journal case compared actual tool timings across independent hosts. These
+logs and databases remain in `full-final-head`. Compatibility checks now require
+immutable historical snapshots/alignments/confirmations, exact claim-bound
+evidence additions, unchanged model/path/relation objects, and exact regenerated
+workspace membership indices (the legacy fixture had a removed-path index).
+Existing typed operation support expires at an evidence revision and may then
+rebind the same inputs/premises and target/act/support permissions. Cross-host
+journal comparison verifies each real replay request before normalizing only
+transport IDs and tool timing, including JSON-decoded alignments. No production
+recovery, confirmation, support, trajectory or authority code was changed to
+resolve these test failures. The initial compatibility-assertion failures remain
+in `targeted-recovery07`; the original 12 cases pass in `targeted-recovery08`.
+The subsequent clean final-HEAD full run is recorded separately.
+The standalone architecture gate exits 1 on both this change and an independent
+export of approved base `b196b6a5f216cbe2fdc438e5f9076883fc959a79`: the existing
+`core -> domain_runtime` cycle and `core/context.py:16` runtime import. Its logs
+are retained separately; this PR does not repair that baseline boundary issue or
+claim an architecture-gate pass.
+
 Read-only inputs: baseline AGENTS.md / CONTRIBUTING.md; relevant Math Core
 responsibility, alignment and migration documents under `F:\demo2\tutor_demo\docs`;
 S4_multiturn_20261009 transcripts.md, protocol.json, repetition-attribution.json,

@@ -29,7 +29,7 @@ from deeptutor.services.session.math_semantic_persistence import sqlite_math_mut
 from deeptutor.services.session.sqlite_store import SQLiteSessionStore
 from deeptutor.services.session.turn_runtime import TurnRuntimeManager
 
-from .recovery_support import A, B, C, reviewed_source
+from .recovery_support import A, B, C, assert_private_evidence_extension, reviewed_source
 
 
 class RoutingHost:
@@ -749,7 +749,7 @@ async def test_frozen_legacy_certified_ids_cut_over_without_adopting_unmarked_ga
     assert {key: cutover["alignments"][key] for key in committed["alignments"]} == committed[
         "alignments"
     ]
-    assert cutover["snapshots"] == committed["snapshots"]
+    assert_private_evidence_extension(committed, cutover)
     assert cutover["confirmations"] == committed["confirmations"]
     await fresh.submit(A, session_id=session["id"])
     current_id = fresh.math_contexts[-1].runtime.accepted_user_message_id
@@ -840,7 +840,7 @@ async def test_fresh_host_reconnects_same_episode_after_ordinary_gap(host_factor
         "alignments"
     ]
     assert len(state["alignments"]) == 2
-    assert state["snapshots"] == original["snapshots"]
+    assert_private_evidence_extension(original, state)
     assert state["confirmations"] == original["confirmations"]
     assert fresh.result()["trajectory"]["status"] == old.result()["trajectory"]["status"]
     assert fresh.result()["verification_status"] == "UNKNOWN"

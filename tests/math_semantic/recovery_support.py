@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import ExitStack, closing
-from dataclasses import replace
+from dataclasses import asdict, replace
 import json
 from pathlib import Path
 import sqlite3
@@ -16,9 +16,15 @@ from deeptutor.capabilities.math_turn.capability import MathTurnCapability
 from deeptutor.core.context import CapabilityBinding
 from deeptutor.math_semantic.accepted import EpisodeIdentity
 from deeptutor.math_semantic.authority import MathSemanticGrant
+from deeptutor.math_semantic.codec import _decode
 from deeptutor.math_semantic.refs import LearnerRef, QuestionRef
 from deeptutor.math_semantic.state import MathMutation, ReviewedSource
-from deeptutor.math_semantic.support import resolve_math_content_support
+from deeptutor.math_semantic.support import (
+    OPERATION_MECHANISM,
+    OPERATION_SCOPE,
+    resolve_math_content_support,
+)
+from deeptutor.math_semantic.validation import STEP_VERSION, step_basis
 from deeptutor.math_semantic.workspace import _snapshot_from
 from deeptutor.runtime.coordination import MemoryCoordinator
 from deeptutor.runtime.registry.capability_registry import CapabilityRegistry
@@ -314,11 +320,11 @@ def durable(db: Path):
 
 def assert_evidence_preserved(before, after, *, new_alignments):
     old, new = before["state"], after["state"]
-    assert (before["episode"], before["session"], before["revision"]) == (
+    assert (before["episode"], before["session"]) == (
         after["episode"],
         after["session"],
-        after["revision"],
     )
+    assert before["revision"] == old["head"] and after["revision"] == new["head"]
     assert new["host_episode_first_message_id"] == old["host_episode_first_message_id"]
     assert (
         new["host_accepted_message_ids"][: len(old["host_accepted_message_ids"])]
@@ -326,6 +332,112 @@ def assert_evidence_preserved(before, after, *, new_alignments):
     )
     assert len(new["alignments"]) == len(old["alignments"]) + new_alignments
     assert {key: new["alignments"][key] for key in old["alignments"]} == old["alignments"]
-    assert new["snapshots"] == old["snapshots"]
+    assert_private_evidence_extension(old, new)
     assert new["confirmations"] == old["confirmations"]
     assert not any("trajectory" in key and key != "trajectory_version" for key in new)
+
+
+def assert_private_evidence_extension(old, new):
+    """Exact history plus only scoped evidence and existing operation rebinding."""
+    assert {key: new["snapshots"][key] for key in old["snapshots"]} == old["snapshots"]
+    added = [
+        _decode(value) for key, value in new["alignments"].items() if key not in old["alignments"]
+    ]
+    claim_proofs = {}
+    for alignment in added:
+        assert not alignment.novel_candidates
+        assert not alignment.validated_artifact_refs
+        assert not alignment.contradicted_artifact_refs
+        for evidence in alignment.math_evidence:
+            claim_proofs[evidence.evidence_id] = evidence
+            if evidence.tool_version == STEP_VERSION:
+                binding = json.loads(evidence.input_summary)
+                assert binding["revision"] == alignment.workspace_revision
+                assert binding["episode"] == new["source"]["episode_id"]
+                assert binding["claim"] in [asdict(c) for c in alignment.claims]
+                pinned = _snapshot_from(
+                    json.dumps(new["snapshots"][str(alignment.workspace_revision)])
+                )
+                assert binding["math_basis"] == step_basis(pinned)
+                assert binding["claim"]["student_response_ref"] == {
+                    "kind": alignment.student_response_ref.kind,
+                    "identifier": alignment.student_response_ref.identifier,
+                }
+    assert set(new["snapshots"]) - set(old["snapshots"]) == {
+        str(revision) for revision in range(old["head"] + 1, new["head"] + 1)
+    }
+    assert new["head"] - old["head"] >= len(added)
+    previous = _snapshot_from(json.dumps(old["snapshots"][str(old["head"])]))
+    for revision in range(old["head"] + 1, new["head"] + 1):
+        current = _snapshot_from(json.dumps(new["snapshots"][str(revision)]))
+        assert current.problem_model == previous.problem_model
+        assert current.paths == previous.paths and current.relations == previous.relations
+        assert current.superseded_by == previous.superseded_by
+        assert current.artifacts[: len(previous.artifacts)] == previous.artifacts
+        assert current.tool_evidence[: len(previous.tool_evidence)] == previous.tool_evidence
+        # append_snapshot regenerates membership indices from actual objects;
+        # the frozen legacy fixture contains one removed-path index. This
+        # checks that exact regeneration rather than ignoring path metadata.
+        assert current.workspace == replace(
+            previous.workspace,
+            revision=revision,
+            artifact_refs=tuple(a.artifact_id for a in current.artifacts),
+            solution_path_refs=tuple(p.path_id for p in current.paths),
+            dependency_relation_refs=tuple(r.relation_id for r in current.relations),
+            tool_evidence_refs=tuple(e.evidence_id for e in current.tool_evidence),
+        )
+        artifacts = current.artifacts[len(previous.artifacts) :]
+        receipts = current.tool_evidence[len(previous.tool_evidence) :]
+        assert receipts
+        targets = tuple(
+            a.artifact_id for a in previous.artifacts if a.claim_kind != "operation_description"
+        )
+
+        def permissions(snapshot):
+            return {
+                (b.target_artifact_ref, b.act_kind, b.support_mechanism, b.support_scope)
+                for b in resolve_math_content_support(snapshot, targets)
+            }
+
+        baseline = _snapshot_from(json.dumps(old["snapshots"][str(old["head"])]))
+        if artifacts:
+            # Existing calculation rebinds the same supported operations.
+            assert permissions(current) == permissions(baseline)
+        else:
+            # Existing typed support is current-revision-only: evidence first
+            # expires it; calculation may subsequently rebind it. Other support
+            # remains exact, and no intermediate permission is added.
+            assert permissions(current) == {
+                p for p in permissions(previous) if p[2] != OPERATION_MECHANISM
+            }
+        operation_proofs = set()
+        old_operations = []
+        for artifact in previous.artifacts:
+            if (
+                artifact.claim_kind == "operation_description"
+                and artifact.verification_scope == OPERATION_SCOPE
+            ):
+                request = json.loads(artifact.statement)
+                request.pop("input_revision")
+                old_operations.append(request)
+        for artifact in artifacts:
+            assert artifact.claim_kind == "operation_description"
+            request = json.loads(artifact.statement)
+            assert request.pop("input_revision") == previous.workspace.revision
+            assert request in old_operations
+            assert artifact.verification_status == "qualified"
+            assert artifact.workspace_revision == revision
+            operation_proofs.update(artifact.tool_evidence_refs)
+        supported_proofs = {
+            b.support_ref.identifier
+            for b in resolve_math_content_support(current, targets)
+            if b.support_ref is not None
+        }
+        assert operation_proofs <= supported_proofs
+        for evidence in receipts:
+            assert replace(evidence, evidence_id=None).evidence_id == evidence.evidence_id
+            assert (
+                evidence.evidence_id in operation_proofs
+                or claim_proofs.get(evidence.evidence_id) == evidence
+            )
+        previous = current

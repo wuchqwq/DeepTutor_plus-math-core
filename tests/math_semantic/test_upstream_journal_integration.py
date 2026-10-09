@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 
 import pytest
 
 from deeptutor.agents.loop.prompt_blocks import ChatPromptAssembler
 from deeptutor.capabilities.math_turn.output import ACKNOWLEDGEMENT
+from deeptutor.math_semantic import state as math_state
 from deeptutor.runtime.coordination import MemoryCoordinator
 from deeptutor.services.learning_journal.store import LearningJournalStore
 from deeptutor.services.path_service import PathService
@@ -62,8 +64,57 @@ async def accepted_confirmation_history(host):
 
 @pytest.mark.asyncio
 async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publication(
-    persisted_journal, publication_host_factory
+    persisted_journal, publication_host_factory, monkeypatch
 ):
+    requests = {}
+    digest = math_state._digest
+
+    def capture_request(value):
+        result = digest(value)
+        if isinstance(value, dict) and set(value) == {
+            "proposal",
+            "provider",
+            "config",
+            "submission",
+            "check_steps",
+        }:
+            requests[result] = deepcopy(value)
+        return result
+
+    monkeypatch.setattr(math_state, "_digest", capture_request)
+
+    def core_state(host):
+        state = {key: value for key, value in host.state().items() if not key.startswith("host_")}
+        # Replay fences deliberately bind real host IDs. Verify each exact
+        # request before comparing mathematics across independent host sessions.
+        fences = state.pop("alignment_inputs")
+        assert set(fences) == set(state["alignments"])
+        canonical = {}
+        for slot, fingerprint in fences.items():
+            request = deepcopy(requests[fingerprint])
+            assert digest(request) == fingerprint
+            submission = request["submission"]
+            row = host.user_row(submission["message_id"])
+            assert submission["session_id"] == row["session_id"]
+            assert submission["turn_id"] == row["metadata"]["turn_id"]
+            assert submission["raw_content"] == row["content"]
+            assert slot.split(":")[0] == str(submission["message_id"])
+            for field in ("session_id", "turn_id", "client_submission_id"):
+                submission.pop(field)
+            canonical[slot] = request
+        state["alignment_inputs"] = canonical
+        # Serialized alignments also contain actual tool timing; decode them
+        # before applying the existing timing-only comparison below.
+        state["alignments"] = {key: json.loads(value) for key, value in state["alignments"].items()}
+        return state
+
+    def without_tool_timing(value):
+        if isinstance(value, dict):
+            return {k: without_tool_timing(v) for k, v in value.items() if k != "duration_ms"}
+        if isinstance(value, (list, tuple)):
+            return [without_tool_timing(v) for v in value]
+        return value
+
     # Match source, accepted history and provider configuration in independent
     # real host databases; only the persisted upstream journal differs.
     baseline, generation, _ = publication_host_factory()
@@ -71,9 +122,7 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
     baseline_seed, baseline_turn = await accepted_confirmation_history(baseline)
     assert all(context.learning_journal_context == "" for context in baseline.math_contexts)
     baseline_calculation = baseline.result()
-    baseline_core = {
-        key: value for key, value in baseline.state().items() if not key.startswith("host_")
-    }
+    baseline_core = core_state(baseline)
     baseline_offers = [call["inputs"]["offers"] for call in generation.calls]
 
     assert persisted_journal.set_mission(topic=HOSTILE_JOURNAL[0]).accepted
@@ -98,7 +147,7 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
         assert row["content"] == context.runtime.accepted_user_content == accepted
         assert row["metadata"]["host_capability_binding"]["binding"]["capability"] == "math_turn"
     assert [projection.response_text for projection in hostile.projections] == [A, B]
-    assert hostile.result() == baseline_calculation
+    assert without_tool_timing(hostile.result()) == without_tool_timing(baseline_calculation)
     assert hostile.result()["verification_status"] == "UNKNOWN"
     assert hostile.result()["verified_grounded_refs"] == ()
     assert all(
@@ -106,18 +155,7 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
         for grant in hostile.result()["authority"]
     )
 
-    def without_tool_timing(value):
-        # These two independent hosts execute real tools. Wall-clock duration
-        # differs without changing any mathematical content or support relation.
-        if isinstance(value, dict):
-            return {k: without_tool_timing(v) for k, v in value.items() if k != "duration_ms"}
-        if isinstance(value, list):
-            return [without_tool_timing(v) for v in value]
-        return value
-
-    assert without_tool_timing(baseline_core) == without_tool_timing(
-        {key: value for key, value in hostile.state().items() if not key.startswith("host_")}
-    )
+    assert without_tool_timing(baseline_core) == without_tool_timing(core_state(hostile))
     assert_no_journal(hostile.state())
     assert baseline_offers == [call["inputs"]["offers"] for call in generation.calls[2:]]
     assert_no_journal([call["inputs"] for call in generation.calls])
