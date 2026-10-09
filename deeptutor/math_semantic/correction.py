@@ -40,6 +40,60 @@ def _polynomial_syntax(text):
     )
 
 
+def _real_scalar_names(value):
+    """Recognize the bounded authored real-scalar declaration, never infer it."""
+    if not isinstance(value, str):
+        return None
+    declaration = re.fullmatch(
+        r"([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)"
+        r"\s+(?:are|is)\s+real(?:\s+(?:scalar variables|scalars|numbers))?\.?",
+        value.strip(),
+    )
+    return tuple(name.strip() for name in declaration[1].split(",")) if declaration else None
+
+
+def _scalar_domain(snapshot, submission, symbol):
+    model = snapshot.problem_model
+    if (
+        model.parse_status != "parsed"
+        or model.uncertainty != 0
+        or not model.domain
+        or len((*model.givens, *model.constraints)) != 1
+        or model.assumptions
+        or model.quantifiers
+    ):
+        return None
+    names = set()
+    for fact in model.domain:
+        declared = _real_scalar_names(fact.value)
+        if (
+            fact.status != "explicit"
+            or fact.uncertainty != 0
+            or model.public_ref not in fact.provenance
+            or declared is None
+        ):
+            return None
+        names.update(declared)
+    # An explicit Domain field in the accepted input cannot silently override
+    # the reviewed source. Unrecognized declarations are inapplicable, rather
+    # than classified using a noncommutative-object keyword blacklist.
+    accepted_domains = re.findall(
+        r"^[ \t]*domain[ \t]*:[ \t]*(.*)$",
+        submission.raw_content,
+        re.MULTILINE | re.IGNORECASE,
+    )
+    for value in accepted_domains:
+        declared = _real_scalar_names(value)
+        if declared is None or not set(declared) <= names | {symbol}:
+            return None
+    return {
+        "semantics": "explicit_real_commutative_scalars_v1",
+        "facts": json.loads(_json([asdict(fact) for fact in model.domain])),
+        "symbols": sorted(names | {symbol}),
+        "accepted_domain_fields": accepted_domains,
+    }
+
+
 def _definition(snapshot, symbol, revision):
     # Only the exact explicit target grammar supplies E. No extraction from
     # private solution prose or derived answers.
@@ -47,8 +101,12 @@ def _definition(snapshot, symbol, revision):
     if target is None or target.status != "explicit" or target.uncertainty != 0:
         return None
     value = target.value
-    if value.startswith("range of "):
-        value = value[len("range of ") :]
+    # There is no target-value disclosure permission in this mechanism. Keep
+    # only the existing range target shape, whose local nonconstant relation
+    # leaves the final range/attainability question unresolved.
+    if not value.startswith("range of "):
+        return None
+    value = value[len("range of ") :]
     pair = _equation(value)
     if (
         pair is None
@@ -97,6 +155,9 @@ def _basis(snapshot, targets, submission, alignment, episode_id):
         definition = _definition(snapshot, symbol, snapshot.workspace.revision + 1)
         if definition is None:
             continue
+        domain = _scalar_domain(snapshot, submission, symbol)
+        if domain is None:
+            continue
         expression = _equation(definition.statement)[1]
         # Require exactly one explicit applicable given with a literal rational
         # constant and the same free identifier set. Never enumerate combinations.
@@ -121,10 +182,10 @@ def _basis(snapshot, targets, submission, alignment, episode_id):
         if len(premises) != 1:
             continue
         premise = premises[0]
-        candidates.append((claim, definition, premise, symbol, expression, student_rhs))
+        candidates.append((claim, definition, premise, symbol, expression, student_rhs, domain))
     if len(candidates) != 1:
         return None
-    claim, definition, premise, symbol, expression, student_rhs = candidates[0]
+    claim, definition, premise, symbol, expression, student_rhs, domain = candidates[0]
     context = {
         "session_id": submission.session_id,
         "turn_id": submission.turn_id,
@@ -138,16 +199,20 @@ def _basis(snapshot, targets, submission, alignment, episode_id):
         "premise_ref": premise.artifact_id,
         "premise_digest": math_content_digest(premise),
         "definition": definition.statement,
+        "scalar_domain": domain,
+        "disclosure_scope": "nonconstant_local_relation_for_explicit_range_target_v1",
     }
     return context, definition, premise, symbol, expression, student_rhs
 
 
 def _requests(basis, outputs):
-    _, _, premise, symbol, expression, student_rhs = basis
+    context, _, premise, symbol, expression, student_rhs = basis
     given, constant = _equation(premise.statement)
     requests = [("expand", {"expression": f"({expression})-({given})"})]
     if len(outputs) >= 1:
-        requests.append(("expand", {"expression": f"({constant})+({outputs[0]})"}))
+        requests.append(
+            ("expand", {"expression": f"({constant})+({outputs[0]})", "require_free_symbols": True})
+        )
     if len(outputs) >= 2:
         requests.append(
             (
@@ -163,6 +228,7 @@ def _requests(basis, outputs):
         requests.append(("expand", {"expression": f"({student_rhs})-({outputs[1]})"}))
     for _, kwargs in requests:
         kwargs["expression_domain"] = FINITE_POLYNOMIAL_DOMAIN
+        kwargs["polynomial_symbols"] = tuple(context["scalar_domain"]["symbols"])
     # Check each original input before subtraction can cancel anything. The
     # exact domain request is part of the existing bound ToolEvidence input.
     requests[0][1]["domain_inputs"] = (symbol, expression, given, constant, student_rhs)

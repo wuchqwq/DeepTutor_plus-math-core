@@ -3,6 +3,7 @@
 from dataclasses import replace
 import hashlib
 import json
+import re
 
 import pytest
 
@@ -24,14 +25,38 @@ from deeptutor.math_semantic.support import resolve_math_content_support
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot, append_snapshot
 
 
-def make_state(given="x^2+x*y+y^2=3", definition="Q=x^2-x*y+y^2", claim="Q=3+2*x*y"):
+def make_state(
+    given="x^2+x*y+y^2=3",
+    definition="Q=x^2-x*y+y^2",
+    claim="Q=3+2*x*y",
+    *,
+    domain=None,
+    target=None,
+    objective=(),
+    raw_content=None,
+    model_updates=None,
+):
     ref = SourceRef("question", "generic-residual")
+    if domain is None:
+        names = sorted(
+            set(
+                re.findall(
+                    r"[A-Za-z][A-Za-z0-9_]*", given.split("=")[0] + " " + definition.split("=")[1]
+                )
+            )
+        )
+        domain = ",".join(names) + " are real"
+    domain_facts = (ProblemFact(domain, provenance=(ref,)),) if isinstance(domain, str) else domain
     model = ProblemModel(
         ref.identifier,
         ref,
         givens=(ProblemFact(given, provenance=(ref,)),),
-        target=ProblemFact("range of " + definition, provenance=(ref,)),
+        target=ProblemFact(target or "range of " + definition, provenance=(ref,)),
+        domain=domain_facts,
+        objective=tuple(ProblemFact(value, provenance=(ref,)) for value in objective),
     )
+    if model_updates:
+        model = replace(model, **model_updates)
     premise = MathArtifact(
         given,
         "given",
@@ -66,11 +91,19 @@ def make_state(given="x^2+x*y+y^2=3", definition="Q=x^2-x*y+y^2", claim="Q=3+2*x
         ),
         snapshot,
     )
-    submission = AcceptedSubmission(1, claim, "generic-session", "generic-turn")
+    raw_content = raw_content or claim
+    submission = AcceptedSubmission(1, raw_content, "generic-session", "generic-turn")
     state = MathMutation(source, submission, (submission,))
     state.align(
         AlignmentProposal.from_value(
-            {"claims": [{"evidence": {"quote": claim}, "claim_type": "equation"}]}
+            {
+                "claims": [
+                    {
+                        "evidence": {"quote": claim, "occurrence": raw_content.count(claim) - 1},
+                        "claim_type": "equation",
+                    }
+                ]
+            }
         ),
         expected_revision=1,
         provider_id="test-native",
@@ -258,6 +291,183 @@ def test_evidence_without_the_exact_polynomial_domain_request_cannot_bind(suppor
         ),
     )
     assert bindings(supported, snapshot) == []
+
+
+@pytest.mark.parametrize(
+    "domain",
+    [
+        (),
+        "x,y are 2x2 real matrices",
+        "x,y are noncommuting operators",
+        "x,y are complex",
+        "x are real",
+    ],
+)
+def test_unconfirmed_scalar_domain_has_no_support_grant_or_accepted_correction(domain):
+    state = make_state(domain=domain)
+    refs = state.trajectory().applicable_artifact_refs
+    artifacts, evidence = materialize_correction_support(state.snapshot(), refs, **context(state))
+    assert artifacts == ()
+    if evidence:
+        assert evidence[-1].status == "invalid_input"
+        state.append(expected_revision=1, evidence=evidence)
+    assert bindings(state) == []
+    calculation = {
+        "authority": [MathSemanticGrant.orientation(ref).to_dict() for ref in refs],
+        "trajectory": state.trajectory().to_dict(),
+        "verified_grounded_refs": [],
+    }
+    inputs = publication_input(state, calculation)
+    assert not any(o["grant"]["act_kind"] == "justification" for o in inputs["offers"])
+    accepted = accept_response(
+        state,
+        calculation,
+        inputs,
+        json.dumps({"authority_basis": inputs["authority_basis"], "grant_ids": []}),
+    )
+    assert accepted.content == "Mathematical evidence recorded."
+    assert json.loads(accepted.metadata_json)["math_publication"]["selected_grants"] == []
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "missing",
+        "noncommuting",
+        "inferred",
+        "uncertain",
+        "changed_real",
+        "value_target",
+        "extra_assumption",
+    ],
+)
+def test_domain_and_disclosure_changes_invalidate_old_binding_and_offer(supported, change):
+    snapshot = supported.snapshot()
+    model = snapshot.problem_model
+    fact = model.domain[0]
+    updates = {
+        "missing": {"domain": ()},
+        "noncommuting": {"domain": (replace(fact, value="x,y are noncommuting operators"),)},
+        "inferred": {"domain": (replace(fact, status="inferred"),)},
+        "uncertain": {"domain": (replace(fact, uncertainty=0.25),)},
+        "changed_real": {"domain": (replace(fact, value="x,y are real numbers"),)},
+        "value_target": {"target": replace(model.target, value="Q=x^2-x*y+y^2")},
+        "extra_assumption": {
+            "assumptions": (replace(fact, value="unspecified multiplication semantics"),)
+        },
+    }[change]
+    model = replace(model, **updates)
+    fresh = make_state(domain=model.domain, target=model.target.value, model_updates=updates)
+    # Replay old proofs/artifacts into a current source with changed interpretation.
+    fresh.append(
+        expected_revision=1, artifacts=snapshot.artifacts[2:], evidence=snapshot.tool_evidence
+    )
+    assert bindings(fresh) == []
+    old_grant = bindings(supported)[0].as_grant()
+    calculation = {
+        "authority": [old_grant.to_dict()],
+        "trajectory": fresh.trajectory().to_dict(),
+        "verified_grounded_refs": [],
+    }
+    inputs = publication_input(fresh, calculation)
+    assert inputs["offers"] == []
+    with pytest.raises(ValueError, match="exceeds"):
+        accept_response(
+            fresh,
+            calculation,
+            inputs,
+            json.dumps(
+                {
+                    "authority_basis": inputs["authority_basis"],
+                    "grant_ids": [
+                        hashlib.sha256(
+                            json.dumps(
+                                old_grant.to_dict(), sort_keys=True, separators=(",", ":")
+                            ).encode()
+                        ).hexdigest()
+                    ],
+                }
+            ),
+        )
+
+
+@pytest.mark.parametrize("target", ["Z=x+y", "range of Z=x+y"])
+def test_target_value_disclosure_is_ineligible_even_with_zero_result_grants(target):
+    state = make_state(
+        "x+y=2",
+        "Z=x+y",
+        "Z=0",
+        target=target,
+        objective=("Check with a small hint; do not reveal the final answer.",),
+    )
+    refs = state.trajectory().applicable_artifact_refs
+    artifacts, evidence = materialize_correction_support(state.snapshot(), refs, **context(state))
+    assert artifacts == ()
+    if target.startswith("range"):
+        assert len(evidence) == 2 and evidence[-1].status == "invalid_input"
+        assert "complete target value" in evidence[-1].output_summary
+        state.append(expected_revision=1, evidence=evidence)
+    else:
+        assert evidence == ()
+    assert bindings(state) == []
+    calculation = {
+        "authority": [],
+        "trajectory": state.trajectory().to_dict(),
+        "verified_grounded_refs": [],
+    }
+    inputs = publication_input(state, calculation)
+    assert inputs["offers"] == []
+    accepted = accept_response(
+        state,
+        calculation,
+        inputs,
+        json.dumps({"authority_basis": inputs["authority_basis"], "grant_ids": []}),
+    )
+    assert accepted.content == "Mathematical evidence recorded."
+
+
+def test_accepted_explicit_domain_override_cannot_borrow_scalar_source():
+    state = make_state(raw_content="Domain: x,y are noncommuting operators\nQ=3+2*x*y")
+    assert materialize_correction_support(
+        state.snapshot(), state.trajectory().applicable_artifact_refs, **context(state)
+    ) == ((), ())
+
+
+def test_declared_real_commutativity_and_constant_claim_are_local_range_support():
+    state = make_state(
+        "x*y+x=2",
+        "Z=y*x-x",
+        "Z=0",
+        domain="x,y,Z are real scalar variables.",
+        raw_content="Domain: x,y,Z are real scalar variables.\nHint only.\nZ=0",
+    )
+    refs = state.trajectory().applicable_artifact_refs
+    artifacts, evidence = materialize_correction_support(state.snapshot(), refs, **context(state))
+    assert len(artifacts) == 2 and all(e.status == "succeeded" for e in evidence)
+    state.append(expected_revision=1, artifacts=artifacts, evidence=evidence)
+    grant = bindings(state)[0].as_grant()
+    calculation = {
+        "authority": [grant.to_dict()],
+        "trajectory": state.trajectory().to_dict(),
+        "verified_grounded_refs": [],
+    }
+    inputs = publication_input(state, calculation)
+    accepted = accept_response(
+        state,
+        calculation,
+        inputs,
+        json.dumps(
+            {
+                "authority_basis": inputs["authority_basis"],
+                "grant_ids": [inputs["offers"][0]["grant_id"]],
+            }
+        ),
+    )
+    assert "Z=2 - 2*x" in accepted.content
+    assert "x,y,Z are real scalar variables." in accepted.content
+    receipt = json.loads(accepted.metadata_json)["math_publication"]
+    assert receipt["content_digest"] == hashlib.sha256(accepted.content.encode()).hexdigest()
+    assert state.snapshot().artifacts[0].verification_status == "qualified"
 
 
 @pytest.mark.parametrize(

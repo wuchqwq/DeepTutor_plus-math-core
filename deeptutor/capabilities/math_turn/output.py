@@ -13,7 +13,7 @@ from typing import Any
 
 from deeptutor.core.context import AcceptedTurnOutput, UnifiedContext
 from deeptutor.math_semantic.authority import MathSemanticGrant, math_content_digest
-from deeptutor.math_semantic.correction import CORRECTION_MECHANISM
+from deeptutor.math_semantic.correction import CORRECTION_MECHANISM, correction_bindings
 from deeptutor.math_semantic.state import MathMutation
 from deeptutor.math_semantic.support import OPERATION_MECHANISM
 
@@ -51,6 +51,20 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
         "authority_digest": _digest(calculation["authority"]),
     }
     offers = []
+    correction_grants = (
+        tuple(
+            binding.as_grant()
+            for binding in correction_bindings(
+                snapshot,
+                state.trajectory().applicable_artifact_refs,
+                submission=state.submission,
+                alignment=state.current_alignment(),
+                episode_id=state.source.identity.episode_id,
+            )
+        )
+        if any(grant.act_kind == "justification" for grant in grants)
+        else ()
+    )
     for grant in grants:
         if grant.act_kind not in {
             "orientation",
@@ -62,6 +76,10 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
             raise ValueError("publication has no renderer for this mathematical act")
         text = ACKNOWLEDGEMENT
         if grant.act_kind == "justification":
+            # A mathematical act name is not permission to disclose a complete
+            # target. Recheck the bounded scope before exposing any offer text.
+            if grant not in correction_grants:
+                continue
             artifact = artifacts.get(grant.content_ref.identifier)
             if (
                 grant.support_mechanism != CORRECTION_MECHANISM
@@ -75,8 +93,12 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
             symbol = definition.statement.split("=")[0]
             rhs, difference = request["outputs"][1], request["outputs"][4]
             claim = request["context"]["claim"]["normalized_form"]
+            domain = "; ".join(
+                fact["value"] for fact in request["context"]["scalar_domain"]["facts"]
+            )
             text = (
-                f"Relative to the explicit premises {definition.statement} and {premise.statement}, "
+                f"Under the explicit scalar domain {domain}, relative to the explicit premises "
+                f"{definition.statement} and {premise.statement}, "
                 f"the algebra gives {symbol}={rhs}. In your claim {claim}, the right-hand side "
                 f"minus this derived right-hand side is {difference}. The two agree only when "
                 f"{difference}=0; they are not identical expressions. "

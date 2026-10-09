@@ -352,6 +352,95 @@ async def test_correction_generation_revision_change_cannot_publish(publication_
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
+    "case",
+    ["matrix", "matrix_range", "missing_domain", "target_value", "constant_range", "scalar_range"],
+)
+async def test_domain_and_target_disclosure_scope_reaches_host_publication(
+    publication_host_factory, case
+):
+    from .test_bounded_correction import make_state
+
+    host, generation, _ = publication_host_factory()
+    claim = "Z=0"
+    if case.startswith("matrix"):
+        claim = "Z=x"
+        domain = "x,y,Z are 2x2 real matrices; * is ordered multiplication; 0 is the zero matrix"
+        state = make_state(
+            "x*y=0",
+            "Z=y*x",
+            claim,
+            domain=domain,
+            target="range of Z=y*x" if case == "matrix_range" else "Z=y*x",
+            raw_content=f"Domain: {domain}\nGiven: x*y=0\nTarget: Z=y*x\n{claim}",
+        )
+    elif case == "missing_domain":
+        state = make_state("x+y=2", "Z=x-y", claim, domain=())
+    elif case == "scalar_range":
+        state = make_state(
+            "x+y=2",
+            "Z=x-y",
+            claim,
+            objective=("Give a small hint; do not reveal the final range.",),
+        )
+    else:
+        target = "Z=x+y" if case == "target_value" else "range of Z=x+y"
+        request = "Determine Z; give a small hint and do not reveal the final answer."
+        state = make_state(
+            "x+y=2",
+            "Z=x+y",
+            claim,
+            target=target,
+            domain="x,y,Z are real scalar variables.",
+            objective=(request,),
+            raw_content=f"Domain: x,y,Z are real scalar variables.\nRequest: {request}\n{claim}",
+        )
+    host.source = state.source
+    host.scope = host.math_scope()
+    catalog = host.engine.capability_registry.catalog
+    entry = catalog.get("turn", "math_turn")
+    capability = entry.factory()
+    capability._provider.propose = lambda projection: {
+        "claims": [
+            {
+                "evidence": {
+                    "quote": claim,
+                    "occurrence": projection.response_text.count(claim) - 1,
+                },
+                "claim_type": "equation",
+            }
+        ]
+    }
+    catalog.register(
+        name="math_turn",
+        kind="turn",
+        manifest=entry.manifest,
+        factory=lambda: capability,
+        replace=True,
+    )
+    generation.mode = "correction" if case == "scalar_range" else "operation"
+    _, turn = await host.submit(state.submission.raw_content)
+    _, body, metadata, _ = assistant_row(host, turn["id"])
+    offers = generation.calls[-1]["inputs"]["offers"]
+    assert host.result()["alignment"]["claims"][0]["parse_status"] == "parsed"
+    if case == "scalar_range":
+        assert "Z=2 - 2*y" in body and "Under the explicit scalar domain" in body
+        assert any(o["grant"]["act_kind"] == "justification" for o in offers)
+    else:
+        assert not any(o["grant"]["act_kind"] == "justification" for o in offers)
+        assert "Try this next step:" in body and "Expand " in body
+        assert "the algebra gives" not in body and "derived right-hand side" not in body
+        assert "Z=0" not in body and "Z=2" not in body
+    receipt = metadata["accepted_output"]["math_publication"]
+    assert not any(g["act_kind"] == "result" for g in receipt["selected_grants"])
+    assert receipt["content_digest"] == hashlib.sha256(body.encode()).hexdigest()
+    first, second = await replay(host, turn), await replay(host, turn)
+    assert first == second
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
     "statement,definition,kind,kwargs,action",
     [
         ("x+1=0", None, "expand", {"expression": "(x+1)-(0)"}, "Expand (x+1)-(0)."),
