@@ -211,13 +211,18 @@ def artifact_content_digest(artifact: MathArtifact) -> str:
 
 
 def resolve_math_content_support(
-    snapshot: MathWorkspaceSnapshot, target_refs: tuple[str, ...]
+    snapshot: MathWorkspaceSnapshot,
+    target_refs: tuple[str, ...],
+    *,
+    submission=None,
+    alignment=None,
+    episode_id=None,
 ) -> tuple[MathContentSupportBinding, ...]:
     """Resolve only registered built-in mechanisms from a trusted pinned snapshot.
 
-    No caller-supplied role/scope string creates a binding. In particular this
-    version has no semantic justification mechanism; operation evidence cannot
-    be used to authorize explanatory prose by changing the requested act.
+    No caller-supplied role/scope string creates a binding. Conditional algebra
+    justification requires its own exact current accepted-claim context;
+    operation evidence cannot authorize prose by changing the requested act.
     """
     by_ref = {item.artifact_id: item for item in snapshot.artifacts}
     bindings = []
@@ -301,4 +306,15 @@ def resolve_math_content_support(
                         )
                     )
     bindings.extend(_typed_operation_bindings(snapshot, target_refs))
+    from .correction import correction_bindings
+
+    bindings.extend(
+        correction_bindings(
+            snapshot,
+            target_refs,
+            submission=submission,
+            alignment=alignment,
+            episode_id=episode_id,
+        )
+    )
     return tuple(bindings)

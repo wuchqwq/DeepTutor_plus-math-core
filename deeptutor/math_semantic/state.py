@@ -312,7 +312,27 @@ class MathMutation:
     def authorize(
         self, selected_refs: tuple[str, ...], grants: tuple[MathSemanticGrant, ...]
     ) -> None:
-        require_math_authority(self.snapshot(), self.trajectory(), selected_refs, grants)
+        require_math_authority(
+            self.snapshot(),
+            self.trajectory(),
+            selected_refs,
+            grants,
+            submission=self.submission,
+            alignment=self.current_alignment(),
+            episode_id=self.source.identity.episode_id,
+        )
+
+    def current_alignment(self) -> ResponseAlignment | None:
+        candidates = (_decode(value) for value in self._records["alignments"].values())
+        return max(
+            (
+                a
+                for a in candidates
+                if a.student_response_ref.identifier == self.submission.response_id
+            ),
+            key=lambda a: a.workspace_revision,
+            default=None,
+        )
 
     def transform(
         self,

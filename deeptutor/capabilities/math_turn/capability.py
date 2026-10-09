@@ -20,6 +20,7 @@ from deeptutor.math_semantic.alignment import AlignmentEvaluator
 from deeptutor.math_semantic.authority import MathSemanticGrant
 from deeptutor.math_semantic.claims import ResponseAlignment
 from deeptutor.math_semantic.codec import _payload
+from deeptutor.math_semantic.correction import materialize_correction_support
 from deeptutor.math_semantic.proposals import (
     AlignmentProjection,
     AlignmentProposal,
@@ -186,8 +187,14 @@ class MathTurnCapability(TurnCapability):
             grants = tuple(MathSemanticGrant.orientation(ref) for ref in selected)
             grants += tuple(
                 binding.as_grant()
-                for binding in resolve_math_content_support(snapshot, selected)
-                if binding.act_kind in {"chosen_operation", "operation_options"}
+                for binding in resolve_math_content_support(
+                    snapshot,
+                    selected,
+                    submission=state.submission,
+                    alignment=state.current_alignment(),
+                    episode_id=source.identity.episode_id,
+                )
+                if binding.act_kind in {"chosen_operation", "operation_options", "justification"}
                 or (binding.act_kind == "result" and binding.target_artifact_ref in verified)
             )
             state.authorize(selected, grants)
@@ -212,6 +219,16 @@ class MathTurnCapability(TurnCapability):
             applicable,
             preferred_refs=alignment.matched_artifact_refs,
         )
+        corrections, correction_evidence = await asyncio.to_thread(
+            materialize_correction_support,
+            snapshot,
+            applicable,
+            submission=submission,
+            alignment=alignment,
+            episode_id=source.identity.episode_id,
+        )
+        operations += corrections
+        evidence += correction_evidence
 
         def prepare_publication(state: MathMutation) -> tuple[dict[str, Any], dict[str, Any]]:
             if state.snapshot() != snapshot:

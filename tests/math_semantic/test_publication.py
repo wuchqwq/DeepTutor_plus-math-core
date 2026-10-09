@@ -68,6 +68,13 @@ class Generation:
         if self.mode == "result":
             assert result, "positive control requires actual Core result authority"
             candidate["grant_ids"] = result
+        elif self.mode == "correction":
+            candidate["grant_ids"] = [
+                offer["grant_id"]
+                for offer in inputs["offers"]
+                if offer["grant"]["act_kind"] == "justification"
+            ][:1]
+            assert candidate["grant_ids"], "requires actual conditional correction evidence"
         elif self.mode == "operation":
             candidate["grant_ids"] = [
                 offer["grant_id"]
@@ -284,6 +291,63 @@ async def test_qualified_premise_publishes_executable_operation_and_replays_exac
     assert first == second and host.state() == before
     assert "".join(e["content"] for e in first if e["type"] == "content") == body
     assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_conditional_correction_body_receipt_events_and_replay_agree(
+    publication_host_factory,
+):
+    from .test_bounded_correction import make_state
+
+    host, generation, _ = publication_host_factory()
+    host.source = make_state().source
+    host.scope = host.math_scope()
+    generation.mode = "correction"
+    _, turn = await host.submit("Q=3+2*x*y")
+    body = assistant_row(host, turn["id"])[1]
+    assert "Q=-2*x*y + 3" in body and "4*x*y=0" in body
+    assert "not identical expressions" in body
+    assert not host.result()["verified_grounded_refs"]
+    offers = generation.calls[-1]["inputs"]["offers"]
+    assert not any(o["grant"]["act_kind"] == "result" for o in offers)
+    first = await replay(host, turn)
+    second = await replay(host, turn)
+    assert first == second
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    receipt = assistant_row(host, turn["id"])[2]["accepted_output"]["math_publication"]
+    assert receipt["content_digest"] == hashlib.sha256(body.encode()).hexdigest()
+    assert receipt["selected_grants"][0]["act_kind"] == "justification"
+    assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_correction_generation_revision_change_cannot_publish(publication_host_factory):
+    from .test_bounded_correction import make_state
+
+    host, generation, completions = publication_host_factory()
+    host.source = make_state().source
+    host.scope = host.math_scope()
+    generation.mode = "correction"
+
+    async def advance(_inputs):
+        context = host.math_contexts[-1]
+        authority = sqlite_episode_mutation(
+            context.runtime,
+            session_id=context.session_id,
+            binding=host.source,
+        )
+        await authority(
+            lambda state: state.append(
+                expected_revision=state.snapshot().workspace.revision,
+                status="partial",
+            )
+        )
+
+    generation.hook = advance
+    _, turn = await host.start("Q=3+2*x*y")
+    await host.finish(turn, status="failed")
+    assert turn["id"] not in host.state().get("host_math_publications", {})
+    assert_no_answer_leak(await replay(host, turn), completions[-1:])
 
 
 @pytest.mark.asyncio
