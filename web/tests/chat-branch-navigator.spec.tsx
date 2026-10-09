@@ -2,7 +2,6 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ChatMessageList } from '@/features/chat/messages'
-import { WatchingProvider } from '@/context/WatchingContext'
 import { initI18n } from '@/i18n/init'
 
 initI18n('en')
@@ -47,7 +46,7 @@ function renderList(
 ) {
   const onSwitchBranch = props.onSwitchBranch ?? vi.fn()
   const view = render(
-    <WatchingProvider>
+
       <ChatMessageList
         messages={forkedMessages}
         isStreaming={false}
@@ -57,7 +56,7 @@ function renderList(
         {...props}
         onSwitchBranch={onSwitchBranch}
       />
-    </WatchingProvider>,
+    ,
   )
   return { view, onSwitchBranch }
 }
@@ -108,7 +107,7 @@ describe('branch navigator discoverability (#1410)', () => {
     // Applying that selection (root -> sibling 1) puts the whole pre-edit
     // branch back on screen.
     view.rerender(
-      <WatchingProvider>
+
         <ChatMessageList
           messages={forkedMessages}
           isStreaming={false}
@@ -118,7 +117,7 @@ describe('branch navigator discoverability (#1410)', () => {
           selectedBranches={{ null: 1 }}
           onSwitchBranch={onSwitchBranch}
         />
-      </WatchingProvider>,
+      ,
     )
     expect(screen.getByText('Original question')).toBeVisible()
     expect(screen.getByText('Long answer on the original branch')).toBeVisible()
@@ -131,7 +130,7 @@ describe('branch navigator discoverability (#1410)', () => {
 
   it('renders no branch navigation for a linear session', () => {
     render(
-      <WatchingProvider>
+
         <ChatMessageList
           messages={[
             { id: 1, role: 'user', content: 'Only line', parentMessageId: null },
@@ -142,7 +141,7 @@ describe('branch navigator discoverability (#1410)', () => {
           onRegenerateMessage={() => undefined}
           onEditMessage={() => undefined}
         />
-      </WatchingProvider>,
+      ,
     )
     expect(
       screen.queryByRole('button', { name: 'Previous branch' }),

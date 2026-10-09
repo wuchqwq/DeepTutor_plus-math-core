@@ -34,6 +34,10 @@ def runtime_home(tmp_path, monkeypatch):
     home = tmp_path / "runtime"
     monkeypatch.setenv("DEEPTUTOR_HOME", str(home))
     monkeypatch.setenv("DT_SETUP_TEST_KEY", "setup-test-secret")
+    # API imports during suite collection can export the developer's ports.
+    # This fixture exercises saved settings, without operator env overrides.
+    monkeypatch.delenv("BACKEND_PORT", raising=False)
+    monkeypatch.delenv("FRONTEND_PORT", raising=False)
     select_runtime_home(home)
     yield home
     from deeptutor_cli.init_cmd import _reset_runtime_singletons

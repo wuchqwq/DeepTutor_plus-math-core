@@ -30,6 +30,53 @@ def test_sqlite_store_defaults_to_data_user_chat_history_db(tmp_path: Path) -> N
         service._user_data_dir = original_user_dir
 
 
+@pytest.mark.asyncio
+async def test_submission_reservation_and_admission_are_atomic_across_workers(tmp_path):
+    """#1793: duplicate transport retries cannot allocate separate chats or turns."""
+    stores = [SQLiteSessionStore(tmp_path / "shared.db") for _ in range(2)]
+    sessions = await asyncio.gather(
+        *(store.reserve_submission("same-submission", "digest") for store in stores)
+    )
+    assert sessions[0] == sessions[1]
+    turns = await asyncio.gather(
+        *(store.begin_turn(sessions[0], submission_id="same-submission") for store in stores)
+    )
+    assert turns[0]["id"] == turns[1]["id"]
+    assert sum(bool(turn.get("_submission_replay")) for turn in turns) == 1
+    assert len(await stores[0].list_sessions()) == 1
+
+
+@pytest.mark.asyncio
+async def test_submission_identity_does_not_cross_accounts_or_workspaces(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from deeptutor.services.workspace import context
+
+    scope = {"id": "one"}
+    monkeypatch.setattr(
+        context, "get_workspace_scope", lambda: SimpleNamespace(workspace_id=scope["id"])
+    )
+    first = SQLiteSessionStore(tmp_path / "account-one.db")
+    second = SQLiteSessionStore(tmp_path / "account-two.db")
+    one = await first.reserve_submission("same-key", "same-digest")
+    two = await second.reserve_submission("same-key", "same-digest")
+    assert one != two
+    scope["id"] = "two"
+    with pytest.raises(RuntimeError, match="different request or workspace"):
+        await first.reserve_submission("same-key", "same-digest")
+    assert len(await first.list_sessions()) == 1
+
+
+@pytest.mark.asyncio
+async def test_resend_does_not_recreate_a_recycled_conversation(tmp_path):
+    store = SQLiteSessionStore(tmp_path / "deleted.db")
+    session_id = await store.reserve_submission("original", "digest")
+    await store.soft_delete_session(session_id)
+    with pytest.raises(RuntimeError, match="Restore the original conversation"):
+        await store.reserve_submission("original", "digest")
+    assert len(await store.list_deleted_sessions()) == 1
+
+
 def test_sqlite_store_migrates_legacy_chat_history_db(tmp_path: Path) -> None:
     service = PathService.get_instance()
     original_root = service._project_root

@@ -214,6 +214,24 @@ def test_terminate_swallows_signal_errors_and_still_reaps(monkeypatch) -> None:
 # --------------------------------------------------------------------------
 
 
+def test_guarded_reclaim_does_not_signal_a_replaced_process(monkeypatch, fast_clock) -> None:
+    """#1795: revalidate ownership before both TERM and KILL, not just once."""
+    owned = {"current": True}
+    signals = []
+
+    def signal_target(pid, pgid, sig):
+        signals.append(sig)
+        owned["current"] = False
+
+    monkeypatch.setattr(launcher, "_send_tree_signal", signal_target)
+    monkeypatch.setattr(launcher, "_port_accepts_connection", lambda _port: True)
+    launcher._kill_port_listeners(
+        {8000: [(4242, "old backend")]},
+        listener_guard=lambda _port, _pid: owned["current"],
+    )
+    assert signals == [signal.SIGTERM]
+
+
 def test_kill_port_listeners_sigterm_frees_the_port(monkeypatch, fast_clock) -> None:
     occupied = {8000}
     signals = _SignalRecorder()

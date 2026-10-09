@@ -296,9 +296,12 @@ class TaskBoardStore:
         with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
             for sid in session_ids:
-                for table in ("session_tasks", "session_task_status"):
+                for statement in (
+                    "UPDATE session_tasks SET workspace_id=? WHERE workspace_id=? AND session_id=?",
+                    "UPDATE session_task_status SET workspace_id=? WHERE workspace_id=? AND session_id=?",
+                ):
                     connection.execute(
-                        f"UPDATE {table} SET workspace_id=? WHERE workspace_id=? AND session_id=?",
+                        statement,
                         (target, source, sid),
                     )
             self._changed(connection)
@@ -308,9 +311,12 @@ class TaskBoardStore:
             return
         with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
-            for table in ("session_tasks", "session_task_status"):
+            for statement in (
+                "DELETE FROM session_tasks WHERE workspace_id=? AND session_id=?",
+                "DELETE FROM session_task_status WHERE workspace_id=? AND session_id=?",
+            ):
                 connection.execute(
-                    f"DELETE FROM {table} WHERE workspace_id=? AND session_id=?",
+                    statement,
                     (workspace_id, session_id),
                 )
             self._changed(connection)
