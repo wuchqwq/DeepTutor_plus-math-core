@@ -245,10 +245,17 @@ async def test_orientation_only_publishes_no_task_mathematics(publication_host_f
     _, turn = await host.submit(A)
     events = await replay(host, turn)
     assert host.result()["verification_status"] == "UNKNOWN"
+    offered = generation.calls[-1]["inputs"]["offers"]
     assert all(
         offer["grant"]["act_kind"] == "orientation"
-        for offer in generation.calls[-1]["inputs"]["offers"]
+        for offer in offered
+        if "contract" not in offer["grant"]
     )
+    feedback = [offer["grant"] for offer in offered if "contract" in offer["grant"]]
+    assert len(feedback) == 1
+    assert feedback[0]["contract"] == "bounded_math_feedback_v1"
+    assert feedback[0]["act_kind"] == "neutral_clarification"
+    assert feedback[0]["support_scope"] == "no_task_math_content"
     assert assistant_row(host, turn["id"])[1] == ACKNOWLEDGEMENT
     assert all(A not in event["content"] for event in events)
     assert all("claims" not in event.get("metadata", {}) for event in events)
