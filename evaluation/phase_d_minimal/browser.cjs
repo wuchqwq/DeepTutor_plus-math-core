@@ -31,8 +31,8 @@ async function main() {
       try { payload = JSON.parse(String(frame.payload)); } catch { return; }
       if (payload.type === 'auth' || payload.token || payload.authorization) return;
       record(direction, payload);
-      if (direction === 'framereceived' && ['done', 'error'].includes(payload.type)) {
-        observedTurns.push({ ...payload, status: payload.metadata?.status || (payload.type === 'error' ? 'failed' : undefined) });
+      if (direction === 'framereceived' && ['done', 'error', 'protocol_error'].includes(payload.type)) {
+        observedTurns.push({ ...payload, status: payload.metadata?.status || (['error', 'protocol_error'].includes(payload.type) ? 'failed' : undefined) });
       }
     });
   });
@@ -75,6 +75,22 @@ async function main() {
       record('turn_observed', { index: i, method_confirmed: confirmed, terminal: terminal || 'NOT_OBSERVED' });
       if (!terminal) throw new Error('Actual terminal done/error was not observed; retain evidence, do not retry sample');
       if ((terminal.state || terminal.status || terminal.turn?.status) !== 'completed') throw new Error('Actual turn failed or was cancelled; retain first result');
+      // A streamed done may precede durable finalization. Read the existing
+      // session endpoint before the next student submission; never retry a
+      // rejected start_turn or infer that its request reached the provider.
+      if (i + 1 < inputs.length) {
+        if (!terminal.session_id) throw new Error('No actual session ID for durable turn synchronization');
+        let idle = false;
+        for (let poll = 0; poll < 60; poll++) {
+          const reply = await page.request.get(new URL(`/api/sessions/${encodeURIComponent(terminal.session_id)}`, base).href);
+          if (!reply.ok()) throw new Error(`Actual session readiness HTTP ${reply.status()}`);
+          const session = await reply.json();
+          if (Array.isArray(session.active_turns) && session.active_turns.length === 0) { idle = true; break; }
+          await page.waitForTimeout(250);
+        }
+        record('actual_session_ready', { session_id: terminal.session_id, idle });
+        if (!idle) throw new Error('Actual session remains active; no next submission');
+      }
     }
     const before = await page.locator('body').innerText();
     fs.writeFileSync(path.join(evidence, 'before-refresh.txt'), before);
