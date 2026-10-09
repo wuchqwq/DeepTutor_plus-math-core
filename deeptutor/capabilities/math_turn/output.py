@@ -28,6 +28,23 @@ def _digest(value: object) -> str:
     ).hexdigest()
 
 
+def _duplicate_operation_alias(
+    grant: dict[str, Any], content: str, seen: dict[tuple[str, str], str]
+) -> bool:
+    """Fold only cross-act aliases of one complete relation and exact content."""
+    kind = grant["act_kind"]
+    if kind not in {"chosen_operation", "operation_options"}:
+        return False
+    relation = json.dumps(
+        {key: value for key, value in grant.items() if key != "act_kind"},
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    previous = seen.setdefault((relation, content), kind)
+    return previous != kind
+
+
 def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[str, Any]:
     """Pin exact grants and render only the action later selected for publication.
 
@@ -256,7 +273,7 @@ def _teaching_context(state: MathMutation, calculation: dict[str, Any]) -> dict[
             return result
         targets = calculation["trajectory"]["applicable_artifact_refs"]
         allowed = [b.as_grant().to_dict() for b in resolve_math_content_support(old, targets)]
-        operations = []
+        validated = []
         artifacts = {a.artifact_id: a for a in old.artifacts}
         for grant in trace["selected_grants"]:
             if grant["act_kind"] not in {"chosen_operation", "operation_options"}:
@@ -266,9 +283,18 @@ def _teaching_context(state: MathMutation, calculation: dict[str, Any]) -> dict[
             if grant["support_mechanism"] != OPERATION_MECHANISM:
                 return result
             operation = artifacts[grant["content_ref"]["identifier"]]
-            operations.append(json.loads(operation.statement))
-        if not operations:
+            validated.append((grant, operation.statement))
+        if not validated:
             continue
+        # Validate every original relation before folding aliases. The pinned
+        # operation literal is identical for aliases; historical receipt bytes
+        # and selected_grants remain untouched, and aliases use one task slot.
+        seen: dict[tuple[str, str], str] = {}
+        operations = [
+            json.loads(statement)
+            for grant, statement in validated
+            if not _duplicate_operation_alias(grant, statement, seen)
+        ]
         result["previous_task"] = {
             "publication_id": entry["publication_id"],
             "turn_id": submitted.turn_id,
@@ -366,11 +392,16 @@ def accept_response(
     state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
     # Orientation supplies no task mathematics. The existing acknowledgement
     # is also the no-selection operational status; it asserts no math truth.
-    results = [
-        by_id[key]["text"]
-        for key in selected
-        if by_id[key]["grant"]["act_kind"] in {"result", "chosen_operation", "operation_options"}
-    ]
+    seen: dict[tuple[str, str], str] = {}
+    results = []
+    for key in selected:
+        offer = by_id[key]
+        if offer["grant"]["act_kind"] not in {"result", "chosen_operation", "operation_options"}:
+            continue
+        # Complete chosen authority has already passed above. Presentation
+        # folding never removes a relation from validation or the receipt.
+        if not _duplicate_operation_alias(offer["grant"], offer["text"], seen):
+            results.append(offer["text"])
     response = "\n\n".join([ACKNOWLEDGEMENT, *results])
     trace = {
         "basis": current["basis"],
