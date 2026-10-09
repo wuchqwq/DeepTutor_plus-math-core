@@ -33,7 +33,9 @@ CONDITIONAL, and the local scope. Answer-type claims, scalar answers, and claims
 corresponding to authored answer artifacts receive no confirmation. Known answer
 structures are excluded from the complete pinned snapshot, independently of
 the model's candidate artifact subset; existing accepted answer relations are
-also excluded. Equality sides are parsed with the checker's existing bounded
+also excluded. Both authored `statement` and explicit `normalized_form` are
+scanned independently; an unsupported representation does not skip the other.
+Equality sides are parsed with the checker's existing bounded
 polynomial grammar and compared as an unordered pair of ASTs without source
 locations. AST-invariant parentheses/whitespace and left/right exchange have
 one structure. This does not expand, substitute, reorder sums/products, change

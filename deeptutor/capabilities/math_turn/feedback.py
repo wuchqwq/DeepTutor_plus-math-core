@@ -115,10 +115,13 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
     for artifact in snapshot.artifacts:
         if artifact.artifact_id not in answer_refs:
             continue
-        try:
-            answer_structures.add(_equality_structure(artifact.normalized_form))
-        except (ValueError, SyntaxError, TypeError):
-            continue
+        # The artifact contract permits an explicit normalized form with a
+        # different structure. Each existing representation is independent.
+        for representation in (artifact.statement, artifact.normalized_form):
+            try:
+                answer_structures.add(_equality_structure(representation))
+            except (ValueError, SyntaxError, TypeError):
+                continue
     proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
     for ordinal, claim in enumerate(current.claims[:4], 1):
         if (
