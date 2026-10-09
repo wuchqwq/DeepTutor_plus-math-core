@@ -1,8 +1,8 @@
 {
-  "archive_relative_path": "data/phase-d-delivery/phase-d-first-round-v2.zip",
-  "archive_bytes": 7396031,
-  "archive_sha256": "ad1091fff9902ee42fdf3bdfd56e90fb2533e2823d1c88bde22578f04b071a76",
-  "file_count": 449,
+  "archive_relative_path": "data/phase-d-delivery/phase-d-first-round-final.zip",
+  "archive_bytes": 7397164,
+  "archive_sha256": "363a6d3ca62d35d8486f9856ae61ef24352dbbe6f8352192a62f81b0afafc96c",
+  "file_count": 450,
   "exclusion": "No runtime homes, model Catalog, key files, auth headers or cookies. SDK/http/browser observation already uses field whitelists. Credential-shaped text scan passed; never compared against or read a key.",
   "known_early_gaps": [
     "Original native ordinary S1 main requests missed SDK wire observation; actual persisted usage retained.",
@@ -2254,7 +2254,15 @@
       "path": "data/phase-d-preparation/existing_support_probe.py",
       "bytes": 2100,
       "sha256": "c52e3a753b90ed4f21913ca6781c0a09ecf07d3030dcb3d7c707627b49c71029"
+    },
+    {
+      "path": "evaluation/phase_d_minimal/results/visual_review.md",
+      "bytes": 1270,
+      "sha256": "a4b35ec4a6bd6c1cafee7d0533f6976899f0ed64d3fbf9b069ff024071a698b7"
     }
   ],
-  "prior_delivery_retained": "data/phase-d-delivery/phase-d-first-round.zip"
+  "prior_delivery_retained": [
+    "data/phase-d-delivery/phase-d-first-round.zip",
+    "data/phase-d-delivery/phase-d-first-round-v2.zip"
+  ]
 }
