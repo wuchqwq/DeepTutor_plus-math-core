@@ -57,8 +57,17 @@ prefix and its existing accepted publication ledger. A prior typed operation is
 recognized only by its actual receipt and supported exact content. Correct local
 AST subexpressions can contribute locally; exact whole-operation equalities can
 correspond to the whole assignment. Merely repeating the unexpanded expression
-does not establish completion. Unsupported correspondence is UNKNOWN. Pure
-clarification can retain the preceding claim/evidence only across unchanged
+does not establish completion. Unsupported correspondence is UNKNOWN.
+Expansion correspondence requires the shown right side, within the bounded AST
+grammar, to be an explicit sum of signed monomials with scalar powers. A product
+containing a sum or a power of a compound base is not an expanded presentation.
+Thus the real polynomial identity `E=0+E`, with
+`E=(a*(b+1))-(a*b+a)`, remains IDENTITY but has UNKNOWN operation correspondence;
+the actual native residual assignment and `E=0` positive control are covered by
+real tool evidence and accepted publication receipts. This also covers other
+variables, distributive expansions and rational coefficients, without filtering
+one particular restatement string. Pure clarification can retain the preceding
+claim/evidence only across unchanged
 mathematical scope and compatible path interpretation. No new pending-work state
 machine is persisted. A receipt denotes accepted assignment, not receipt by,
 understanding of, or mastery by the student.
@@ -110,6 +119,12 @@ recovery, confirmation, support, trajectory or authority code was changed to
 resolve these test failures. The initial compatibility-assertion failures remain
 in `targeted-recovery07`; the original 12 cases pass in `targeted-recovery08`.
 The subsequent clean final-HEAD full run is recorded separately.
+The `c4b01c9d35b6ee2be2529185c603f04674bee1e3` run in `full-final-head02` passed
+all 948 existing cases; it did not contain the later independently reproduced
+distributivity restatement control. The bounded expansion-form fix above adds
+eight native accepted-claim/real-tool/assignment-receipt cases. Their initial
+test-field typo and subsequent exact controls remain in `targeted-operation09`
+and `targeted-operation10`. The new final-HEAD full run has its own manifest.
 The standalone architecture gate exits 1 on both this change and an independent
 export of approved base `b196b6a5f216cbe2fdc438e5f9076883fc959a79`: the existing
 `core -> domain_runtime` cycle and `core/context.py:16` runtime import. Its logs

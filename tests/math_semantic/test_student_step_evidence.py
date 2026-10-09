@@ -480,6 +480,58 @@ def test_non_s4_whole_sum_and_one_square_are_distinct():
     )
 
 
+@pytest.mark.parametrize(
+    "domain,operation,response,scope",
+    [
+        ("a,b are real", "a*(b+1)=a*b+a", "(a*(b+1))-(a*b+a)=0+((a*(b+1))-(a*b+a))", "UNKNOWN"),
+        ("a,b are real", "a*(b+1)=a*b+a", "(a*(b+1))-(a*b+a)=1*((a*(b+1))-(a*b+a))", "UNKNOWN"),
+        ("a,b are real", "a*(b+1)=a*b+a", "(a*(b+1))-(a*b+a)=-(-((a*(b+1))-(a*b+a)))", "UNKNOWN"),
+        ("a,b are real", "a*(b+1)=a*b+a", "(a*(b+1))-(a*b+a)=0", "WHOLE_OPERATION"),
+        ("a,b are real", "a*(b+1)=a*b+a", "a*(b+1)=a*b+a", "WHOLE_OPERATION"),
+        ("m,n are real", "m*(n-2)=m*n-2*m", "m*(n-2)=m*n-2*m", "WHOLE_OPERATION"),
+        (
+            "m,n are real",
+            "m*(n-2)=m*n-2*m",
+            "(m*(n-2))-(m*n-2*m)=0+((m*(n-2))-(m*n-2*m))",
+            "UNKNOWN",
+        ),
+        ("a,b are real", "a*(b/2+1)=a*b/2+a", "a*(b/2+1)=a*b/2+a", "WHOLE_OPERATION"),
+    ],
+)
+def test_native_residual_assignment_requires_visible_polynomial_expansion(
+    domain, operation, response, scope
+):
+    reviewed = source(domain=domain, givens=(), definitions=(), operation=operation)
+    first = state_for(reviewed, operation)
+    payload, _, receipt = issue_task(first, operation)
+    left, right = operation.split("=")
+    requested = f"({left})-({right})"
+    actual_operations = [
+        a for a in first.snapshot().artifacts if a.claim_kind == "operation_description"
+    ]
+    assert len(actual_operations) == 1
+    assert json.loads(actual_operations[0].statement)["kwargs"] == {"expression": requested}
+    proof_id = actual_operations[0].tool_evidence_refs[0]
+    proof = next(e for e in first.snapshot().tool_evidence if e.evidence_id == proof_id)
+    assert proof.tool_name == "expand" and proof.output_summary == "0"
+    second = state_for(reviewed, response, payload=payload, prefix=first.prefix)
+    aligned = align(second, response)
+    envelope = next(e for e in aligned.math_evidence if e.tool_version == STEP_VERSION)
+    assert json.loads(envelope.output_summary)["local_relation"] == "IDENTITY"
+    private = publication_input(second, calculation(second))["private_teaching_context"]
+    assert private["previous_task"]["publication_id"] == receipt.publication_id
+    assert [r["kwargs"] for r in private["previous_task"]["operations"]] == [
+        {"expression": requested}
+    ]
+    assert {c["scope"] for c in private["operation_correspondence"]} == {scope}
+    assert all(
+        c["stage_completion"] == "UNKNOWN" and c["mastery"] == "NO_INFERENCE"
+        for c in private["operation_correspondence"]
+    )
+    assert aligned.validated_artifact_refs == aligned.novel_path_refs == ()
+    assert all(g["act_kind"] != "result" for g in calculation(second)["authority"])
+
+
 @pytest.mark.asyncio
 async def test_real_host_selector_consumes_evidence_and_receipt_without_publication_expansion(
     publication_host_factory,

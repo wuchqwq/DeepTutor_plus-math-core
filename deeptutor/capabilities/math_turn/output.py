@@ -126,10 +126,27 @@ def _operation_correspondence(
         shown = tree(parts[0])
         transformed = tree(parts[1])
         key = ast.dump(shown)
-        if key == ast.dump(transformed) or any(
-            isinstance(n, ast.BinOp) and isinstance(n.op, ast.Pow) and isinstance(n.left, ast.BinOp)
-            for n in ast.walk(transformed)
-        ):
+
+        def monomial(node):
+            # _polynomial already bounds/validates this AST. Here we require
+            # visible expansion, not another proof of algebraic equivalence.
+            if isinstance(node, (ast.Name, ast.Constant)):
+                return True
+            if isinstance(node, ast.UnaryOp):
+                return monomial(node.operand)
+            if isinstance(node, ast.BinOp):
+                if isinstance(node.op, (ast.Mult, ast.Div)):
+                    return monomial(node.left) and monomial(node.right)
+                if isinstance(node.op, ast.Pow):
+                    return isinstance(node.left, (ast.Name, ast.Constant))
+            return False
+
+        def expanded(node):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub)):
+                return expanded(node.left) and expanded(node.right)
+            return monomial(node)
+
+        if key == ast.dump(transformed) or not expanded(transformed):
             return "UNKNOWN"
         residual = tree(f"({parts[0]})-({parts[1]})")
         if key == ast.dump(requested) or ast.dump(residual) == ast.dump(requested):
