@@ -42,6 +42,8 @@ class AlignmentMutation:
     artifacts: tuple[MathArtifact, ...]
     paths: tuple[SolutionPath, ...]
     evidence: tuple[ToolEvidence, ...]
+    input_snapshot: MathWorkspaceSnapshot | None = None
+    request_basis: tuple[AcceptedSubmission, AlignmentProposal, str, str, bool] | None = None
 
 
 def _digest(value: object) -> str:
@@ -395,6 +397,7 @@ def materialize_alignment(
     *,
     provider_id: str,
     config_digest: str,
+    check_steps: bool = False,
 ) -> AlignmentMutation:
     proposal = AlignmentProposal.from_value(proposal)
     text = response.text_content()
@@ -644,4 +647,34 @@ def materialize_alignment(
             if validated_artifacts
             else snapshot.workspace.revision,
         )
-    return AlignmentMutation(alignment, validated_artifacts, candidate_paths, validation_evidence)
+    if check_steps:
+        import time
+
+        from .tools import MathToolRegistry
+        from .validation import check_student_step
+
+        registry = MathToolRegistry(max_calls=32)
+        deadline = time.monotonic() + 10
+        local = tuple(
+            proof
+            for claim in claims[:4]
+            for proof in check_student_step(claim, snapshot, registry, deadline=deadline)
+        )
+        validation_evidence += local
+        alignment = replace(
+            alignment,
+            math_evidence=alignment.math_evidence + local,
+            validation_evidence_refs=alignment.validation_evidence_refs
+            + tuple(e.evidence_id for e in local),
+            output_workspace_revision=snapshot.workspace.revision + 1
+            if validated_artifacts or validation_evidence
+            else snapshot.workspace.revision,
+        )
+    return AlignmentMutation(
+        alignment,
+        validated_artifacts,
+        candidate_paths,
+        validation_evidence,
+        input_snapshot=snapshot,
+        request_basis=(response, proposal, provider_id, config_digest, check_steps),
+    )

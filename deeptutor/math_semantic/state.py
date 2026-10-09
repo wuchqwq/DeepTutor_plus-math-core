@@ -12,7 +12,7 @@ import json
 from typing import Any, Protocol, TypeVar, cast
 
 from .accepted import AcceptedSubmission, EpisodeIdentity
-from .alignment import materialize_alignment
+from .alignment import AlignmentMutation, materialize_alignment
 from .authority import MathSemanticGrant
 from .ceiling import require_math_authority
 from .claims import ResponseAlignment
@@ -156,6 +156,35 @@ class MathMutation:
         self._records["head"] = after.workspace.revision
         return after
 
+    def replay_alignment(
+        self,
+        proposal: AlignmentProposal,
+        *,
+        expected_revision: int,
+        provider_id: str,
+        config_digest: str,
+        check_steps: bool = False,
+    ) -> ResponseAlignment | None:
+        """Exact original slot/request lookup; never execute mathematical tools."""
+        slot = f"{self.submission.response_id}:{expected_revision}"
+        request = _digest(
+            {
+                "proposal": asdict(AlignmentProposal.from_value(proposal)),
+                "provider": provider_id,
+                "config": config_digest,
+                "submission": asdict(self.submission),
+                "check_steps": check_steps,
+            }
+        )
+        old = self._records["alignments"].get(slot)
+        if old is not None and slot in self._records.get("alignment_inputs", {}):
+            if self._records["alignment_inputs"][slot] != request:
+                raise ValueError("immutable alignment input changed")
+            alignment = _decode(old)
+            self._check_step_evidence(alignment)
+            return alignment
+        return None
+
     def align(
         self,
         proposal: AlignmentProposal,
@@ -163,25 +192,59 @@ class MathMutation:
         expected_revision: int,
         provider_id: str,
         config_digest: str,
+        check_steps: bool = False,
+        prepared: AlignmentMutation | None = None,
     ) -> ResponseAlignment:
+        proposal = AlignmentProposal.from_value(proposal)
+        replay = self.replay_alignment(
+            proposal,
+            expected_revision=expected_revision,
+            provider_id=provider_id,
+            config_digest=config_digest,
+            check_steps=check_steps,
+        )
+        if replay is not None:
+            return replay
         snapshot = self.snapshot()
         if snapshot.workspace.revision != expected_revision:
             raise RevisionConflict("alignment input workspace revision is stale")
-        mutation = materialize_alignment(
+        mutation = prepared or materialize_alignment(
             self.submission,
             snapshot,
             proposal,
             provider_id=provider_id,
             config_digest=config_digest,
+            check_steps=check_steps,
         )
+        if mutation.input_snapshot != snapshot or mutation.request_basis != (
+            self.submission,
+            proposal,
+            provider_id,
+            config_digest,
+            check_steps,
+        ):
+            raise ValueError("prepared alignment input snapshot or request changed")
         alignment = mutation.alignment
+        if (
+            alignment.student_response_ref
+            != SourceRef("student_response", self.submission.response_id)
+            or alignment.math_workspace_ref != snapshot.workspace_ref
+            or alignment.workspace_revision != expected_revision
+            or alignment.output_workspace_revision
+            != expected_revision + bool(mutation.artifacts or mutation.evidence)
+            or alignment.math_evidence != mutation.evidence
+            or any(
+                replace(e, evidence_id=None).evidence_id != e.evidence_id for e in mutation.evidence
+            )
+        ):
+            raise ValueError("prepared alignment has altered binding or tool receipts")
         slot = f"{self.submission.response_id}:{expected_revision}"
         old = self._records["alignments"].get(slot)
         if old is not None:
             if _decode(old) != alignment:
                 raise ValueError("immutable alignment conflicts with a different result")
             return alignment
-        if mutation.artifacts:
+        if mutation.artifacts or mutation.evidence:
             self.append(
                 expected_revision=expected_revision,
                 artifacts=mutation.artifacts,
@@ -189,7 +252,51 @@ class MathMutation:
                 paths=mutation.paths,
             )
         self._records["alignments"][slot] = _payload(alignment)
+        if check_steps:
+            self._records.setdefault("alignment_inputs", {})[slot] = _digest(
+                {
+                    "proposal": asdict(proposal),
+                    "provider": provider_id,
+                    "config": config_digest,
+                    "submission": asdict(self.submission),
+                    "check_steps": check_steps,
+                }
+            )
+        self._check_step_evidence(alignment)
         return alignment
+
+    def _check_step_evidence(self, alignment: ResponseAlignment) -> None:
+        from .validation import STEP_VERSION, step_basis
+
+        before = self.snapshot(alignment.workspace_revision)
+        after = self.snapshot(alignment.output_workspace_revision)
+        proofs = {e.evidence_id: e for e in after.tool_evidence}
+        for evidence in alignment.math_evidence:
+            if evidence.tool_version != STEP_VERSION:
+                continue
+            fresh = replace(evidence, evidence_id=None)
+            binding = json.loads(evidence.input_summary)
+            claims = {c.claim_id: asdict(c) for c in alignment.claims}
+            claim = binding["claim"]
+            if (
+                fresh.evidence_id != evidence.evidence_id
+                or proofs.get(evidence.evidence_id) != evidence
+                or binding["episode"] != self.source.identity.episode_id
+                or binding["revision"] != alignment.workspace_revision
+                or alignment.math_workspace_ref != before.workspace_ref
+                or binding["math_basis"] != step_basis(before)
+                or claims.get(claim["claim_id"]) != claim
+            ):
+                raise ValueError("foreign, stale or altered student step evidence")
+            for ref in json.loads(evidence.output_summary)["tool_evidence_refs"]:
+                proof = proofs.get(ref)
+                if (
+                    proof is None
+                    or replace(proof, evidence_id=None).evidence_id != ref
+                    or proof not in alignment.math_evidence
+                    or proof.input_refs != evidence.input_refs
+                ):
+                    raise ValueError("student step evidence has a dangling or altered tool receipt")
 
     def trajectory(self, *, cutoff_revision: int | None = None) -> TrajectoryProjection:
         # A complete episode prefix must come from the trusted host reader;
@@ -220,6 +327,7 @@ class MathMutation:
             ]
             alignment = max(candidates, key=lambda value: value.workspace_revision, default=None)
             if alignment is not None:
+                self._check_step_evidence(alignment)
                 before = self.snapshot(alignment.workspace_revision)
                 after = self.snapshot(alignment.output_workspace_revision)
                 if (

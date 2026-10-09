@@ -16,7 +16,7 @@ from deeptutor.core.capability_protocol import CapabilityManifest, StreamBusProt
 from deeptutor.core.context import UnifiedContext
 from deeptutor.core.stream import StreamEvent, StreamEventType
 from deeptutor.math_semantic.accepted import AcceptedSubmission
-from deeptutor.math_semantic.alignment import AlignmentEvaluator
+from deeptutor.math_semantic.alignment import AlignmentEvaluator, materialize_alignment
 from deeptutor.math_semantic.authority import MathSemanticGrant
 from deeptutor.math_semantic.claims import ResponseAlignment
 from deeptutor.math_semantic.codec import _payload
@@ -31,6 +31,7 @@ from deeptutor.math_semantic.support import (
     resolve_math_content_support,
 )
 from deeptutor.math_semantic.trajectory_types import TrajectoryProjection
+from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 from deeptutor.services.session.math_semantic_persistence import (
     MathEpisodeBinding,
     accepted_submission,
@@ -75,26 +76,54 @@ class MathTurnCapability(TurnCapability):
             binding=binding,
         )
 
-        def prepare(state: MathMutation) -> tuple[int, AlignmentProjection]:
+        def prepare(state: MathMutation) -> tuple[MathWorkspaceSnapshot, AlignmentProjection]:
             snapshot = state.snapshot()
-            return snapshot.workspace.revision, AlignmentEvaluator._project(
+            return snapshot, AlignmentEvaluator._project(
                 state.submission.raw_content,
                 snapshot,
             )
 
-        revision, projection = await authority(prepare)
-        # The provider only proposes. Native grounding/validation runs inside
-        # the protected mutation against the same pinned revision.
+        alignment_snapshot, projection = await authority(prepare)
+        revision = alignment_snapshot.workspace.revision
+        # Proposal and all native alignment tools run outside the write
+        # transaction. Only adoption uses the existing protected commit port.
         proposed = await asyncio.to_thread(self._provider.propose, projection)
         proposal = AlignmentProposal.from_value(proposed)
-
-        def observe(state: MathMutation) -> tuple[ResponseAlignment, TrajectoryProjection, int]:
-            alignment = state.align(
+        provider_id, config_digest = self._provider.provider_id, self._provider.model_config_digest
+        replay = await authority(
+            lambda state: state.replay_alignment(
                 proposal,
                 expected_revision=revision,
-                provider_id=self._provider.provider_id,
-                config_digest=self._provider.model_config_digest,
+                provider_id=provider_id,
+                config_digest=config_digest,
+                check_steps=True,
             )
+        )
+        prepared = None
+        if replay is None:
+            prepared = await asyncio.to_thread(
+                materialize_alignment,
+                submission,
+                alignment_snapshot,
+                proposal,
+                provider_id=provider_id,
+                config_digest=config_digest,
+                check_steps=True,
+            )
+
+        def observe(state: MathMutation) -> tuple[ResponseAlignment, TrajectoryProjection, int]:
+            args = {
+                "expected_revision": revision,
+                "provider_id": self._provider.provider_id,
+                "config_digest": self._provider.model_config_digest,
+                "check_steps": True,
+            }
+            if prepared is None:
+                alignment = state.replay_alignment(proposal, **args)
+                if alignment is None:
+                    raise ValueError("alignment replay basis changed")
+            else:
+                alignment = state.align(proposal, prepared=prepared, **args)
             trajectory = state.trajectory()
             return alignment, trajectory, state.snapshot().workspace.revision
 

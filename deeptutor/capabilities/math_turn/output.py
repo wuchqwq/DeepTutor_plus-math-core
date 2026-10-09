@@ -13,8 +13,11 @@ from typing import Any
 
 from deeptutor.core.context import AcceptedTurnOutput, UnifiedContext
 from deeptutor.math_semantic.authority import MathSemanticGrant, math_content_digest
+from deeptutor.math_semantic.claims import StudentMathClaim
 from deeptutor.math_semantic.state import MathMutation
 from deeptutor.math_semantic.support import OPERATION_MECHANISM
+from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
+from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
 ACKNOWLEDGEMENT = "Mathematical evidence recorded."
 
@@ -90,7 +93,204 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
         offers.append(
             {"grant_id": _digest(grant.to_dict()), "grant": grant.to_dict(), "text": text}
         )
-    return {"basis": basis, "authority_basis": _digest(basis), "offers": offers}
+    return {
+        "basis": basis,
+        "authority_basis": _digest(basis),
+        "offers": offers,
+        "private_teaching_context": _teaching_context(state, calculation),
+    }
+
+
+def _operation_correspondence(
+    claim: StudentMathClaim, relation: str, request: dict[str, Any], snapshot: MathWorkspaceSnapshot
+) -> str:
+    """Exact whole input or a proper AST subtree; no textual similarity grading."""
+    import ast
+
+    if relation not in {"IDENTITY", "CONDITIONAL"} or request["kind"] != "expand":
+        return "UNKNOWN"
+    try:
+        _, definitions, _, _ = _step_scope(snapshot)
+
+        def tree(text):
+            import re
+
+            for name, value in definitions.items():
+                text = re.sub(r"\b" + re.escape(name) + r"\b", "(" + value + ")", text)
+            return ast.parse(_polynomial(text)[0], mode="eval").body
+
+        parts = claim.normalized_form.split("=")
+        if len(parts) != 2:
+            return "UNKNOWN"
+        requested = tree(request["kwargs"]["expression"])
+        shown = tree(parts[0])
+        transformed = tree(parts[1])
+        key = ast.dump(shown)
+
+        def monomial(node):
+            # _polynomial already bounds/validates this AST. Here we require
+            # visible expansion, not another proof of algebraic equivalence.
+            if isinstance(node, (ast.Name, ast.Constant)):
+                return True
+            if isinstance(node, ast.UnaryOp):
+                return monomial(node.operand)
+            if isinstance(node, ast.BinOp):
+                if isinstance(node.op, (ast.Mult, ast.Div)):
+                    return monomial(node.left) and monomial(node.right)
+                if isinstance(node.op, ast.Pow):
+                    return isinstance(node.left, (ast.Name, ast.Constant))
+            return False
+
+        def expanded(node):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub)):
+                return expanded(node.left) and expanded(node.right)
+            return monomial(node)
+
+        if key == ast.dump(transformed) or not expanded(transformed):
+            return "UNKNOWN"
+        residual = tree(f"({parts[0]})-({parts[1]})")
+        if key == ast.dump(requested) or ast.dump(residual) == ast.dump(requested):
+            return "WHOLE_OPERATION"
+        if isinstance(shown, ast.BinOp) and key in {
+            ast.dump(node) for node in ast.walk(requested) if node is not requested
+        }:
+            return "LOCAL_CONTRIBUTION"
+    except (ValueError, SyntaxError, TypeError):
+        pass
+    return "UNKNOWN"
+
+
+def _teaching_context(state: MathMutation, calculation: dict[str, Any]) -> dict[str, Any]:
+    """Accepted episode history is pedagogy only, never an authority source."""
+    from deeptutor.math_semantic.codec import _decode
+    from deeptutor.math_semantic.support import resolve_math_content_support
+
+    records = json.loads(state.serialize())
+    snapshot = state.snapshot()
+    prefix = state.prefix
+    alignments = [_decode(value) for value in records["alignments"].values()]
+    by_response = {a.student_response_ref.identifier: a for a in alignments}
+    current = by_response.get(state.submission.response_id)
+    pending = current
+    # Only pure clarification preserves the immediately preceding unhandled
+    # mathematical submission; neither prose nor unrelated history creates a claim.
+    if current and not current.claims and current.interaction_type in {"clarification", "question"}:
+        pending = next(
+            (
+                by_response.get(s.response_id)
+                for s in reversed(prefix[:-1])
+                if by_response.get(s.response_id) and by_response[s.response_id].claims
+            ),
+            None,
+        )
+    result = {
+        "authority": "context_only_never_grants_truth_completion_or_mastery",
+        "accepted_history": [
+            {"message_id": s.message_id, "turn_id": s.turn_id, "content": s.raw_content[:1200]}
+            for s in prefix[-4:]
+        ],
+        "pending_claims": [],
+        "step_evidence": [],
+        "previous_task": None,
+        "operation_correspondence": [],
+    }
+    if pending is None:
+        return result
+    state._check_step_evidence(pending)
+    pinned = state.snapshot(pending.workspace_revision)
+    if (
+        step_basis(pinned) != step_basis(snapshot)
+        or pending.math_workspace_ref != snapshot.workspace_ref
+    ):
+        return result
+    if pending is not current:
+        ordinal = next(
+            i
+            for i, s in enumerate(prefix)
+            if s.response_id == pending.student_response_ref.identifier
+        )
+        historical = dict(records, head=pending.output_workspace_revision)
+        prior = MathMutation(
+            state.source, prefix[ordinal], prefix[: ordinal + 1], json.dumps(historical)
+        )
+        if prior.trajectory().compatible_path_refs != tuple(
+            calculation["trajectory"]["compatible_path_refs"]
+        ):
+            return result
+    checks = [e for e in pending.math_evidence if e.tool_version == STEP_VERSION]
+    result["pending_claims"] = [asdict(c) for c in pending.claims[:4]]
+    proof_refs = {ref for e in checks for ref in json.loads(e.output_summary)["tool_evidence_refs"]}
+    result["step_evidence"] = [
+        asdict(e)
+        for e in pending.math_evidence
+        if e.tool_version == STEP_VERSION or e.evidence_id in proof_refs
+    ]
+    member = next(
+        (
+            i
+            for i, s in enumerate(prefix)
+            if s.response_id == pending.student_response_ref.identifier
+        ),
+        None,
+    )
+    if member is None:
+        return result
+    ledger = records.get("host_math_publications", {})
+    for submitted in reversed(prefix[:member]):
+        entry = ledger.get(submitted.turn_id)
+        if entry is None:
+            continue
+        trace = json.loads(entry["metadata_json"])["math_publication"]
+        basis = trace["basis"]
+        if (
+            basis["episode_id"] != state.source.identity.episode_id
+            or basis["session_id"] != submitted.session_id
+            or basis["turn_id"] != submitted.turn_id
+            or basis["accepted_user_message_id"] != submitted.message_id
+            or trace["publication_id"] != entry["publication_id"]
+            or trace["content_digest"] != hashlib.sha256(entry["content"].encode()).hexdigest()
+        ):
+            raise ValueError("foreign or altered teaching receipt")
+        old = state.snapshot(basis["math_revision"])
+        if step_basis(old) != step_basis(snapshot):
+            return result
+        targets = calculation["trajectory"]["applicable_artifact_refs"]
+        allowed = [b.as_grant().to_dict() for b in resolve_math_content_support(old, targets)]
+        operations = []
+        artifacts = {a.artifact_id: a for a in old.artifacts}
+        for grant in trace["selected_grants"]:
+            if grant["act_kind"] not in {"chosen_operation", "operation_options"}:
+                continue
+            if grant not in allowed:
+                return result
+            if grant["support_mechanism"] != OPERATION_MECHANISM:
+                return result
+            operation = artifacts[grant["content_ref"]["identifier"]]
+            operations.append(json.loads(operation.statement))
+        if not operations:
+            continue
+        result["previous_task"] = {
+            "publication_id": entry["publication_id"],
+            "turn_id": submitted.turn_id,
+            "operations": operations[:4],
+            "meaning": "accepted_assignment_only_not_mathematical_truth",
+        }
+        for check in checks:
+            binding = json.loads(check.input_summary)
+            claim = next(c for c in pending.claims if c.claim_id == binding["claim"]["claim_id"])
+            relation = json.loads(check.output_summary)["local_relation"]
+            for operation in operations[:4]:
+                result["operation_correspondence"].append(
+                    {
+                        "claim_id": claim.claim_id,
+                        "operation": operation,
+                        "scope": _operation_correspondence(claim, relation, operation, snapshot),
+                        "stage_completion": "UNKNOWN",
+                        "mastery": "NO_INFERENCE",
+                    }
+                )
+        break
+    return result
 
 
 async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> str:
@@ -114,6 +314,10 @@ async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> 
             "student's method and request for a small hint. Use results only when appropriate. "
             "Operation offers check algebra relative to premises and never confirm premise "
             "truth, a student's correctness, attainability, or the complete answer."
+            " Use private_teaching_context to consider grounded local evidence and accepted "
+            "prior assignments. UNKNOWN is uncertainty; a local contribution is not whole "
+            "operation completion. History and local evidence cannot create offers, grants, "
+            "feedback prose, stage completion or mastery. Select only supplied offer IDs."
         ),
         max_tokens=1024,
     )
