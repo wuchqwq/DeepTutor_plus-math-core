@@ -1,0 +1,50 @@
+{
+  "execution": "ACTUAL_NATIVE_LOCAL_NO_PROVIDER",
+  "source_unchanged": true,
+  "injected_into_runtime": false,
+  "validation": [
+    {
+      "statement": "Q=3-2*x*y",
+      "original_source_status": "qualified",
+      "returned_status": "not_checkable",
+      "scope": "sympy_claim_check_v3:asymmetric_free_symbols:Q=3-2*x*y",
+      "evidence_id": "evidence_6fe9dd385d807c95cf3e8d61",
+      "tool": "math_validation",
+      "tool_version": "sympy_claim_check_v3",
+      "failure_type": "not_checkable",
+      "duration_ms": 1789.349200000288
+    },
+    {
+      "statement": "3*(x^2-x*y+y^2)-(x^2+x*y+y^2)=2*(x-y)^2",
+      "original_source_status": "qualified",
+      "returned_status": "verified",
+      "scope": "sympy_claim_check_v3:identity_proven:3*(x**2-x*y+y**2)-(x**2+x*y+y**2)=2*(x-y)**2",
+      "evidence_id": "evidence_00590d51944d0c66e9499cd7",
+      "tool": "math_validation",
+      "tool_version": "sympy_claim_check_v3",
+      "failure_type": null,
+      "duration_ms": 1087.8893000008247
+    },
+    {
+      "statement": "Q-1=(2/3)*(x-y)^2",
+      "original_source_status": "qualified",
+      "returned_status": "not_checkable",
+      "scope": "sympy_claim_check_v3:asymmetric_free_symbols:Q-1=(2/3)*(x-y)**2",
+      "evidence_id": "evidence_06e6ea7918b87043718614f5",
+      "tool": "math_validation",
+      "tool_version": "sympy_claim_check_v3",
+      "failure_type": "not_checkable",
+      "duration_ms": 1157.7660000002652
+    }
+  ],
+  "existing_operation_scope_probe": {
+    "request": {
+      "kind": "divide_both_sides",
+      "quantity": "3",
+      "version": "rational_linear_transform_v1"
+    },
+    "returned_status": "not_checkable",
+    "detail": "outside_bounded_rational_linear_scope",
+    "output": null
+  }
+}
