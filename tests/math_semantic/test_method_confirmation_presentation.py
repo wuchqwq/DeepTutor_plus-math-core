@@ -139,8 +139,13 @@ async def test_hostile_method_text_is_private_before_acceptance_and_on_replay(
         assert len(host.state()["confirmations"]) == 1
         assert host.result()["verification_status"] == "UNKNOWN"
         assert host.result()["verified_grounded_refs"] == ()
-        assert all(g["act_kind"] == "orientation" for g in host.result()["authority"])
-        assert all(o["grant"]["act_kind"] == "orientation" for o in generated[-1]["offers"])
+        # Confirmation authorizes no truth/result. Independently executed
+        # operation support can still supply a bounded algebraic next step.
+        assert all(
+            g["act_kind"] in {"orientation", "chosen_operation", "operation_options"}
+            for g in host.result()["authority"]
+        )
+        assert all(o["grant"]["act_kind"] != "result" for o in generated[-1]["offers"])
         assert turn["id"] not in host.state()["host_math_publications"]
         assert context.capability_output.accepted_output is None
         assert not any(e["type"] in {"content", "result"} for e in events)

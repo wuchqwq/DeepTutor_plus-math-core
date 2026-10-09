@@ -16,12 +16,23 @@ import pytest_asyncio
 
 from deeptutor.capabilities.math_turn.output import ACKNOWLEDGEMENT
 from deeptutor.core.stream import StreamEventType
+from deeptutor.math_semantic.accepted import EpisodeIdentity
+from deeptutor.math_semantic.contracts import (
+    MathArtifact,
+    MathWorkspace,
+    ProblemModel,
+    SolutionPath,
+)
+from deeptutor.math_semantic.refs import QuestionRef, SourceRef
+from deeptutor.math_semantic.state import ReviewedSource
 from deeptutor.math_semantic.support import resolve_math_content_support
+from deeptutor.math_semantic.tools import MathToolRegistry
+from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot, _snapshot_from
 from deeptutor.services.session._turn_runtime_shared import _repair_chinese_emphasis_for_persistence
 from deeptutor.services.session.math_semantic_persistence import sqlite_episode_mutation
 from deeptutor.services.session.turns.title_service import SessionTitleService
 
-from .recovery_support import A
+from .recovery_support import A, B
 from .test_routing_isolation import RoutingHost
 
 FORBIDDEN_ANSWER = "CONFIDENT_FINAL_ANSWER: Q = 999"
@@ -36,6 +47,7 @@ class Generation:
         self.hook = None
         self.previous = None
         self.foreign_grant = None
+        self.operation_grant_id = None
 
     async def __call__(self, config, _provider_spec, *, prompt, **kwargs):
         inputs = json.loads(prompt)
@@ -56,6 +68,16 @@ class Generation:
         if self.mode == "result":
             assert result, "positive control requires actual Core result authority"
             candidate["grant_ids"] = result
+        elif self.mode == "operation":
+            candidate["grant_ids"] = [
+                offer["grant_id"]
+                for offer in inputs["offers"]
+                if offer["grant"]["act_kind"] == "chosen_operation"
+                and (
+                    self.operation_grant_id is None or offer["grant_id"] == self.operation_grant_id
+                )
+            ][:1]
+            assert candidate["grant_ids"], "positive control requires real operation evidence"
         elif self.mode == "free_prose":
             return FORBIDDEN_ANSWER
         elif self.mode == "orientation_with_text":
@@ -230,6 +252,170 @@ async def test_orientation_only_publishes_no_task_mathematics(publication_host_f
     assert assistant_row(host, turn["id"])[1] == ACKNOWLEDGEMENT
     assert all(A not in event["content"] for event in events)
     assert all("claims" not in event.get("metadata", {}) for event in events)
+
+
+@pytest.mark.asyncio
+async def test_qualified_premise_publishes_executable_operation_and_replays_exact_bytes(
+    publication_host_factory,
+):
+    host, generation, _ = publication_host_factory()
+    host.source = replace(
+        host.source,
+        authored=replace(
+            host.source.authored,
+            artifacts=tuple(
+                replace(a, verification_status="qualified", verification_scope="AI-reviewed")
+                if a.statement == A
+                else a
+                for a in host.source.authored.artifacts
+            ),
+        ),
+    )
+    generation.mode = "operation"
+    _, turn = await host.submit(A)
+    body = assistant_row(host, turn["id"])[1]
+    assert "Try this next step:" in body and "Expand " in body
+    assert not host.result()["verified_grounded_refs"]
+    assert not any(
+        o["grant"]["act_kind"] == "result" for o in generation.calls[-1]["inputs"]["offers"]
+    )
+    before = host.state()
+    first, second = await replay(host, turn), await replay(host, turn)
+    assert first == second and host.state() == before
+    assert "".join(e["content"] for e in first if e["type"] == "content") == body
+    assert len(generation.calls) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "statement,definition,kind,kwargs,action",
+    [
+        ("x+1=0", None, "expand", {"expression": "(x+1)-(0)"}, "Expand (x+1)-(0)."),
+        ("x^2=x", None, "expand", {"expression": "(x^2)-(x)"}, "Expand (x^2)-(x)."),
+        ("sin(x)=0", None, "expand", {"expression": "(sin(x))-(0)"}, "Expand (sin(x))-(0)."),
+        (
+            B,
+            None,
+            "expand",
+            {"expression": "(3*(x^2-x*y+y^2)-(x^2+x*y+y^2))-(2*(x-y)^2)"},
+            "Expand (3*(x^2-x*y+y^2)-(x^2+x*y+y^2))-(2*(x-y)^2).",
+        ),
+        (
+            "w^2-r=4",
+            "w=a+b",
+            "substitute",
+            {"expression": "(w^2-r)-(4)", "substitutions": {"w": "a+b"}},
+            "Substitute w=a+b into (w^2-r)-(4).",
+        ),
+    ],
+    ids=["linear", "quadratic", "trigonometric", "S4-square-identity", "substitute"],
+)
+async def test_publication_expresses_only_exact_selected_tool_supported_operation(
+    publication_host_factory, statement, definition, kind, kwargs, action
+):
+    host, generation, _ = publication_host_factory()
+    provenance = (SourceRef("question", "generic-publication-operation"),)
+    model = ProblemModel("generic-publication-operation", provenance[0])
+    premise = MathArtifact(
+        statement,
+        "intermediate",
+        provenance=provenance,
+        verification_status="qualified",
+        verification_scope="AI-reviewed",
+    )
+    artifacts = (premise,)
+    if definition is not None:
+        artifacts += (
+            MathArtifact(
+                definition,
+                "definition",
+                claim_kind="definition",
+                provenance=provenance,
+                verification_status="qualified",
+                verification_scope="AI-reviewed",
+            ),
+        )
+    refs = tuple(a.artifact_id for a in artifacts)
+    path = SolutionPath("reviewed algebra", artifact_refs=refs, provenance=provenance)
+    snapshot = MathWorkspaceSnapshot(
+        MathWorkspace(
+            "generic-publication-episode",
+            model.model_ref,
+            artifact_refs=refs,
+            solution_path_refs=(path.path_id,),
+        ),
+        model,
+        artifacts,
+        paths=(path,),
+    )
+    host.source = ReviewedSource(
+        EpisodeIdentity(
+            snapshot.workspace.workspace_id,
+            host.source.identity.learner,
+            QuestionRef(model.problem_id, model.revision),
+        ),
+        snapshot,
+    )
+    host.scope = host.math_scope()
+    generation.mode = "operation"
+    selected = {}
+
+    async def select_exact_operation(inputs):
+        state = host.state()
+        current = _snapshot_from(json.dumps(state["snapshots"][str(state["head"])]))
+        by_ref = {a.artifact_id: a for a in current.artifacts}
+        for offer in inputs["offers"]:
+            grant = offer["grant"]
+            if grant["act_kind"] != "chosen_operation":
+                continue
+            operation = by_ref[grant["content_ref"]["identifier"]]
+            request = json.loads(operation.statement)
+            if request["kind"] == kind and request["kwargs"] == kwargs:
+                assert request["premises"] == list(refs)
+                proof = next(
+                    e
+                    for e in current.tool_evidence
+                    if e.evidence_id == grant["support_ref"]["identifier"]
+                )
+                assert operation.tool_evidence_refs == (proof.evidence_id,)
+                assert proof.tool_name == kind and proof.status == "succeeded"
+                assert proof.tool_version == MathToolRegistry.VERSION
+                assert proof.input_summary == MathToolRegistry._input_summary(kwargs)
+                assert proof.input_refs == (
+                    *refs,
+                    f"{current.workspace.workspace_id}@{request['input_revision']}",
+                )
+                assert request["input_revision"] + 1 == current.workspace.revision
+                selected.update(offer)
+                generation.operation_grant_id = offer["grant_id"]
+                return
+        raise AssertionError("Expected real tool-supported operation was not offered")
+
+    generation.hook = select_exact_operation
+    _, turn = await host.submit(statement)
+    body = (
+        ACKNOWLEDGEMENT
+        + "\n\nTry this next step: "
+        + action
+        + " This checks the algebra relative to the named premises; "
+        "their truth and the complete answer are not yet confirmed."
+    )
+    _, stored, metadata, _ = assistant_row(host, turn["id"])
+    assert stored == body
+    assert selected["text"] == body.split("\n\n", 1)[1]
+    trace = metadata["accepted_output"]["math_publication"]
+    assert trace["selected_grants"] == [selected["grant"]]
+    assert trace["content_digest"] == hashlib.sha256(body.encode()).hexdigest()
+    assert json.loads(generation.raw_candidates[-1])["grant_ids"] == [selected["grant_id"]]
+    assert not host.result()["verified_grounded_refs"]
+    assert not any(
+        o["grant"]["act_kind"] == "result" for o in generation.calls[-1]["inputs"]["offers"]
+    )
+    before = host.state()
+    events = await replay(host, turn)
+    assert "".join(e["content"] for e in events if e["type"] == "content") == body
+    assert next(e["metadata"]["response"] for e in events if e["type"] == "result") == body
+    assert await replay(host, turn) == events and host.state() == before
 
 
 @pytest.mark.asyncio

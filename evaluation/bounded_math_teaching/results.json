@@ -1,0 +1,641 @@
+{
+  "status": "BOUNDED_OPERATION_PATH_EXECUTED; TEACHING_LIMITATIONS_REMAIN; NO_PHASE_D_PASS",
+  "product_base": "143e41784bdd2c34d765a50c754869ef3a2d9830",
+  "original_pr18_head": "b8d2ac2aad38c587859b9bbedabe3fb72c66f4da",
+  "rerun_arm": "integrated only; unchanged ordinary baseline remains in PR18 and was not rerun",
+  "executed_with_uncommitted_changes": "per-case exact git diff hashes retained; final batch-reuse refinement affects same-snapshot repeats and was in place before v2 S8; earlier single-turn cases required no reuse",
+  "runs": [
+    {
+      "run": "teaching-v1",
+      "http_requests": 35,
+      "observed_usage_tokens": 93679,
+      "non_ack_replies": 11,
+      "cases": [
+        {
+          "case": "S1",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "623b9377a6e9ce4986df5e5dd158e8d3a7f3550be7dadaff67c4838fd4077058"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 10316,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2d001de41a00af2b35ff6ce73861b032cc09231f811a13c56e845a8568dea719"
+        },
+        {
+          "case": "S2",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "unresolved"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5163,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2d001de41a00af2b35ff6ce73861b032cc09231f811a13c56e845a8568dea719"
+        },
+        {
+          "case": "S3",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "unresolved"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5203,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "38df5295bd1f171c3c1ef5ff41626ca61381ba8484664aa646bbd75fcca7bfb5"
+        },
+        {
+          "case": "S4",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "2ce8f2cf4d8a3182d9198ca3e1cc04c1e746e910c8c3df1bab6c4dc74387c61e"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 8183,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "c946a9bc38449f0acb0cce3bd762e6f388bcb48d02b83dbd166343c4f244e4a9"
+        },
+        {
+          "case": "S5",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "no_math_claim"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5106,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "c946a9bc38449f0acb0cce3bd762e6f388bcb48d02b83dbd166343c4f244e4a9"
+        },
+        {
+          "case": "S6",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "no_math_claim"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5094,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "c946a9bc38449f0acb0cce3bd762e6f388bcb48d02b83dbd166343c4f244e4a9"
+        },
+        {
+          "case": "S7",
+          "turn_statuses": [
+            "failed"
+          ],
+          "non_ack_reply_count": 0,
+          "publication_count": 0,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": false,
+          "rendered_response_count_after_refresh": 0,
+          "alignment_statuses": [],
+          "selected_act_kinds": [],
+          "response_content_sha256": [],
+          "publication_revision_sequence": [],
+          "http_requests": 2,
+          "observed_usage_tokens": 3422,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 1,
+          "execution_diff_sha256": "c946a9bc38449f0acb0cce3bd762e6f388bcb48d02b83dbd166343c4f244e4a9"
+        },
+        {
+          "case": "S8",
+          "turn_statuses": [
+            "completed",
+            "completed",
+            "completed",
+            "completed",
+            "completed"
+          ],
+          "non_ack_reply_count": 5,
+          "publication_count": 5,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 5,
+          "alignment_statuses": [
+            "aligned",
+            "aligned",
+            "unresolved",
+            "unresolved",
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "6907af2646eedd34d0ed323bd8274ac8d99518702751997e27259bc800a9b634",
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c"
+          ],
+          "publication_revision_sequence": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "http_requests": 15,
+          "observed_usage_tokens": 51192,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": true,
+          "confirmation_states": [
+            "resolved"
+          ],
+          "browser_exit": 0,
+          "execution_diff_sha256": "c946a9bc38449f0acb0cce3bd762e6f388bcb48d02b83dbd166343c4f244e4a9"
+        }
+      ]
+    },
+    {
+      "run": "teaching-v2",
+      "http_requests": 35,
+      "observed_usage_tokens": 82400,
+      "non_ack_replies": 11,
+      "cases": [
+        {
+          "case": "S1",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "623b9377a6e9ce4986df5e5dd158e8d3a7f3550be7dadaff67c4838fd4077058"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 8095,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "9c652758b0789d55b1588885d3f191f65249e5ed5001196add6a8aba60a5fba0"
+        },
+        {
+          "case": "S2",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "unresolved"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5174,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "9c652758b0789d55b1588885d3f191f65249e5ed5001196add6a8aba60a5fba0"
+        },
+        {
+          "case": "S3",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "unresolved"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5210,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        },
+        {
+          "case": "S4",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "2ce8f2cf4d8a3182d9198ca3e1cc04c1e746e910c8c3df1bab6c4dc74387c61e"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 7561,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        },
+        {
+          "case": "S5",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "no_math_claim"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5101,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        },
+        {
+          "case": "S6",
+          "turn_statuses": [
+            "completed"
+          ],
+          "non_ack_reply_count": 1,
+          "publication_count": 1,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 1,
+          "alignment_statuses": [
+            "no_math_claim"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2"
+          ],
+          "publication_revision_sequence": [
+            2
+          ],
+          "http_requests": 3,
+          "observed_usage_tokens": 5088,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        },
+        {
+          "case": "S7",
+          "turn_statuses": [
+            "failed"
+          ],
+          "non_ack_reply_count": 0,
+          "publication_count": 0,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": false,
+          "rendered_response_count_after_refresh": 0,
+          "alignment_statuses": [],
+          "selected_act_kinds": [],
+          "response_content_sha256": [],
+          "publication_revision_sequence": [],
+          "http_requests": 2,
+          "observed_usage_tokens": 3020,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": false,
+          "confirmation_states": [],
+          "browser_exit": 1,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        },
+        {
+          "case": "S8",
+          "turn_statuses": [
+            "completed",
+            "completed",
+            "completed",
+            "completed",
+            "completed"
+          ],
+          "non_ack_reply_count": 5,
+          "publication_count": 5,
+          "content_digest_valid": true,
+          "live_equals_durable_and_receipts": true,
+          "rendered_response_segments_equal_after_refresh": true,
+          "rendered_response_count_after_refresh": 5,
+          "alignment_statuses": [
+            "aligned",
+            "aligned",
+            "unresolved",
+            "unresolved",
+            "aligned"
+          ],
+          "selected_act_kinds": [
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ],
+            [
+              "chosen_operation"
+            ]
+          ],
+          "response_content_sha256": [
+            "6907af2646eedd34d0ed323bd8274ac8d99518702751997e27259bc800a9b634",
+            "904873e8f08a86534dd2ac0be1089b24dcbb740f85b4b5940eb3fa49e86d54a2",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c",
+            "17cca822bf2f10ac49419180c7029a4b9617a0965f888ba1c245b11d4afe0b9c"
+          ],
+          "publication_revision_sequence": [
+            2,
+            3,
+            4,
+            4,
+            4
+          ],
+          "http_requests": 15,
+          "observed_usage_tokens": 43151,
+          "all_actual_wire_thinking_off": true,
+          "actual_response_models": [
+            "deepseek-flash"
+          ],
+          "method_button_clicked": true,
+          "confirmation_states": [
+            "resolved"
+          ],
+          "browser_exit": 0,
+          "execution_diff_sha256": "2866d045758cd4007511ffa9824775b5b7793c0d858d7b51d29a8da32d84ba92"
+        }
+      ]
+    }
+  ]
+}

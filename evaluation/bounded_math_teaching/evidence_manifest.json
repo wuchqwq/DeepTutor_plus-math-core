@@ -1,0 +1,48 @@
+{
+  "local_raw_root": "F:\\demo2\\DeepTutor_bounded_math_teaching\\data\\support-evidence",
+  "old_pr18_raw_preserved_without_copy": "C:\\Users\\13471\\Documents\\Codex\\2026-10-09\\task-2\\DeepTutor_phase_d\\data\\phase-d-evidence",
+  "base": "143e41784bdd2c34d765a50c754869ef3a2d9830",
+  "final_owner_sha256": {
+    "deeptutor/math_semantic/support.py": "ba34f780b6c49ed8da6ce80a7969a080de04d355e1d9086fd9d92d85faeec658",
+    "deeptutor/capabilities/math_turn/capability.py": "747a533ab8268958da054aa34ae949e2ff43242126aa0d4c66d45a33388e4dba",
+    "deeptutor/capabilities/math_turn/output.py": "2a4c6fce2272fc199d417bae5de66b3e8e67017924af86331d028deea51b599f"
+  },
+  "frozen_pr18_script_sha256": {
+    "protocol.json": "eff848cf70bc0048b879f6d3376b423b7fdba5764bf6165dce7aab08a21c00e3",
+    "source.py": "c5afb38830f94004544362789169e35f408177af967f2c493f179d942bae58f2",
+    "provider.py": "c9c9a50e8fd1bd32030d75c12682666d4e1e4ab44b52f0c5dae5d3f6f8c24d46",
+    "browser.cjs": "a103fbe799be0bd602f624b2f5585c39dfd57413015920b6fec3fe67046245a7"
+  },
+  "actual_export_sha256": {
+    "teaching-v1\\S1\\actual_sqlite_evidence.json": "416e27c79b6131eedfb4647d3878bafc167ff8c0b5ebf0dcc4b054a6724a86ef",
+    "teaching-v1\\S2\\actual_sqlite_evidence.json": "3dfaa7ef9d133bb18b752da8d3c32abcb14d2583ae6f2c1e39a934b71ae15bcf",
+    "teaching-v1\\S3\\actual_sqlite_evidence.json": "a0ed37f39e96dc87551af8483122df599c8ad53ebf40dd1a5062ad45f3bcba5d",
+    "teaching-v1\\S4\\actual_sqlite_evidence.json": "64827efeedb389396ed99c9900d5b53f40f0a0bcdf09a3b887bd5107dcdac261",
+    "teaching-v1\\S5\\actual_sqlite_evidence.json": "8ed68d7da3f7079290209c74bcd00758393f8fad5fa2fff68dd146dc0b2df2c0",
+    "teaching-v1\\S6\\actual_sqlite_evidence.json": "4ee281babe38b867e3af8889d788d8b6a1f1dbbe33acc7fd9a3cd16119f1b682",
+    "teaching-v1\\S7\\actual_sqlite_evidence.json": "ea08b5161cebaa49c4608b1f4e01c14b49ef07a5a7c0ad7b64447bc72a7776c1",
+    "teaching-v1\\S8\\actual_sqlite_evidence.json": "932019447c7e1d06333a68958351d8f32fc0ebad038fd0aff46cf826bd47afc5",
+    "teaching-v2\\S1\\actual_sqlite_evidence.json": "9bdb888d23ca84c0d786480fa7a52da61b485df453b09e2cca7e113583cd0bfe",
+    "teaching-v2\\S2\\actual_sqlite_evidence.json": "b10fbe72643dcacdfb0c3cec9604e0791f242378979e3d23ae3a3ec1c6dfa67b",
+    "teaching-v2\\S3\\actual_sqlite_evidence.json": "e1dbec1f7b3e5ed681b7428057d67e937c7b3f000508776e092c35175b9f67da",
+    "teaching-v2\\S4\\actual_sqlite_evidence.json": "55ab0ba3dd2ffb28e1ff7f3cd9f4f0ebb6056e7387d3ff6e7c098116efcebac5",
+    "teaching-v2\\S5\\actual_sqlite_evidence.json": "7d800dcd3af879542a872bfbb42f7f33680a29888e4dc1f7b9266fc4d2d7332d",
+    "teaching-v2\\S6\\actual_sqlite_evidence.json": "dda0397372ae791f3dc80ecae7e6a440fda02ce0ab6d2327424f6bc27b370653",
+    "teaching-v2\\S7\\actual_sqlite_evidence.json": "889b9e0ab023942c796c183201a1cb378cd0bd558086f65b7332ef15baacdf21",
+    "teaching-v2\\S8\\actual_sqlite_evidence.json": "9f0d4d92c88ab7c753933ff5968597bcb65fd35d63fff961ede95005051152f9"
+  },
+  "raw_archive": {
+    "path": "F:\\demo2\\DeepTutor_bounded_math_teaching\\data\\bounded-math-teaching-evidence-20261009.zip",
+    "sha256": "22ab0ccc514bd410ff87482f7cb99a729acde8e612f40b62c1870196b2350c51",
+    "bytes": 4849893,
+    "file_count": 376,
+    "sorted_path_content_hash_chain_sha256": "cfcb5c1acf46112eeff051f0a9afc55199d2a506142cfe225e9a6c95d12688c1"
+  },
+  "credential_scope": "Evidence only; no runtime/Catalog/key/header files",
+  "validation_logs_sha256": {
+    "math-tests-final.log": "10c91f3d68e20d61919eff3f95dd223709f4c9a38f8e51b20db1401bf1e015da",
+    "math-tests-remaining-final.log": "db8b3269df1a428ccb80379e5d10f42e20e5a42f9002f7fbde8a6678081e99d1",
+    "preserved_initial_failures.md": "c2d047e63a3221c97a851bf5c7b261279941e89247363c1f060c09da88b32811"
+  },
+  "collected_math_test_count": 914
+}

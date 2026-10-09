@@ -359,7 +359,10 @@ async def test_independent_process_reconstruction_and_pending_crash(tmp_path, sc
             assert after["result"]["trajectory"]["status"] == "SUPPORTED"
             assert after["result"]["verification_status"] == "UNKNOWN"
             assert after["result"]["verified_grounded_refs"] == []
-            assert all(grant["act_kind"] == "orientation" for grant in after["result"]["authority"])
+            assert all(
+                grant["act_kind"] in {"orientation", "chosen_operation", "operation_options"}
+                for grant in after["result"]["authority"]
+            )
         else:
             assert before["result"]["trajectory"]["status"] == "SUPPORTED"
             assert after["result"]["trajectory"]["status"] == "UNKNOWN"
