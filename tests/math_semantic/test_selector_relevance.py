@@ -1,69 +1,53 @@
-"""Selector input and bounded fallback through the original host acceptance seam.
+"""Selector transport retains context and every existing offer.
 
-The provider stub exercises the seam, never claims to establish model behavior.
-Real model selection is measured separately using frozen checkpoint comparisons.
+These are input-contract tests with a provider stub. Native authority, receipt
+and replay coverage remains in the existing publication and evidence tests;
+real model selection is measured by the frozen checkpoint comparison.
 """
 
+from copy import deepcopy
 import json
+from types import SimpleNamespace
 
 import pytest
 
-from deeptutor.capabilities.math_turn.output import ACKNOWLEDGEMENT
-
-from .test_publication import assistant_row, replay
-from .test_publication import publication_host_factory as _publication_host_factory
-from .test_student_step_evidence import source
-
-publication_host_factory = _publication_host_factory
-SUM = "(a-b)^2+(a+b)^2=2*a^2+2*b^2"
-LOCAL = "(a-b)^2=a^2-2*a*b+b^2"
-WHOLE = "((a-b)^2+(a+b)^2)-(2*a^2+2*b^2)=0"
+from deeptutor.capabilities.math_turn.output import generate_response
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("text,scope", [(WHOLE, "WHOLE_OPERATION"), (LOCAL, "LOCAL_CONTRIBUTION")])
-async def test_no_selection_preserves_exact_context_offers_and_host_receipt(
-    publication_host_factory, monkeypatch, text, scope
-):
-    host, generation, _ = publication_host_factory()
-    host.source = source(domain="a,b are real", givens=(), definitions=(), operation=SUM)
-    host.scope = host.math_scope()
-    generation.mode = "operation"
-    session, first = await host.submit(LOCAL)
-    prior = assistant_row(host, first["id"])[2]["accepted_output"]["math_publication"]
-    requests = []
-
-    async def choose_none(_config, _spec, *, prompt, **_kwargs):
-        inputs = json.loads(prompt)
-        requests.append(inputs)
-        return json.dumps({"authority_basis": inputs["authority_basis"], "grant_ids": []})
-
-    monkeypatch.setattr("deeptutor.services.llm.factory._complete_with_resolved_config", choose_none)
-    _, second = await host.submit(text, session_id=session["session_id"])
-    inputs = requests[-1]
-    private = inputs["private_teaching_context"]
-    assert inputs["accepted_user_content"] == text
-    assert private["previous_task"]["publication_id"] == prior["publication_id"]
-    assert {item["scope"] for item in private["operation_correspondence"]} == {scope}
-    assert all(
-        item["stage_completion"] == "UNKNOWN" and item["mastery"] == "NO_INFERENCE"
-        for item in private["operation_correspondence"]
-    )
-    # The selector policy cannot erase either authorized alias to force its choice.
-    operations = [
-        offer for offer in inputs["offers"]
-        if offer["grant"]["act_kind"] in {"chosen_operation", "operation_options"}
-    ]
-    assert {offer["grant"]["act_kind"] for offer in operations} == {
-        "chosen_operation", "operation_options"
+@pytest.mark.parametrize("scope", ["WHOLE_OPERATION", "LOCAL_CONTRIBUTION", "UNKNOWN"])
+async def test_selector_keeps_scope_request_and_operation_aliases(monkeypatch, scope):
+    # Synthetic transport markers confer no native mathematical authority.
+    operation = {"kind": "expand", "kwargs": {"expression": "(a-b)^2"}}
+    inputs = {
+        "basis": {"accepted_user_message_id": 3},
+        "authority_basis": "transport-test-basis",
+        "offers": [
+            {"grant_id": "chosen-id", "grant": {"act_kind": "chosen_operation"}, "text": "same literal"},
+            {"grant_id": "option-id", "grant": {"act_kind": "operation_options"}, "text": "same literal"},
+        ],
+        "private_teaching_context": {
+            "authority": "context_only_never_grants_truth_completion_or_mastery",
+            "previous_task": {"operations": [operation]},
+            "operation_correspondence": [
+                {"operation": operation, "scope": scope, "stage_completion": "UNKNOWN", "mastery": "NO_INFERENCE"}
+            ],
+        },
     }
-    assert len({offer["text"] for offer in operations}) < len(operations)
-    body = assistant_row(host, second["id"])[1]
-    receipt = assistant_row(host, second["id"])[2]["accepted_output"]["math_publication"]
-    assert body == ACKNOWLEDGEMENT and receipt["selected_grants"] == []
-    assert receipt["basis"] == inputs["basis"]
-    before = host.state()
-    events = await replay(host, second)
-    assert host.state() == before
-    assert "".join(event["content"] for event in events if event["type"] == "content") == body
-    assert len(requests) == 1
+    before = deepcopy(inputs)
+    accepted = "Please repeat that same operation slowly."
+    calls = []
+
+    async def proposal(**kwargs):
+        calls.append(kwargs)
+        request = json.loads(kwargs["prompt"])
+        return json.dumps({"authority_basis": request["authority_basis"], "grant_ids": []})
+
+    monkeypatch.setattr("deeptutor.services.llm.factory.complete", proposal)
+    raw = await generate_response(
+        SimpleNamespace(runtime=SimpleNamespace(accepted_user_content=accepted)), inputs
+    )
+    assert inputs == before
+    assert len(calls) == 1
+    assert json.loads(calls[0]["prompt"]) == {"accepted_user_content": accepted, **before}
+    assert json.loads(raw) == {"authority_basis": inputs["authority_basis"], "grant_ids": []}
