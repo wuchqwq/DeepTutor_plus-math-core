@@ -13,7 +13,7 @@ from typing import Any, Protocol, TypeVar, cast
 
 from .accepted import AcceptedSubmission, EpisodeIdentity
 from .alignment import AlignmentMutation, materialize_alignment
-from .authority import MathSemanticGrant
+from .authority import MathSemanticGrant, math_content_digest
 from .ceiling import require_math_authority
 from .claims import ResponseAlignment
 from .codec import _decode, _payload
@@ -46,12 +46,47 @@ from .workspace import (
 
 
 @dataclass(frozen=True, slots=True)
+class ReviewedGoalConnection:
+    """One prior human review adopted by trusted host composition, not content.
+
+    Construction/hashes do not perform review. Only the resolve_episode owner
+    may explicitly attach this declaration; no upload/proposal decoder does so.
+    Terms name explicit ProblemFacts (category, index, digest, coefficient).
+    """
+
+    model_digest: str
+    relation_ref: str
+    relation_digest: str
+    student_equality: str
+    premise_terms: tuple[tuple[str, int, str, str], ...]
+    student_coefficient: str
+    canonical_explanation: str
+    purpose: str = "explain_connection_to_goal"
+
+    def __post_init__(self) -> None:
+        if self.purpose != "explain_connection_to_goal":
+            raise ValueError("unreviewed goal connection purpose")
+        if (
+            not 1 <= len(self.premise_terms) <= 3
+            or not self.canonical_explanation.strip()
+            or len(self.canonical_explanation) > 1024
+        ):
+            raise ValueError("goal connection requires a bounded reviewed declaration")
+        object.__setattr__(self, "premise_terms", tuple(tuple(t) for t in self.premise_terms))
+
+
+@dataclass(frozen=True, slots=True)
 class ReviewedSource:
     identity: EpisodeIdentity
     authored: MathWorkspaceSnapshot
     trajectory_version: str = "math_trajectory_v2"
+    reviewed_connection: ReviewedGoalConnection | None = None
 
     def __post_init__(self) -> None:
+        if self.reviewed_connection is not None and not isinstance(
+            self.reviewed_connection, ReviewedGoalConnection
+        ):
+            raise TypeError("goal release requires explicit trusted-composition declaration")
         if not self.identity.episode_id or not self.authored.paths:
             raise ValueError("reviewed source requires an explicit episode and authored paths")
         if self.identity.episode_id != self.authored.workspace.workspace_id:
@@ -97,6 +132,10 @@ class MathMutation:
         if payload is None:
             self._records: dict[str, Any] = {
                 "source": asdict(source.identity),
+                "reviewed_connection": None
+                if source.reviewed_connection is None
+                else json.loads(json.dumps(asdict(source.reviewed_connection))),
+                "reviewed_source_digest": math_content_digest(source),
                 "trajectory_version": source.trajectory_version,
                 "authored": _snapshot_payload(source.authored),
                 "head": source.authored.workspace.revision,
@@ -111,7 +150,17 @@ class MathMutation:
         else:
             self._records = json.loads(payload)
             if (
-                self._records["trajectory_version"] != source.trajectory_version
+                self._records.get("reviewed_connection")
+                != (
+                    None
+                    if source.reviewed_connection is None
+                    else json.loads(json.dumps(asdict(source.reviewed_connection)))
+                )
+                or (
+                    "reviewed_source_digest" in self._records
+                    and self._records["reviewed_source_digest"] != math_content_digest(source)
+                )
+                or self._records["trajectory_version"] != source.trajectory_version
                 or self._records["source"] != asdict(source.identity)
                 or _snapshot_from(json.dumps(self._records["authored"])) != source.authored
             ):
@@ -420,7 +469,9 @@ class MathMutation:
     def authorize(
         self, selected_refs: tuple[str, ...], grants: tuple[MathSemanticGrant, ...]
     ) -> None:
-        require_math_authority(self.snapshot(), self.trajectory(), selected_refs, grants)
+        require_math_authority(
+            self.snapshot(), self.trajectory(), selected_refs, grants, state=self
+        )
 
     def transform(
         self,

@@ -27,6 +27,8 @@ from deeptutor.math_semantic.proposals import (
 )
 from deeptutor.math_semantic.state import MathMutation, ReviewedSource, confirm_method
 from deeptutor.math_semantic.support import (
+    connection_request,
+    materialize_connection_support,
     materialize_operation_support,
     resolve_math_content_support,
 )
@@ -215,8 +217,8 @@ class MathTurnCapability(TurnCapability):
             grants = tuple(MathSemanticGrant.orientation(ref) for ref in selected)
             grants += tuple(
                 binding.as_grant()
-                for binding in resolve_math_content_support(snapshot, selected)
-                if binding.act_kind in {"chosen_operation", "operation_options"}
+                for binding in resolve_math_content_support(snapshot, selected, state=state)
+                if binding.act_kind in {"chosen_operation", "operation_options", "justification"}
                 or (binding.act_kind == "result" and binding.target_artifact_ref in verified)
             )
             state.authorize(selected, grants)
@@ -230,8 +232,12 @@ class MathTurnCapability(TurnCapability):
                 "authority": tuple(grant.to_dict() for grant in grants),
             }
 
-        snapshot, applicable = await authority(
-            lambda state: (state.snapshot(), state.trajectory().applicable_artifact_refs)
+        snapshot, applicable, connection = await authority(
+            lambda state: (
+                state.snapshot(),
+                state.trajectory().applicable_artifact_refs,
+                connection_request(state, state.trajectory().applicable_artifact_refs),
+            )
         )
         # Existing tools execute outside the commit transaction. The native
         # revision fence rechecks the exact input before adopting their evidence.
@@ -242,14 +248,25 @@ class MathTurnCapability(TurnCapability):
             preferred_refs=alignment.matched_artifact_refs,
         )
 
+        connection_artifacts, connection_evidence = await asyncio.to_thread(
+            materialize_connection_support, connection
+        )
+
         def prepare_publication(state: MathMutation) -> tuple[dict[str, Any], dict[str, Any]]:
+            if (
+                source.reviewed_connection is not None
+                and self._resolve_episode(submission) != binding
+            ):
+                raise ValueError("reviewed goal connection source changed after tools")
             if state.snapshot() != snapshot:
                 raise ValueError("operation input revision became stale")
-            if operations or evidence:
+            if connection_request(state, applicable) != connection:
+                raise ValueError("goal connection evidence or permission became stale")
+            if operations or evidence or connection_artifacts or connection_evidence:
                 state.append(
                     expected_revision=snapshot.workspace.revision,
-                    artifacts=operations,
-                    evidence=evidence,
+                    artifacts=(*operations, *connection_artifacts),
+                    evidence=(*evidence, *connection_evidence),
                 )
             calculation = calculate(state)
             return calculation, publication_input(state, calculation)
@@ -265,9 +282,16 @@ class MathTurnCapability(TurnCapability):
             binding=binding,
             record_publication=True,
         )
-        accepted = await publication_authority(
-            lambda state: accept_response(state, calculate(state), inputs, raw_candidate)
-        )
+
+        def accept_selected(state: MathMutation):
+            if (
+                source.reviewed_connection is not None
+                and self._resolve_episode(submission) != binding
+            ):
+                raise ValueError("reviewed goal connection source changed before acceptance")
+            return accept_response(state, calculate(state), inputs, raw_candidate)
+
+        accepted = await publication_authority(accept_selected)
         # Acceptance commits under the existing fence before any answer bytes
         # reach the host stream. There is no ordinary math-answer fallback.
         context.capability_output.accepted_output = accepted
