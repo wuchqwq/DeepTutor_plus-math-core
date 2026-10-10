@@ -123,7 +123,11 @@ async def test_hostile_persisted_journal_does_not_enter_math_evidence_or_publica
                 grant = offer["grant"]
                 if "contract" not in grant:
                     continue
-                assert grant["contract"] == "bounded_math_feedback_v1"
+                assert grant["contract"] in {
+                    "bounded_math_feedback_v1",
+                    "bounded_counterexample_feedback_v1",
+                    "accepted_object_clarification_v1",
+                }
                 assert grant["session_id"] == context.session_id
                 assert grant["turn_id"] == context.runtime.turn_id
                 assert grant["accepted_user_message_id"] == context.runtime.accepted_user_message_id
