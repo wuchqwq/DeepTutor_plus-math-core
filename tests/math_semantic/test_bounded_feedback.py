@@ -10,6 +10,7 @@ from deeptutor.capabilities.math_turn.feedback import CLARIFICATION, FEEDBACK_VE
 from deeptutor.capabilities.math_turn.output import accept_response, publication_input
 from deeptutor.math_semantic.contracts import MathArtifact
 from deeptutor.math_semantic.proposals import AlignmentProposal
+from deeptutor.math_semantic.support import materialize_operation_support
 from deeptutor.math_semantic.tools import MathToolRegistry
 from deeptutor.math_semantic.validation import STEP_VERSION
 
@@ -440,6 +441,32 @@ def test_partial_whole_and_non_s4_never_become_completion(domain, operation, tex
     )
     assert "only that submitted equality" in accepted.content
     assert "does not confirm" in accepted.content and "task completion" in accepted.content
+    if scope == "LOCAL_CONTRIBUTION":
+        # The requested original operation is still open. This is a legal
+        # combination check, not evidence that a real selector will choose it.
+        artifacts, evidence = materialize_operation_support(
+            following.snapshot(), following.trajectory().applicable_artifact_refs
+        )
+        following.append(
+            expected_revision=following.snapshot().workspace.revision,
+            artifacts=artifacts,
+            evidence=evidence,
+        )
+        calc = calculation(following)
+        inputs = publication_input(following, calc)
+        chosen = offers(inputs, "local_confirmation") + offers(inputs, "chosen_operation")[:1]
+        assert {o["grant"]["act_kind"] for o in chosen} == {
+            "local_confirmation",
+            "chosen_operation",
+        }
+        assert (
+            chosen[-1]["grant"]["target_artifact_ref"]
+            == reviewed.authored.artifacts[-1].artifact_id
+        )
+        before = following.serialize()
+        accepted = accept_response(following, calc, inputs, candidate(inputs, chosen))
+        assert all(o["text"] in accepted.content for o in chosen)
+        assert following.serialize() == before
 
 
 def select_feedback(generation, monkeypatch, kind, *, invalid=False):

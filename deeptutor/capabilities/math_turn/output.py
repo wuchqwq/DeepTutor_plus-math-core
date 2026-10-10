@@ -461,6 +461,9 @@ async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> 
             "prior assignments. UNKNOWN is uncertainty; a local contribution is not whole "
             "operation completion. History and local evidence cannot create offers, grants, "
             "feedback prose, stage completion or mastery. Select only supplied offer IDs."
+            " When composing a response, prefer supported current local confirmation together "
+            "with an authorized explanation that directly answers the accepted question. "
+            "Add an operation only when it provides a distinct necessary next action."
         ),
         max_tokens=1024,
     )

@@ -6,6 +6,7 @@ real model selection is measured by the frozen checkpoint comparison.
 """
 
 from copy import deepcopy
+import hashlib
 import json
 from types import SimpleNamespace
 
@@ -23,14 +24,27 @@ async def test_selector_keeps_scope_request_and_operation_aliases(monkeypatch, s
         "basis": {"accepted_user_message_id": 3},
         "authority_basis": "transport-test-basis",
         "offers": [
-            {"grant_id": "chosen-id", "grant": {"act_kind": "chosen_operation"}, "text": "same literal"},
-            {"grant_id": "option-id", "grant": {"act_kind": "operation_options"}, "text": "same literal"},
+            {
+                "grant_id": "chosen-id",
+                "grant": {"act_kind": "chosen_operation"},
+                "text": "same literal",
+            },
+            {
+                "grant_id": "option-id",
+                "grant": {"act_kind": "operation_options"},
+                "text": "same literal",
+            },
         ],
         "private_teaching_context": {
             "authority": "context_only_never_grants_truth_completion_or_mastery",
             "previous_task": {"operations": [operation]},
             "operation_correspondence": [
-                {"operation": operation, "scope": scope, "stage_completion": "UNKNOWN", "mastery": "NO_INFERENCE"}
+                {
+                    "operation": operation,
+                    "scope": scope,
+                    "stage_completion": "UNKNOWN",
+                    "mastery": "NO_INFERENCE",
+                }
             ],
         },
     }
@@ -51,3 +65,16 @@ async def test_selector_keeps_scope_request_and_operation_aliases(monkeypatch, s
     assert len(calls) == 1
     assert json.loads(calls[0]["prompt"]) == {"accepted_user_content": accepted, **before}
     assert json.loads(raw) == {"authority_basis": inputs["authority_basis"], "grant_ids": []}
+    system = calls[0]["system_prompt"]
+    # Exact frozen A + B append; this tests the sent prompt, not model behavior.
+    assert hashlib.sha256(system.encode()).hexdigest() == (
+        "cee12ff60b34d28d42cf5bf430e982f487852b01ae193ef8a5262038a66faf46"
+    )
+    assert system.endswith(
+        " When composing a response, prefer supported current local confirmation together "
+        "with an authorized explanation that directly answers the accepted question. "
+        "Add an operation only when it provides a distinct necessary next action."
+    )
+    assert "UNKNOWN is uncertainty" in system
+    assert "LOCAL_CONTRIBUTION leaves the rest of the assigned operation open" in system
+    assert "An explicit request to repeat permits that operation again" in system

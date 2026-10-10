@@ -174,6 +174,32 @@ def test_native_fixed_certificate_and_exact_reviewed_text(kind):
     assert state.snapshot().artifacts[0].verification_status == "qualified"
 
 
+def test_current_confirmation_and_reviewed_explanation_compose_without_new_authority(prepared):
+    # Explicit legal selection verifies acceptance, not the model's choice.
+    calc, inputs, explanations = offers(prepared)
+    confirmation = next(
+        o for o in inputs["offers"] if o["grant"]["act_kind"] == "local_confirmation"
+    )
+    chosen = [confirmation, explanations[0]]
+    before = prepared.serialize()
+    accepted = output.accept_response(
+        prepared,
+        calc,
+        inputs,
+        json.dumps(
+            {
+                "authority_basis": inputs["authority_basis"],
+                "grant_ids": [o["grant_id"] for o in chosen],
+            }
+        ),
+    )
+    assert all(o["text"] in accepted.content for o in chosen)
+    receipt = json.loads(accepted.metadata_json)["math_publication"]
+    assert receipt["selected_feedback"] == [confirmation["grant"]]
+    assert receipt["selected_grants"] == [explanations[0]["grant"]]
+    assert prepared.serialize() == before
+
+
 def test_no_retroactive_review_and_no_content_decode(prepared):
     plain = replace(prepared.source, reviewed_connection=None)
     with pytest.raises(ValueError, match="source or episode"):
