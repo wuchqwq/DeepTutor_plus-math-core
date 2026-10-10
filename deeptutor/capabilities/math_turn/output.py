@@ -320,8 +320,92 @@ def _teaching_context(state: MathMutation, calculation: dict[str, Any]) -> dict[
                         "mastery": "NO_INFERENCE",
                     }
                 )
+        # Revision and content/grant IDs change when an operation is rebound.
+        # Match its exact executable structure and named premises instead;
+        # this is assignment identity, never a new mathematical use relation.
+        links = {}
+        current_artifacts = {a.artifact_id: a for a in snapshot.artifacts}
+        for grant in calculation["authority"]:
+            if (
+                grant["act_kind"] not in {"chosen_operation", "operation_options"}
+                or grant["support_mechanism"] != OPERATION_MECHANISM
+            ):
+                continue
+            ref = grant["content_ref"]["identifier"]
+            request = json.loads(current_artifacts[ref].statement)
+            scopes = [
+                {"claim_id": item["claim_id"], "scope": item["scope"]}
+                for item in result["operation_correspondence"]
+                if _same_assignment(request, item["operation"])
+            ]
+            if scopes:
+                links[ref] = {
+                    "content_ref": ref,
+                    "previous_publication_id": entry["publication_id"],
+                    "claim_scopes": scopes,
+                }
+        if links:
+            result["assignment_offer_links"] = list(links.values())
         break
     return result
+
+
+def _same_assignment(current: dict[str, Any], previous: dict[str, Any]) -> bool:
+    return all(
+        current[key] == previous[key]
+        for key in ("mechanism", "kind", "kwargs", "premises", "workspace_id")
+    )
+
+
+def _selector_input(accepted_content: str, inputs: dict[str, Any]) -> dict[str, Any]:
+    """Default teaching order only; every offer and the authority stay intact."""
+    prompt = {"accepted_user_content": accepted_content, **inputs}
+    links = inputs.get("private_teaching_context", {}).get("assignment_offer_links", [])
+    whole = [
+        link
+        for link in links
+        if {item["scope"] for item in link["claim_scopes"]} == {"WHOLE_OPERATION"}
+    ]
+    refs = {link["content_ref"] for link in whole}
+    claims = {item["claim_id"] for link in whole for item in link["claim_scopes"]}
+    repeats = {
+        offer["grant_id"]
+        for offer in inputs["offers"]
+        if offer["grant"]["act_kind"] in {"chosen_operation", "operation_options"}
+        and offer["grant"].get("content_ref", {}).get("identifier") in refs
+    }
+    feedback = {
+        offer["grant_id"]
+        for offer in inputs["offers"]
+        if offer["grant"].get("contract") == FEEDBACK_VERSION
+        and (
+            offer["grant"]["act_kind"] == "neutral_clarification"
+            or (
+                offer["grant"]["act_kind"] == "local_confirmation"
+                and offer["grant"]["claim_ref"] in claims
+            )
+        )
+    }
+    if not repeats or not feedback:
+        return prompt
+
+    def priority(offer):
+        if offer["grant_id"] in feedback:
+            return 0 if offer["grant"]["act_kind"] == "local_confirmation" else 1
+        return 3 if offer["grant_id"] in repeats else 2
+
+    prompt["offers"] = sorted(inputs["offers"], key=priority)
+    prompt["teaching_priority"] = {
+        "meaning": "default_pedagogical_order_only_not_authority_or_stage_mastery",
+        "current_feedback_ids": sorted(feedback),
+        "repeat_of_whole_assignment_ids": sorted(repeats),
+        "choice": (
+            "Respond to the current request with its available feedback before reassigning "
+            "the locally completed operation. Explicit repeat or recheck requests may select "
+            "that operation; all offers remain selectable."
+        ),
+    }
+    return prompt
 
 
 async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> str:
@@ -330,7 +414,7 @@ async def generate_response(context: UnifiedContext, inputs: dict[str, Any]) -> 
 
     return await factory.complete(
         prompt=json.dumps(
-            {"accepted_user_content": context.runtime.accepted_user_content, **inputs},
+            _selector_input(context.runtime.accepted_user_content, inputs),
             ensure_ascii=False,
             sort_keys=True,
         ),
