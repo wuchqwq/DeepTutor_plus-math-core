@@ -19,6 +19,7 @@ from deeptutor.math_semantic.support import OPERATION_MECHANISM
 from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
+from .contextual_clarification import CONTEXTUAL_VERSION, contextual_clarification_offers
 from .feedback import FEEDBACK_VERSION, feedback_offers
 
 ACKNOWLEDGEMENT = "Mathematical evidence recorded."
@@ -115,11 +116,17 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
     feedback = feedback_offers(state)
     basis["feedback_authority_digest"] = _digest([offer["grant"] for offer in feedback])
     offers.extend({"grant_id": _digest(offer["grant"]), **offer} for offer in feedback)
+    teaching_context = _teaching_context(state, calculation)
+    contextual = contextual_clarification_offers(state, calculation, teaching_context)
+    basis["contextual_clarification_authority_digest"] = _digest(
+        [offer["grant"] for offer in contextual]
+    )
+    offers.extend({"grant_id": _digest(offer["grant"]), **offer} for offer in contextual)
     return {
         "basis": basis,
         "authority_basis": _digest(basis),
         "offers": offers,
-        "private_teaching_context": _teaching_context(state, calculation),
+        "private_teaching_context": teaching_context,
     }
 
 
@@ -488,13 +495,18 @@ def accept_response(
         for key in selected
         if by_id[key]["grant"].get("contract") == FEEDBACK_VERSION
     ]
+    contextual = [
+        by_id[key]["grant"]
+        for key in selected
+        if by_id[key]["grant"].get("contract") == CONTEXTUAL_VERSION
+    ]
     # Feedback is a separate, finite host contract. Exact membership above
     # was freshly resolved from accepted claims and pinned Core receipts;
     # it neither impersonates nor broadens an orientation/operation grant.
     chosen = tuple(
         MathSemanticGrant.from_value(by_id[key]["grant"])
         for key in selected
-        if by_id[key]["grant"].get("contract") != FEEDBACK_VERSION
+        if by_id[key]["grant"].get("contract") not in {FEEDBACK_VERSION, CONTEXTUAL_VERSION}
     )
     state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
     # Orientation supplies no task mathematics. The existing acknowledgement
@@ -509,6 +521,7 @@ def accept_response(
             "operation_options",
             "neutral_clarification",
             "local_confirmation",
+            "contextual_clarification",
         }:
             continue
         # Complete chosen authority has already passed above. Presentation
@@ -524,6 +537,8 @@ def accept_response(
     }
     if feedback:
         trace["selected_feedback"] = feedback
+    if contextual:
+        trace["selected_contextual_clarifications"] = contextual
     publication_id = "math_output_" + _digest(trace)
     trace["publication_id"] = publication_id
     return AcceptedTurnOutput(
