@@ -13,13 +13,16 @@ def require_math_authority(
     trajectory: TrajectoryProjection | None,
     selected_refs: tuple[str, ...],
     grants: tuple[MathSemanticGrant, ...],
+    *,
+    state=None,
 ) -> None:
     if trajectory is None:
         raise ValueError("fresh protected math execution requires trajectory applicability")
     if not set(selected_refs) <= set(trajectory.applicable_artifact_refs):
         raise ValueError("selected math refs exceed the trajectory authority ceiling")
     bindings = {
-        binding.relation_key() for binding in resolve_math_content_support(snapshot, selected_refs)
+        binding.relation_key()
+        for binding in resolve_math_content_support(snapshot, selected_refs, state=state)
     }
     for grant in grants:
         if grant.target_artifact_ref not in selected_refs or grant.relation_key() not in bindings:

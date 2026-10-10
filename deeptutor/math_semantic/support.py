@@ -7,6 +7,8 @@ premise truth, current applicability, or a complete justification/proof.
 
 from __future__ import annotations
 
+from dataclasses import asdict, replace
+from fractions import Fraction
 import json
 import re
 
@@ -14,10 +16,298 @@ from deeptutor.math_semantic.authority import MathContentSupportBinding, math_co
 from deeptutor.math_semantic.contracts import MathArtifact
 from deeptutor.math_semantic.refs import SourceRef
 from deeptutor.math_semantic.tools import MathToolRegistry
+from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
+from deeptutor.math_semantic.verification import normalize_display
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
 OPERATION_MECHANISM = "typed_expand_substitute_support_v1"
 OPERATION_SCOPE = "execution_relative_to_named_premises_not_truth_or_answer"
+CONNECTION_MECHANISM = "reviewed_intermediate_certificate_v1"
+CONNECTION_SCOPE = "reviewed_connection_only_no_range_completion_or_mastery"
+
+
+def _connection_residual(text, names):
+    parts = normalize_display(text).split("=")
+    if len(parts) != 2:
+        raise ValueError("connection requires a finite equality")
+    left, ln, _ = _polynomial(parts[0])
+    right, rn, _ = _polynomial(parts[1])
+    if (ln | rn) - names:
+        raise ValueError("undefined connection symbol")
+    return f"({left})-({right})"
+
+
+def _connection_coefficient(value):
+    coefficient = Fraction(value)
+    if not coefficient or max(abs(coefficient.numerator), coefficient.denominator) > 1000:
+        raise ValueError("connection coefficient budget")
+    return f"({coefficient.numerator}/{coefficient.denominator})"
+
+
+def _connection_zero(proof, kwargs, refs):
+    return (
+        proof.tool_name == "expand"
+        and proof.tool_version == MathToolRegistry.VERSION
+        and proof.status == "succeeded"
+        and proof.failure_type is None
+        and proof.scope == MathToolRegistry._scope_for("expand")
+        and proof.input_summary == MathToolRegistry._input_summary(kwargs)
+        and proof.input_refs == refs
+        and proof.output_summary == "0"
+        and replace(proof, evidence_id=None).evidence_id == proof.evidence_id
+    )
+
+
+def connection_request(state, target_refs, *, input_revision=None):
+    """Read current canonical evidence; caller refs/JSON never create permission.
+
+    This first use requires a current asserted mathematical claim. The existing
+    selector handles request relevance; questions are never asserted claims.
+    Earlier-step-only clarification intentionally has no request.
+    """
+    declaration = state.source.reviewed_connection
+    if declaration is None:
+        return None
+    snapshot = state.snapshot()
+    revision = snapshot.workspace.revision if input_revision is None else input_revision
+    from deeptutor.math_semantic.codec import _decode
+
+    current = max(
+        (
+            a
+            for v in json.loads(state.serialize())["alignments"].values()
+            if (a := _decode(v)).student_response_ref.identifier == state.submission.response_id
+            and a.output_workspace_revision <= revision
+        ),
+        key=lambda a: a.workspace_revision,
+        default=None,
+    )
+    if (
+        current is None
+        or current.interaction_type != "answer"
+        or current.uncertainty not in {None, 0}
+    ):
+        return None
+    state._check_step_evidence(current)
+    try:
+        model = snapshot.problem_model
+        symbols, definitions, _, facts = _step_scope(snapshot)
+        if (
+            model.has_unknowns
+            or model.has_conflicts
+            or declaration.model_digest != math_content_digest(model)
+            or model != state.source.authored.problem_model
+            or current.math_workspace_ref != snapshot.workspace_ref
+            or step_basis(state.snapshot(current.workspace_revision)) != step_basis(snapshot)
+            or any(
+                not f.provenance or f.status != "explicit" or f.uncertainty != 0
+                for f in model.domain
+            )
+        ):
+            return None
+        target = next(
+            a for a in state.source.authored.artifacts if a.artifact_id == declaration.relation_ref
+        )
+        if (
+            target.artifact_id not in target_refs
+            or target.role != "intermediate"
+            or math_content_digest(target) != declaration.relation_digest
+            or target not in snapshot.artifacts
+            or target.uncertainty != 0
+            or target.assumptions
+            or target.verification_status in {"refuted", "unresolved_conflict"}
+        ):
+            return None
+        names = symbols | definitions.keys()
+        terms = []
+        for category, index, digest, coefficient in declaration.premise_terms:
+            if (
+                category not in {"givens", "constraints", "assumptions", "target"}
+                or type(index) is not int
+                or index < 0
+            ):
+                return None
+            values = (model.target,) if category == "target" else getattr(model, category)
+            fact = values[index]
+            if (
+                fact is None
+                or math_content_digest(fact) != digest
+                or fact.status != "explicit"
+                or fact.uncertainty != 0
+                or not fact.provenance
+                or not set(fact.provenance) <= set(model.provenance)
+            ):
+                return None
+            equality = fact.value.removeprefix("range of ") if category == "target" else fact.value
+            terms.append(
+                f"{_connection_coefficient(coefficient)}*({_connection_residual(equality, names)})"
+            )
+        proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
+        for claim in current.claims[:4]:
+            if (
+                claim.claim_type not in {"identity", "equation"}
+                or claim.parse_status != "parsed"
+                or claim.uncertainty not in {None, 0}
+                or claim.student_response_ref != current.student_response_ref
+                or normalize_display(claim.normalized_form)
+                != normalize_display(declaration.student_equality)
+                or normalize_display(claim.evidence.quote) != claim.normalized_form
+                or state.submission.raw_content[claim.evidence.start : claim.evidence.end]
+                != claim.evidence.quote
+            ):
+                continue
+            residual = _connection_residual(claim.normalized_form, symbols)
+            for envelope in current.math_evidence:
+                if envelope.tool_version != STEP_VERSION:
+                    continue
+                binding, checked = (
+                    json.loads(envelope.input_summary),
+                    json.loads(envelope.output_summary),
+                )
+                refs = (
+                    state.submission.response_id,
+                    claim.claim_id,
+                    f"{snapshot.workspace.workspace_id}@{current.workspace_revision}",
+                    model.model_ref.identifier,
+                    *tuple(dict.fromkeys(ref for _, ref in facts)),
+                )
+                if (
+                    binding["claim"] != asdict(claim)
+                    or binding["model"] != json.loads(json.dumps(asdict(model)))
+                    or binding["premises"] != [list(f) for f in facts]
+                    or envelope.input_refs != refs
+                    or checked["local_relation"] != "IDENTITY"
+                    or checked["reason"] != "zero_polynomial_over_explicit_reals"
+                    or envelope.status != "succeeded"
+                    or envelope.failure_type is not None
+                    or len(checked["tool_evidence_refs"]) != 1
+                ):
+                    continue
+                proof = proofs.get(checked["tool_evidence_refs"][0])
+                if proof is None or not _connection_zero(proof, {"expression": residual}, refs):
+                    continue
+                expression = _connection_residual(target.statement, names)
+                expression += (
+                    "-("
+                    + "+".join(
+                        (
+                            *terms,
+                            f"{_connection_coefficient(declaration.student_coefficient)}*({residual})",
+                        )
+                    )
+                    + ")"
+                )
+                # Every component used the existing polynomial grammar; only a
+                # fixed rational sum is assembled. No search or solver is used.
+                from deeptutor.math_semantic.tools import _safe_expression
+
+                _safe_expression(expression)
+                return {
+                    "mechanism": CONNECTION_MECHANISM,
+                    "target": target.artifact_id,
+                    "source_digest": math_content_digest(state.source),
+                    "declaration_digest": math_content_digest(declaration),
+                    "input_revision": revision,
+                    "workspace_id": snapshot.workspace.workspace_id,
+                    "submission_digest": math_content_digest(state.submission),
+                    "alignment_digest": math_content_digest(current),
+                    "claim_ref": claim.claim_id,
+                    "claim_digest": math_content_digest(claim),
+                    "step_ref": envelope.evidence_id,
+                    "step_digest": math_content_digest(envelope),
+                    "kwargs": {"expression": expression},
+                    "text": declaration.canonical_explanation,
+                }
+    except (
+        ValueError,
+        TypeError,
+        KeyError,
+        IndexError,
+        StopIteration,
+        AttributeError,
+        SyntaxError,
+    ):
+        return None
+    return None
+
+
+def _connection_refs(request):
+    return (
+        f"{request['workspace_id']}@{request['input_revision']}",
+        request["source_digest"],
+        request["submission_digest"],
+        request["claim_ref"],
+        request["step_ref"],
+    )
+
+
+def materialize_connection_support(request):
+    """One explicit certificate tool call outside the transaction; no permission."""
+    if request is None:
+        return (), ()
+    result = MathToolRegistry(max_calls=1).call(
+        "expand", input_refs=_connection_refs(request), **request["kwargs"]
+    )
+    if not _connection_zero(result.evidence, request["kwargs"], _connection_refs(request)):
+        return (), (result.evidence,)
+    revision = SourceRef(
+        "workspace_revision", f"{request['workspace_id']}@{request['input_revision']}"
+    )
+    canonical = json.dumps(request, ensure_ascii=False, sort_keys=True)
+    artifact = MathArtifact(
+        canonical,
+        "transformation",
+        claim_kind="operation_description",
+        normalized_form=canonical,
+        provenance=(SourceRef("math_workspace", request["workspace_id"]), revision),
+        dependencies=(request["target"],),
+        verification_status="qualified",
+        verification_scope=CONNECTION_SCOPE,
+        tool_evidence_refs=(result.evidence.evidence_id,),
+        workspace_revision=request["input_revision"] + 1,
+    )
+    return (artifact,), (result.evidence,)
+
+
+def _connection_bindings(snapshot, target_refs, state):
+    if state is None or state.snapshot() != snapshot:
+        return
+    request = connection_request(state, target_refs, input_revision=snapshot.workspace.revision - 1)
+    if request is None:
+        return
+    canonical = json.dumps(request, ensure_ascii=False, sort_keys=True)
+    proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
+    for artifact in snapshot.artifacts:
+        if (
+            artifact.claim_kind != "operation_description"
+            or artifact.role != "transformation"
+            or artifact.verification_scope != CONNECTION_SCOPE
+            or artifact.verification_status != "qualified"
+            or artifact.workspace_revision != snapshot.workspace.revision
+            or artifact.statement != canonical
+            or artifact.normalized_form != canonical
+            or artifact.dependencies != (request["target"],)
+            or artifact.provenance
+            != (
+                snapshot.workspace_ref,
+                SourceRef("workspace_revision", _connection_refs(request)[0]),
+            )
+            or len(artifact.tool_evidence_refs) != 1
+        ):
+            continue
+        proof = proofs.get(artifact.tool_evidence_refs[0])
+        if proof is not None and _connection_zero(
+            proof, request["kwargs"], _connection_refs(request)
+        ):
+            yield MathContentSupportBinding(
+                request["target"],
+                "justification",
+                SourceRef("math_artifact", artifact.artifact_id),
+                artifact_content_digest(artifact),
+                SourceRef("math_tool_evidence", proof.evidence_id),
+                CONNECTION_MECHANISM,
+                CONNECTION_SCOPE,
+            )
 
 
 def _operation_requests(snapshot, target, allowed_refs):
@@ -211,13 +501,13 @@ def artifact_content_digest(artifact: MathArtifact) -> str:
 
 
 def resolve_math_content_support(
-    snapshot: MathWorkspaceSnapshot, target_refs: tuple[str, ...]
+    snapshot: MathWorkspaceSnapshot, target_refs: tuple[str, ...], *, state=None
 ) -> tuple[MathContentSupportBinding, ...]:
     """Resolve only registered built-in mechanisms from a trusted pinned snapshot.
 
     No caller-supplied role/scope string creates a binding. In particular this
-    version has no semantic justification mechanism; operation evidence cannot
-    be used to authorize explanatory prose by changing the requested act.
+    version supplies only the explicitly reviewed current-claim connection
+    below; ordinary operation evidence cannot authorize explanatory prose.
     """
     by_ref = {item.artifact_id: item for item in snapshot.artifacts}
     bindings = []
@@ -301,4 +591,5 @@ def resolve_math_content_support(
                         )
                     )
     bindings.extend(_typed_operation_bindings(snapshot, target_refs))
+    bindings.extend(_connection_bindings(snapshot, target_refs, state))
     return tuple(bindings)

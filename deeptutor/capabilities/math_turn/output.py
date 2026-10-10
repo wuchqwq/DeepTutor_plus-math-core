@@ -15,7 +15,7 @@ from deeptutor.core.context import AcceptedTurnOutput, UnifiedContext
 from deeptutor.math_semantic.authority import MathSemanticGrant, math_content_digest
 from deeptutor.math_semantic.claims import StudentMathClaim
 from deeptutor.math_semantic.state import MathMutation
-from deeptutor.math_semantic.support import OPERATION_MECHANISM
+from deeptutor.math_semantic.support import CONNECTION_MECHANISM, OPERATION_MECHANISM
 from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
@@ -74,7 +74,13 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
     }
     offers = []
     for grant in grants:
-        if grant.act_kind not in {"orientation", "result", "chosen_operation", "operation_options"}:
+        if grant.act_kind not in {
+            "orientation",
+            "result",
+            "chosen_operation",
+            "operation_options",
+            "justification",
+        }:
             raise ValueError("publication has no renderer for this mathematical act")
         text = ACKNOWLEDGEMENT
         if grant.act_kind == "result":
@@ -88,6 +94,15 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
             ):
                 raise ValueError("publication result lacks exact verified grounding")
             text = artifact.statement
+        if grant.act_kind == "justification":
+            artifact = artifacts.get(grant.content_ref.identifier)
+            if (
+                grant.support_mechanism != CONNECTION_MECHANISM
+                or artifact is None
+                or math_content_digest(artifact) != grant.content_digest
+            ):
+                raise ValueError("publication explanation lacks reviewed exact content")
+            text = json.loads(artifact.statement)["text"]
         if grant.act_kind in {"chosen_operation", "operation_options"}:
             operation = artifacts.get(grant.content_ref.identifier)
             if operation is None or math_content_digest(operation) != grant.content_digest:
@@ -523,6 +538,7 @@ def accept_response(
             "local_confirmation",
             "contextual_clarification",
             "local_counterexample",
+            "justification",
         }:
             continue
         # Complete chosen authority has already passed above. Presentation
