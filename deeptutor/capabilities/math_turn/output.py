@@ -557,9 +557,9 @@ def accept_response(
     if contextual:
         trace["selected_contextual_clarifications"] = contextual
     historical = []
-    artifacts = {a.artifact_id: a for a in state.snapshot().artifacts}
     for grant in chosen:
         if grant.act_kind == "justification" and grant.support_mechanism == CONNECTION_MECHANISM:
+            artifacts = {a.artifact_id: a for a in state.snapshot().artifacts}
             request = json.loads(artifacts[grant.content_ref.identifier].statement)
             if "historical_claim_origin" in request:
                 historical.append(
