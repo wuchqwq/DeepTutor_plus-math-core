@@ -57,8 +57,8 @@ def contextual_clarification_offers(
 ) -> list[dict[str, Any]]:
     """Resolve current exact spans, or a previously validated operation receipt.
 
-    Reuse the owner's freshly resolved history, or recheck an immediate prior
-    assignment against its original Core grants. No model prose or new proof.
+    Resolve the latest accepted assignment against its original Core grants.
+    Correspondence context can precede a newer task. No model prose or new proof.
     """
     records = json.loads(state.serialize())
     snapshot = state.snapshot()
@@ -149,52 +149,51 @@ def contextual_clarification_offers(
         offers.append({"grant": grant, "text": text + _CHOICES})
     if current.claims:
         return offers
-    previous = teaching_context.get("previous_task")
-    if previous is None:
-        # Teaching correspondence looks before the pending claim. An immediate
-        # request to revisit a just-issued task has no intervening claim; resolve
-        # that accepted task separately without inventing correspondence.
-        for submitted in reversed(state.prefix[:-1]):
-            entry = records.get("host_math_publications", {}).get(submitted.turn_id)
-            if entry is None:
+    previous = None
+    # Correspondence context points before the pending claim, which may precede
+    # a newer accepted task. No-claim clarification follows receipt chronology;
+    # invalid latest authority returns no reference rather than falling back.
+    for submitted in reversed(state.prefix[:-1]):
+        entry = records.get("host_math_publications", {}).get(submitted.turn_id)
+        if entry is None:
+            continue
+        trace = json.loads(entry["metadata_json"])["math_publication"]
+        old_basis = trace["basis"]
+        if (
+            old_basis["episode_id"] != state.source.identity.episode_id
+            or old_basis["session_id"] != submitted.session_id
+            or old_basis["turn_id"] != submitted.turn_id
+            or old_basis["accepted_user_message_id"] != submitted.message_id
+            or trace["publication_id"] != entry["publication_id"]
+            or trace["content_digest"] != hashlib.sha256(entry["content"].encode()).hexdigest()
+        ):
+            raise ValueError("foreign or altered contextual assignment receipt")
+        old = state.snapshot(old_basis["math_revision"])
+        if step_basis(old) != step_basis(snapshot):
+            return []
+        allowed = [
+            b.as_grant().to_dict()
+            for b in resolve_math_content_support(
+                old, calculation["trajectory"]["applicable_artifact_refs"]
+            )
+        ]
+        artifacts = {a.artifact_id: a for a in old.artifacts}
+        operations = []
+        for grant in trace["selected_grants"]:
+            if grant["act_kind"] not in {"chosen_operation", "operation_options"}:
                 continue
-            trace = json.loads(entry["metadata_json"])["math_publication"]
-            old_basis = trace["basis"]
-            if (
-                old_basis["episode_id"] != state.source.identity.episode_id
-                or old_basis["session_id"] != submitted.session_id
-                or old_basis["turn_id"] != submitted.turn_id
-                or old_basis["accepted_user_message_id"] != submitted.message_id
-                or trace["publication_id"] != entry["publication_id"]
-                or trace["content_digest"] != hashlib.sha256(entry["content"].encode()).hexdigest()
-            ):
-                raise ValueError("foreign or altered contextual assignment receipt")
-            old = state.snapshot(old_basis["math_revision"])
-            if step_basis(old) != step_basis(snapshot):
+            if grant not in allowed or grant["support_mechanism"] != OPERATION_MECHANISM:
                 return []
-            allowed = [
-                b.as_grant().to_dict()
-                for b in resolve_math_content_support(
-                    old, calculation["trajectory"]["applicable_artifact_refs"]
-                )
-            ]
-            artifacts = {a.artifact_id: a for a in old.artifacts}
-            operations = []
-            for grant in trace["selected_grants"]:
-                if grant["act_kind"] not in {"chosen_operation", "operation_options"}:
-                    continue
-                if grant not in allowed or grant["support_mechanism"] != OPERATION_MECHANISM:
-                    return []
-                operation = json.loads(artifacts[grant["content_ref"]["identifier"]].statement)
-                if operation not in operations:
-                    operations.append(operation)
-            if operations:
-                previous = {
-                    "turn_id": submitted.turn_id,
-                    "publication_id": entry["publication_id"],
-                    "operations": operations[:4],
-                }
-                break
+            operation = json.loads(artifacts[grant["content_ref"]["identifier"]].statement)
+            if operation not in operations:
+                operations.append(operation)
+        if operations:
+            previous = {
+                "turn_id": submitted.turn_id,
+                "publication_id": entry["publication_id"],
+                "operations": operations[:4],
+            }
+            break
     if not previous:
         return []
     entry = records.get("host_math_publications", {}).get(previous["turn_id"])
