@@ -19,6 +19,8 @@ from deeptutor.math_semantic.support import OPERATION_MECHANISM
 from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
+from .feedback import FEEDBACK_VERSION, feedback_offers
+
 ACKNOWLEDGEMENT = "Mathematical evidence recorded."
 
 
@@ -110,6 +112,9 @@ def publication_input(state: MathMutation, calculation: dict[str, Any]) -> dict[
         offers.append(
             {"grant_id": _digest(grant.to_dict()), "grant": grant.to_dict(), "text": text}
         )
+    feedback = feedback_offers(state)
+    basis["feedback_authority_digest"] = _digest([offer["grant"] for offer in feedback])
+    offers.extend({"grant_id": _digest(offer["grant"]), **offer} for offer in feedback)
     return {
         "basis": basis,
         "authority_basis": _digest(basis),
@@ -388,7 +393,19 @@ def accept_response(
     by_id = {offer["grant_id"]: offer for offer in current["offers"]}
     if any(identifier not in by_id for identifier in selected):
         raise ValueError("publication selection exceeds current mathematical authority")
-    chosen = tuple(MathSemanticGrant.from_value(by_id[key]["grant"]) for key in selected)
+    feedback = [
+        by_id[key]["grant"]
+        for key in selected
+        if by_id[key]["grant"].get("contract") == FEEDBACK_VERSION
+    ]
+    # Feedback is a separate, finite host contract. Exact membership above
+    # was freshly resolved from accepted claims and pinned Core receipts;
+    # it neither impersonates nor broadens an orientation/operation grant.
+    chosen = tuple(
+        MathSemanticGrant.from_value(by_id[key]["grant"])
+        for key in selected
+        if by_id[key]["grant"].get("contract") != FEEDBACK_VERSION
+    )
     state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
     # Orientation supplies no task mathematics. The existing acknowledgement
     # is also the no-selection operational status; it asserts no math truth.
@@ -396,7 +413,13 @@ def accept_response(
     results = []
     for key in selected:
         offer = by_id[key]
-        if offer["grant"]["act_kind"] not in {"result", "chosen_operation", "operation_options"}:
+        if offer["grant"]["act_kind"] not in {
+            "result",
+            "chosen_operation",
+            "operation_options",
+            "neutral_clarification",
+            "local_confirmation",
+        }:
             continue
         # Complete chosen authority has already passed above. Presentation
         # folding never removes a relation from validation or the receipt.
@@ -409,6 +432,8 @@ def accept_response(
         "selected_grants": [grant.to_dict() for grant in chosen],
         "content_digest": hashlib.sha256(response.encode()).hexdigest(),
     }
+    if feedback:
+        trace["selected_feedback"] = feedback
     publication_id = "math_output_" + _digest(trace)
     trace["publication_id"] = publication_id
     return AcceptedTurnOutput(
