@@ -188,6 +188,26 @@ class PathSummary:
     artifact_refs: tuple[str, ...]
 
 
+EXTRACTION_REQUEST_GUIDANCE = (
+    "interaction_type describes the presence of the student's own current mathematical "
+    "assertion, not a question mark, certainty or mathematical correctness. If claims "
+    "is nonempty, use answer, including a submitted equality hedged with uncertainty "
+    "or followed by a request to check or explain it. Preserve that assertion; do not "
+    "drop claims to make question or clarification valid. question and clarification "
+    "require empty claims. A formula only quoted from someone else, copied as problem "
+    "context, or mentioned as the subject of a question is not an asserted student "
+    "claim. In a mixed response, extract only the student's own exact assertion spans. "
+    "Do not decide truth, grade, solve, or invent evidence. Examples describe speech "
+    "acts only and never supply evidence for the actual response_text: "
+    "'My submitted equality is p+1=q. I am unsure; can you check it?' has answer and "
+    "one equation claim quoting p+1=q. 'The worksheet says p+1=q; what does it mean?' "
+    "has question and empty claims. 'The worksheet says p+1=q. My line is p-1=r; "
+    "please check my line.' has answer and only one claim quoting p-1=r. "
+    "Return the existing AlignmentProposal object; this request guidance is not a "
+    "response field and does not relax its schema."
+)
+
+
 @dataclass(frozen=True, slots=True)
 class AlignmentProjection:
     response_text: str
@@ -198,6 +218,7 @@ class AlignmentProjection:
     paths: tuple[PathSummary, ...]
     dependency_edges: tuple[tuple[str, str], ...]
     projected_refs: tuple[str, ...]
+    extraction_guidance: str = EXTRACTION_REQUEST_GUIDANCE
 
 
 class ResponseAlignmentProvider(Protocol):
