@@ -58,30 +58,113 @@ def _connection_zero(proof, kwargs, refs):
     )
 
 
-def connection_request(state, target_refs, *, input_revision=None):
-    """Read current canonical evidence; caller refs/JSON never create permission.
+def _connection_origin(state, revision):
+    """Read the existing pending step from canonical accepted records only."""
+    from deeptutor.math_semantic.codec import _decode
 
-    This first use requires a current asserted mathematical claim. The existing
-    selector handles request relevance; questions are never asserted claims.
-    Earlier-step-only clarification intentionally has no request.
+    records = json.loads(state.serialize())
+    alignments = [_decode(v) for v in records["alignments"].values()]
+
+    def latest(submitted):
+        return max(
+            (
+                a
+                for a in alignments
+                if a.student_response_ref.identifier == submitted.response_id
+                and a.output_workspace_revision <= revision
+            ),
+            key=lambda a: a.workspace_revision,
+            default=None,
+        )
+
+    current = latest(state.submission)
+    if current is None or current.uncertainty not in {None, 0}:
+        return None
+    if current.interaction_type == "answer":
+        return state.submission, current, None
+    if current.claims or current.interaction_type not in {"clarification", "question"}:
+        return None
+    snapshot = state.snapshot()
+    if current.math_workspace_ref != snapshot.workspace_ref or step_basis(
+        state.snapshot(current.workspace_revision)
+    ) != step_basis(snapshot):
+        return None
+    state._check_step_evidence(current)
+    # This is the same bounded pending-step look-back as teaching context, but
+    # a missing/unclear/latest substantive alignment stops, never falls back.
+    prefix = state.prefix
+    if not prefix or prefix[-1] != state.submission or len(prefix) > 32:
+        return None
+    if len({s.response_id for s in prefix}) != len(prefix) or any(
+        s.session_id != state.submission.session_id for s in prefix
+    ):
+        return None
+    for ordinal in range(len(prefix) - 2, -1, -1):
+        submitted = prefix[ordinal]
+        pending = latest(submitted)
+        if pending is None or pending.uncertainty not in {None, 0}:
+            return None
+        if not pending.claims:
+            if pending.interaction_type in {"clarification", "question"}:
+                continue
+            return None
+        if pending.interaction_type != "answer" or len(pending.claims) != 1:
+            return None
+        state._check_step_evidence(pending)
+        pinned = state.snapshot(pending.output_workspace_revision)
+        from deeptutor.math_semantic.state import MathMutation
+
+        prior = MathMutation(
+            state.source,
+            submitted,
+            prefix[: ordinal + 1],
+            json.dumps(dict(records, head=pending.output_workspace_revision)),
+        )
+        proofs = {e.evidence_id: e for e in snapshot.tool_evidence}
+        if (
+            pending.math_workspace_ref != snapshot.workspace_ref
+            or step_basis(pinned) != step_basis(snapshot)
+            or pinned.paths != snapshot.paths
+            or prior.trajectory().compatible_path_refs != state.trajectory().compatible_path_refs
+            or any(proofs.get(e.evidence_id) != e for e in pending.math_evidence)
+        ):
+            return None
+        return (
+            submitted,
+            pending,
+            {
+                "session_id": submitted.session_id,
+                "turn_id": submitted.turn_id,
+                "accepted_user_message_id": submitted.message_id,
+                "student_response_ref": asdict(pending.student_response_ref),
+                "alignment_ref": pending.alignment_id,
+                "workspace_revision": pending.workspace_revision,
+                "output_workspace_revision": pending.output_workspace_revision,
+                "submission_digest": math_content_digest(submitted),
+                "alignment_digest": math_content_digest(pending),
+                "inquiry_digest": math_content_digest(state.submission),
+                "inquiry_alignment_digest": math_content_digest(current),
+            },
+        )
+    return None
+
+
+def connection_request(state, target_refs, *, input_revision=None):
+    """Use a current claim or the explicitly permitted unique pending claim.
+
+    Pure inquiries reference the latest valid accepted claim without becoming
+    assertions. Historical row/claim/step/tool revisions remain their originals;
+    the new certificate and publication are bound to this inquiry separately.
     """
     declaration = state.source.reviewed_connection
     if declaration is None:
         return None
     snapshot = state.snapshot()
     revision = snapshot.workspace.revision if input_revision is None else input_revision
-    from deeptutor.math_semantic.codec import _decode
-
-    current = max(
-        (
-            a
-            for v in json.loads(state.serialize())["alignments"].values()
-            if (a := _decode(v)).student_response_ref.identifier == state.submission.response_id
-            and a.output_workspace_revision <= revision
-        ),
-        key=lambda a: a.workspace_revision,
-        default=None,
-    )
+    origin = _connection_origin(state, revision)
+    if origin is None:
+        return None
+    submitted, current, historical = origin
     if (
         current is None
         or current.interaction_type != "answer"
@@ -152,7 +235,7 @@ def connection_request(state, target_refs, *, input_revision=None):
                 or normalize_display(claim.normalized_form)
                 != normalize_display(declaration.student_equality)
                 or normalize_display(claim.evidence.quote) != claim.normalized_form
-                or state.submission.raw_content[claim.evidence.start : claim.evidence.end]
+                or submitted.raw_content[claim.evidence.start : claim.evidence.end]
                 != claim.evidence.quote
             ):
                 continue
@@ -165,7 +248,7 @@ def connection_request(state, target_refs, *, input_revision=None):
                     json.loads(envelope.output_summary),
                 )
                 refs = (
-                    state.submission.response_id,
+                    submitted.response_id,
                     claim.claim_id,
                     f"{snapshot.workspace.workspace_id}@{current.workspace_revision}",
                     model.model_ref.identifier,
@@ -209,7 +292,7 @@ def connection_request(state, target_refs, *, input_revision=None):
                     "declaration_digest": math_content_digest(declaration),
                     "input_revision": revision,
                     "workspace_id": snapshot.workspace.workspace_id,
-                    "submission_digest": math_content_digest(state.submission),
+                    "submission_digest": math_content_digest(submitted),
                     "alignment_digest": math_content_digest(current),
                     "claim_ref": claim.claim_id,
                     "claim_digest": math_content_digest(claim),
@@ -217,6 +300,7 @@ def connection_request(state, target_refs, *, input_revision=None):
                     "step_digest": math_content_digest(envelope),
                     "kwargs": {"expression": expression},
                     "text": declaration.canonical_explanation,
+                    **({"historical_claim_origin": historical} if historical is not None else {}),
                 }
     except (
         ValueError,
@@ -232,13 +316,17 @@ def connection_request(state, target_refs, *, input_revision=None):
 
 
 def _connection_refs(request):
-    return (
+    refs = (
         f"{request['workspace_id']}@{request['input_revision']}",
         request["source_digest"],
         request["submission_digest"],
         request["claim_ref"],
         request["step_ref"],
     )
+    if "historical_claim_origin" in request:
+        origin = request["historical_claim_origin"]
+        refs += (origin["inquiry_digest"], origin["inquiry_alignment_digest"])
+    return refs
 
 
 def materialize_connection_support(request):
