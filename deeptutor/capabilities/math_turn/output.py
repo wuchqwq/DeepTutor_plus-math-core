@@ -509,11 +509,43 @@ def accept_response(
         if by_id[key]["grant"].get("contract") not in {*FEEDBACK_CONTRACTS, CONTEXTUAL_VERSION}
     )
     state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
+    # One current-object clarification already asks for the exact part or
+    # assumptions. Fold its generic companion only in presentation, after all
+    # selected authority passed; both contracts remain in the receipt below.
+    specific = [
+        offer
+        for offer in current["offers"]
+        if offer["grant"].get("contract") == CONTEXTUAL_VERSION
+        and offer["grant"]["act_kind"] == "contextual_clarification"
+        and offer["grant"].get("object_kind") == "current_submission"
+    ]
+    redundant = set()
+    if len(specific) == 1 and specific[0]["grant_id"] in selected:
+        binding = (
+            "session_id",
+            "turn_id",
+            "accepted_user_message_id",
+            "student_response_ref",
+            "episode_id",
+            "source_digest",
+            "math_workspace_ref",
+            "math_revision",
+            "math_basis",
+        )
+        redundant = {
+            key
+            for key in selected
+            if (grant := by_id[key]["grant"]).get("contract") == FEEDBACK_VERSION
+            and grant["act_kind"] == "neutral_clarification"
+            and all(grant[field] == specific[0]["grant"][field] for field in binding)
+        }
     # Orientation supplies no task mathematics. The existing acknowledgement
     # is also the no-selection operational status; it asserts no math truth.
     seen: dict[tuple[str, str], str] = {}
     results = []
     for key in selected:
+        if key in redundant:
+            continue
         offer = by_id[key]
         if offer["grant"]["act_kind"] not in {
             "result",
