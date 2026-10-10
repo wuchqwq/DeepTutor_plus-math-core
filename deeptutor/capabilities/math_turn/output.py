@@ -556,6 +556,25 @@ def accept_response(
         trace["selected_feedback"] = feedback
     if contextual:
         trace["selected_contextual_clarifications"] = contextual
+    historical = []
+    artifacts = {a.artifact_id: a for a in state.snapshot().artifacts}
+    for grant in chosen:
+        if grant.act_kind == "justification" and grant.support_mechanism == CONNECTION_MECHANISM:
+            request = json.loads(artifacts[grant.content_ref.identifier].statement)
+            if "historical_claim_origin" in request:
+                historical.append(
+                    {
+                        "origin": request["historical_claim_origin"],
+                        "claim_ref": request["claim_ref"],
+                        "claim_digest": request["claim_digest"],
+                        "step_ref": request["step_ref"],
+                        "step_digest": request["step_digest"],
+                        "connection_content_ref": grant.content_ref.identifier,
+                        "certificate_ref": grant.support_ref.identifier,
+                    }
+                )
+    if historical:
+        trace["historical_claim_references"] = historical
     publication_id = "math_output_" + _digest(trace)
     trace["publication_id"] = publication_id
     return AcceptedTurnOutput(

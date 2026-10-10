@@ -308,7 +308,7 @@ def test_correct_direct_answer_certificate_is_not_release_permission():
     assert prepare(state) is None and offers(state)[2] == []
 
 
-def test_r3_earlier_step_only_request_is_explicitly_not_supported(prepared):
+def test_r3_pure_inquiry_references_reviewed_historical_claim(prepared):
     state = state_for(
         prepared.source,
         "Explain that previous step's connection to the goal",
@@ -322,7 +322,16 @@ def test_r3_earlier_step_only_request_is_explicitly_not_supported(prepared):
         config_digest="offline",
         check_steps=True,
     )
-    assert prepare(state) is None and offers(state)[2] == []
+    request = prepare(state)
+    assert (
+        request["historical_claim_origin"]["accepted_user_message_id"]
+        == prepared.submission.message_id
+    )
+    assert request["submission_digest"] == math_content_digest(prepared.submission)
+    assert request["historical_claim_origin"]["inquiry_digest"] == math_content_digest(
+        state.submission
+    )
+    assert len(offers(state)[2]) == 1
 
 
 @pytest.mark.asyncio
