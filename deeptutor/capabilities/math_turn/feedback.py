@@ -1,4 +1,4 @@
-"""Two finite host feedback acts, resolved from current accepted Core evidence.
+"""Finite host feedback acts, resolved from current accepted Core evidence.
 
 These contracts neither reuse math-content grants nor admit claims or results.
 The publication owner re-resolves them under the existing acceptance fence.
@@ -17,7 +17,10 @@ from deeptutor.math_semantic.state import MathMutation
 from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_scope, step_basis
 from deeptutor.math_semantic.verification import normalize_display
 
+from .counterexample_feedback import COUNTEREXAMPLE_VERSION, _counterexample_point
+
 FEEDBACK_VERSION = "bounded_math_feedback_v1"
+FEEDBACK_CONTRACTS = (FEEDBACK_VERSION, COUNTEREXAMPLE_VERSION)
 CLARIFICATION = (
     "Which expression or transformation in your current step would you like help with? "
     "Please point to that part."
@@ -161,6 +164,7 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
             expected_reason = {
                 "IDENTITY": "zero_polynomial_over_explicit_reals",
                 "CONDITIONAL": "zero_after_explicit_definitions",
+                "COUNTEREXAMPLE": "all_constraints_exactly_checked",
             }.get(relation)
             if (
                 binding["claim"] != asdict(claim)
@@ -184,6 +188,32 @@ def feedback_offers(state: MathMutation) -> list[dict[str, Any]]:
                 "local_relation": relation,
                 "support_scope": "submitted_equality_only_no_result_completion_or_mastery",
             }
+            if relation == "COUNTEREXAMPLE":
+                try:
+                    point = _counterexample_point(
+                        snapshot,
+                        binding,
+                        checked,
+                        [proofs[ref] for ref in checked["tool_evidence_refs"]],
+                    )
+                except (ValueError, TypeError, KeyError, SyntaxError, ZeroDivisionError):
+                    continue
+                if point is None:
+                    continue
+                grant.update(
+                    contract=COUNTEREXAMPLE_VERSION,
+                    act_kind="local_counterexample",
+                    witness=point,
+                    support_scope="verified_point_only_no_diagnosis_result_completion_or_mastery",
+                )
+                values = ", ".join(f"{name}={value}" for name, value in point.items())
+                text = (
+                    f"At {values}, the two sides of submitted equality {ordinal} are unequal "
+                    "under all explicit applicable premises. This conclusion covers only "
+                    "that equality at that point."
+                )
+                offers.append({"grant": grant, "text": text})
+                break
             if relation == "IDENTITY":
                 text = f"Submitted equality {ordinal} is an algebraic identity in the question's explicit real scalar domain."
             else:
