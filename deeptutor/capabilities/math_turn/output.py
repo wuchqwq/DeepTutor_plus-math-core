@@ -20,7 +20,7 @@ from deeptutor.math_semantic.validation import STEP_VERSION, _polynomial, _step_
 from deeptutor.math_semantic.workspace import MathWorkspaceSnapshot
 
 from .contextual_clarification import CONTEXTUAL_VERSION, contextual_clarification_offers
-from .feedback import FEEDBACK_VERSION, feedback_offers
+from .feedback import FEEDBACK_CONTRACTS, FEEDBACK_VERSION, feedback_offers
 
 ACKNOWLEDGEMENT = "Mathematical evidence recorded."
 
@@ -493,7 +493,7 @@ def accept_response(
     feedback = [
         by_id[key]["grant"]
         for key in selected
-        if by_id[key]["grant"].get("contract") == FEEDBACK_VERSION
+        if by_id[key]["grant"].get("contract") in FEEDBACK_CONTRACTS
     ]
     contextual = [
         by_id[key]["grant"]
@@ -506,7 +506,7 @@ def accept_response(
     chosen = tuple(
         MathSemanticGrant.from_value(by_id[key]["grant"])
         for key in selected
-        if by_id[key]["grant"].get("contract") not in {FEEDBACK_VERSION, CONTEXTUAL_VERSION}
+        if by_id[key]["grant"].get("contract") not in {*FEEDBACK_CONTRACTS, CONTEXTUAL_VERSION}
     )
     state.authorize(tuple(calculation["trajectory"]["applicable_artifact_refs"]), chosen)
     # Orientation supplies no task mathematics. The existing acknowledgement
@@ -522,6 +522,7 @@ def accept_response(
             "neutral_clarification",
             "local_confirmation",
             "contextual_clarification",
+            "local_counterexample",
         }:
             continue
         # Complete chosen authority has already passed above. Presentation
